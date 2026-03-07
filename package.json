@@ -2,23 +2,33 @@
   "name": "@wira-borneo/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev:mobile": "nx run mobile:dev",
+    "dev:api": "nx serve api"
+  },
   "private": true,
   "devDependencies": {
     "@eslint/js": "^9.8.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@next/eslint-plugin-next": "^16.0.1",
     "@nx/devkit": "22.5.4",
     "@nx/eslint": "22.5.4",
     "@nx/eslint-plugin": "22.5.4",
     "@nx/jest": "22.5.4",
     "@nx/js": "22.5.4",
+    "@nx/nest": "^22.5.4",
     "@nx/next": "^22.5.4",
+    "@nx/node": "22.5.4",
     "@nx/playwright": "22.5.4",
+    "@nx/web": "22.5.4",
+    "@nx/webpack": "22.5.4",
     "@playwright/test": "^1.36.0",
     "@swc-node/register": "~1.11.1",
     "@swc/cli": "~0.8.0",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
+    "@swc/jest": "~0.2.38",
     "@testing-library/dom": "10.4.0",
     "@testing-library/react": "16.3.0",
     "@types/jest": "^30.0.0",
@@ -37,6 +47,7 @@
     "eslint-plugin-react-hooks": "5.0.0",
     "jest": "^30.0.2",
     "jest-environment-jsdom": "^30.0.2",
+    "jest-environment-node": "^30.0.2",
     "jest-util": "^30.0.2",
     "nx": "22.5.4",
     "postcss": "8.4.38",
@@ -46,15 +57,22 @@
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
-    "typescript-eslint": "^8.40.0"
+    "typescript-eslint": "^8.40.0",
+    "webpack-cli": "^5.1.4"
   },
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "axios": "^1.6.0",
     "next": "~16.0.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.0"
   }
 }
