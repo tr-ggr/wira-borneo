@@ -21,7 +21,7 @@ export default function WeatherCard({
 }: WeatherCardProps) {
   return (
     <div
-      className={`glass-sm p-3 flex flex-col gap-1 animate-fade-in ${className}`}
+      className={`glass-sm p-4 flex flex-col gap-1.5 animate-fade-in ${className}`}
     >
       <div className="flex items-center gap-2">
         <span className="text-lg" aria-hidden>{icon}</span>

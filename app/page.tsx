@@ -195,7 +195,7 @@ export default function WiraDashboard() {
       {/* ── Weather side panel ── */}
       {panelOpen && (
         <aside
-          className="absolute top-0 right-0 bottom-0 z-30 w-full max-w-[360px]"
+          className="absolute top-2 right-2 bottom-2 z-30 w-[min(360px,calc(100%-1rem))] overflow-hidden rounded-2xl"
           style={{
             background: "rgba(6,16,31,0.92)",
             backdropFilter: "blur(20px)",
@@ -205,14 +205,14 @@ export default function WiraDashboard() {
         >
           {/* Loading skeleton while waiting */}
           {loading && !data && (
-            <div className="p-5 space-y-4 animate-fade-in">
+            <div className="p-6 space-y-5 animate-fade-in">
               <div className="skeleton h-6 w-3/4 rounded-lg" />
               <div className="skeleton h-4 w-1/2 rounded-lg" />
               <div className="skeleton h-28 w-full rounded-xl mt-4" />
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
               </div>
-              <div className="space-y-2 mt-2">
+              <div className="space-y-2.5 mt-2">
                 {[...Array(7)].map((_, i) => <div key={i} className="skeleton h-10 rounded-xl" />)}
               </div>
             </div>

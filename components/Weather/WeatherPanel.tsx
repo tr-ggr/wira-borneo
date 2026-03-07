@@ -96,7 +96,7 @@ export default function WeatherPanel({ forecast, aqi, lat, lon, locationName, on
     <div className="h-full flex flex-col overflow-hidden animate-slide-in">
       {/* Header */}
       <div
-        className="px-5 pt-5 pb-4 flex-shrink-0"
+        className="px-6 pt-6 pb-5 flex-shrink-0"
         style={{
           background: "linear-gradient(180deg, rgba(0,56,147,0.25) 0%, transparent 100%)",
           borderBottom: "1px solid rgba(0,56,147,0.3)",
@@ -132,10 +132,10 @@ export default function WeatherPanel({ forecast, aqi, lat, lon, locationName, on
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
 
         {/* Current conditions hero */}
-        <div className="glass p-4 flex items-center gap-4">
+        <div className="glass p-5 flex items-center gap-5">
           <div className="flex flex-col items-center gap-1">
             <WeatherIcon code={weatherCode} isDay={isDay} size={52} />
             <p className="text-[11px] text-[var(--text-muted)] text-center leading-tight max-w-[70px]">
@@ -160,7 +160,7 @@ export default function WeatherPanel({ forecast, aqi, lat, lon, locationName, on
           {/* AQI badge */}
           {currentAQI !== null && (
             <div
-              className="flex flex-col items-center px-3 py-2 rounded-xl border"
+              className="flex flex-col items-center px-3.5 py-2.5 rounded-xl border"
               style={{
                 borderColor: getAQILabel(currentAQI).color,
                 background: `${getAQILabel(currentAQI).color}18`,
@@ -178,7 +178,7 @@ export default function WeatherPanel({ forecast, aqi, lat, lon, locationName, on
         </div>
 
         {/* Quick stats grid */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <WeatherCard
             label="Wind"
             value={`${Math.round(windSpeed)} ${windDir}`}
@@ -220,17 +220,17 @@ export default function WeatherPanel({ forecast, aqi, lat, lon, locationName, on
 
         {/* 7-day forecast */}
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--asean-yellow)] opacity-70 mb-2 px-1">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--asean-yellow)] opacity-70 mb-3 px-1.5">
             7-Day Forecast
           </p>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {forecastDays.map((day, i) => {
               const info = getWeatherInfo(day.code, true);
               const isToday = i === 0;
               return (
                 <div
                   key={i}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors
+                  className={`flex items-center gap-3.5 px-4 py-2.5 rounded-2xl transition-colors
                     ${isToday
                       ? "bg-[rgba(0,56,147,0.3)] border border-[rgba(245,211,18,0.2)]"
                       : "hover:bg-[rgba(0,56,147,0.15)]"
@@ -266,7 +266,7 @@ export default function WeatherPanel({ forecast, aqi, lat, lon, locationName, on
         </div>
 
         {/* Attribution */}
-        <p className="text-[10px] text-[var(--text-muted)] text-center py-2">
+        <p className="text-[10px] text-[var(--text-muted)] text-center py-3">
           Data from{" "}
           <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer"
             className="text-[var(--asean-yellow)] hover:underline">
