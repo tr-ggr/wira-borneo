@@ -1,26 +1,225 @@
 @import "tailwindcss";
+@import "ol/ol.css";
+
+/* ============================================================
+   WIRA — ASEAN Weather Dashboard
+   Brand palette from the ASEAN flag:
+     Blue   #003893
+     Red    #CE1126
+     White  #FFFFFF
+     Yellow #F5D312
+   ============================================================ */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ASEAN brand palette */
+  --asean-blue:    #003893;
+  --asean-blue-2:  #1a4faa;
+  --asean-blue-3:  #0a2d70;
+  --asean-red:     #CE1126;
+  --asean-yellow:  #F5D312;
+  --asean-white:   #FFFFFF;
+
+  /* Dark-mode neutrals */
+  --bg-base:       #06101f;
+  --bg-surface:    #0c1a30;
+  --bg-panel:      #0f2040;
+  --bg-card:       #122448;
+  --border-subtle: rgba(0, 56, 147, 0.35);
+  --border-glow:   rgba(245, 211, 18, 0.25);
+
+  /* Text */
+  --text-primary:  #e8f0fe;
+  --text-secondary:#94b0d6;
+  --text-muted:    #5a7ba8;
+
+  /* Foreground / background fallbacks */
+  --background:    var(--bg-base);
+  --foreground:    var(--text-primary);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Geist', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Custom scrollbar
+   ============================================================ */
+
+::-webkit-scrollbar               { width: 5px; height: 5px; }
+::-webkit-scrollbar-track         { background: transparent; }
+::-webkit-scrollbar-thumb         { background: var(--asean-blue-2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover   { background: var(--asean-blue); }
+
+/* ============================================================
+   Glassmorphism utility classes
+   ============================================================ */
+
+.glass {
+  background: rgba(12, 26, 48, 0.80);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+}
+
+.glass-sm {
+  background: rgba(12, 26, 48, 0.70);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+.glow-yellow {
+  box-shadow: 0 0 24px rgba(245, 211, 18, 0.12);
+}
+
+.glow-blue {
+  box-shadow: 0 0 24px rgba(0, 56, 147, 0.40);
+}
+
+/* ============================================================
+   Gradient accents
+   ============================================================ */
+
+.gradient-brand {
+  background: linear-gradient(135deg, var(--asean-blue) 0%, var(--asean-blue-2) 60%, #0f3f8a 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--asean-yellow) 0%, #ffeA50 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   OpenLayers map overrides
+   ============================================================ */
+
+.ol-viewport {
+  border-radius: 0;
+}
+
+.ol-zoom {
+  top: auto;
+  bottom: 24px;
+  left: 24px;
+}
+
+.ol-zoom .ol-zoom-in,
+.ol-zoom .ol-zoom-out {
+  background: rgba(12, 26, 48, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  color: var(--asean-yellow);
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  transition: background 0.2s, border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ol-zoom .ol-zoom-in:hover,
+.ol-zoom .ol-zoom-out:hover {
+  background: var(--asean-blue);
+  border-color: var(--asean-yellow);
+}
+
+.ol-attribution {
+  background: rgba(6, 16, 31, 0.6);
+  color: var(--text-muted);
+  font-size: 10px;
+  border-radius: 6px 0 0 0;
+}
+
+.ol-attribution button {
+  color: var(--text-muted);
+}
+
+.ol-attribution a {
+  color: var(--asean-yellow);
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  70%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.animate-slide-in { animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in  { animation: fadeIn 0.3s ease both; }
+.animate-spin     { animation: spin 0.9s linear infinite; }
+
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-card) 25%,
+    rgba(26, 79, 170, 0.3) 50%,
+    var(--bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   TailwindCSS v4 theme tokens
+   ============================================================ */
+
+@theme inline {
+  --color-background:    var(--background);
+  --color-foreground:    var(--foreground);
+  --color-asean-blue:    var(--asean-blue);
+  --color-asean-red:     var(--asean-red);
+  --color-asean-yellow:  var(--asean-yellow);
+  --color-surface:       var(--bg-surface);
+  --color-panel:         var(--bg-panel);
+  --color-card:          var(--bg-card);
+  --font-sans:           'Inter', system-ui, sans-serif;
 }
