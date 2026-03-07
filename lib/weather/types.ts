@@ -484,11 +484,32 @@ export interface SeasonalForecastOptions extends LatLon {
 // Geocoding
 // ---------------------------------------------------------------------------
 
+/**
+ * Axis-aligned bounding box in decimal degrees (WGS84).
+ * Sourced from Nominatim when `includeBoundingBox` is requested.
+ */
+export interface BoundingBox {
+  /** Northern boundary (max latitude) */
+  north: number;
+  /** Southern boundary (min latitude) */
+  south: number;
+  /** Eastern boundary (max longitude) */
+  east: number;
+  /** Western boundary (min longitude) */
+  west: number;
+}
+
 export interface GeocodingOptions {
   name: string;
   count?: number;
   language?: string;
   countryCode?: string;
+  /**
+   * When true, each result will be enriched with a `bbox` field
+   * sourced from a secondary Nominatim (OpenStreetMap) lookup.
+   * Note: this adds one extra network request per geocoding call.
+   */
+  includeBoundingBox?: boolean;
 }
 
 export interface GeocodingResult {
@@ -504,6 +525,8 @@ export interface GeocodingResult {
   admin2?: string;
   timezone: string;
   population?: number;
+  /** Present only when `GeocodingOptions.includeBoundingBox` is true. */
+  bbox?: BoundingBox;
 }
 
 // ---------------------------------------------------------------------------

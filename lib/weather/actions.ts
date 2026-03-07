@@ -15,6 +15,7 @@ import type {
   ActionResult,
   AirQualityOptions,
   AirQualityResponse,
+  BoundingBox,
   ClimateProjectionOptions,
   ClimateProjectionResponse,
   ElevationResponse,
@@ -22,6 +23,7 @@ import type {
   FloodForecastResponse,
   GeocodingOptions,
   GeocodingResponse,
+  GeocodingResult,
   MarineWeatherOptions,
   MarineWeatherResponse,
   OpenMeteoResponse,
@@ -44,6 +46,8 @@ const BASE_URLS = {
   seasonal: "https://seasonal-forecast-api.open-meteo.com/v1/seasonal",
   geocoding: "https://geocoding-api.open-meteo.com/v1/search",
   elevation: "https://api.open-meteo.com/v1/elevation",
+  /** Nominatim (OpenStreetMap) — used only for bounding box enrichment. */
+  nominatim: "https://nominatim.openstreetmap.org/search",
 } as const;
 
 /** Build a URLSearchParams object, filtering out undefined values. */
@@ -318,8 +322,21 @@ export async function getSeasonalForecast(
 /**
  * Search for a location by name or postal code and return its coordinates.
  *
+ * Pass `includeBoundingBox: true` to also fetch a bounding box from
+ * Nominatim (OpenStreetMap). This adds one extra network request but
+ * enriches each result with a `bbox` field.
+ *
  * @example
+ * // Basic
  * const result = await geocodeLocation({ name: "Kuching", countryCode: "MY" });
+ *
+ * // With bounding box
+ * const result = await geocodeLocation({
+ *   name: "Kuching",
+ *   countryCode: "MY",
+ *   includeBoundingBox: true,
+ * });
+ * if (result.ok) console.log(result.data.results?.[0].bbox);
  */
 export async function geocodeLocation(
   options: GeocodingOptions,
@@ -332,7 +349,59 @@ export async function geocodeLocation(
     format: "json",
   });
 
-  return fetchJSON<GeocodingResponse>(`${BASE_URLS.geocoding}?${params}`);
+  const geoResult = await fetchJSON<GeocodingResponse>(
+    `${BASE_URLS.geocoding}?${params}`,
+  );
+
+  // Return early if no bbox enrichment requested or the base call failed.
+  if (!options.includeBoundingBox || !geoResult.ok) return geoResult;
+
+  const results = geoResult.data.results;
+  if (!results || results.length === 0) return geoResult;
+
+  // Fan out one Nominatim lookup per result (typically 1–5) in parallel.
+  const enriched = await Promise.all(
+    results.map(async (place): Promise<GeocodingResult> => {
+      try {
+        const nominatimParams = new URLSearchParams({
+          q: place.name,
+          format: "json",
+          limit: "1",
+          countrycodes: place.country_code.toLowerCase(),
+        });
+
+        const res = await fetch(
+          `${BASE_URLS.nominatim}?${nominatimParams}`,
+          {
+            headers: { "User-Agent": "wira-borneo/1.0" },
+            next: { revalidate: 86400 }, // bboxes rarely change — cache 24 h
+          },
+        );
+
+        if (!res.ok) return place;
+
+        const hits = (await res.json()) as Array<{
+          boundingbox?: [string, string, string, string];
+        }>;
+
+        const hit = hits[0];
+        if (!hit?.boundingbox) return place;
+
+        // Nominatim returns [south, north, west, east] as strings.
+        const [south, north, west, east] = hit.boundingbox.map(Number);
+        const bbox: BoundingBox = { north, south, east, west };
+        return { ...place, bbox };
+      } catch {
+        // Non-fatal — return the place without a bbox if Nominatim fails.
+        return place;
+      }
+    }),
+  );
+
+  return {
+    ok: true,
+    data: { ...geoResult.data, results: enriched },
+  };
 }
 
 // ---------------------------------------------------------------------------
