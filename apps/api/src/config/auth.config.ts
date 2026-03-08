@@ -6,7 +6,7 @@ export interface AuthRuntimeConfig {
 
 const DEFAULT_LOCAL_TRUSTED_ORIGINS = [
   'http://localhost:4444',
-  'http://localhost:5555',
+  'http://localhost:3192',
   'http://localhost:8888',
 ];
 
