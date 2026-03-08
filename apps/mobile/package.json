@@ -3,12 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@tanstack/react-query": "^5.90.2",
-    "@wira-borneo/api-client": "*",
-    "@react-native/metro-config": "*",
-    "react": "*",
-    "react-native": "*",
-    "react-native-svg": "*",
-    "metro-config": "*"
+    "next": "~16.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
