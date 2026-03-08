@@ -51,6 +51,7 @@ test-output
 skills-lock.json
 openspec
 .github
+.agent
 
 # React Native
 

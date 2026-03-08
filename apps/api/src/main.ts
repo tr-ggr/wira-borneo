@@ -8,8 +8,8 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { httpRequestLoggerMiddleware } from './common';
 import { getAuthRuntimeConfig } from './config/auth.config';
+import { httpRequestLoggerMiddleware } from './common';
 
 async function bootstrap() {
   if (!process.env.DATABASE_URL) {
@@ -19,14 +19,11 @@ async function bootstrap() {
   }
 
   const authConfig = getAuthRuntimeConfig();
-  const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase();
-  const isDevelopment = !nodeEnv || nodeEnv === 'development';
 
   const app = await NestFactory.create(AppModule);
 
-  if (isDevelopment) {
-    app.use(httpRequestLoggerMiddleware);
-  }
+  app.use(httpRequestLoggerMiddleware);
+  Logger.log('✅ HTTP Request Logger Middleware registered');
 
   app.enableCors({
     origin: authConfig.trustedOrigins,

@@ -3,12 +3,12 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev:mobile": "nx run mobile:dev",
-    "dev:tracker": "nx run tracker:dev",
-    "dev:admin": "nx run admin:dev",
-    "dev:api": "nx serve api",
+    "mobile": "nx run mobile:dev",
+    "tracker": "nx run tracker:dev",
+    "admin": "nx run admin:dev",
+    "api": "nx serve api",
     "android": "nx run-android mobile",
-    "migrate:dev": "nx run api:migrate-dev",
+    "migrate": "nx run api:migrate-dev",
     "api:openapi:sync": "npm run openapi:sync -w @wira-borneo/api-client",
     "api:client:generate": "npm run generate -w @wira-borneo/api-client",
     "api:client:generate:check": "npm run generate:check -w @wira-borneo/api-client"
