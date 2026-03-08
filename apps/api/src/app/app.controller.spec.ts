@@ -4,18 +4,28 @@ import { AppService } from './app.service';
 
 describe('AppController', () => {
   let app: TestingModule;
+  const appServiceMock = {
+    getData: jest.fn().mockResolvedValue({ message: 'Hello API' }),
+  };
 
   beforeAll(async () => {
     app = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        {
+          provide: AppService,
+          useValue: appServiceMock,
+        },
+      ],
     }).compile();
   });
 
   describe('getData', () => {
-    it('should return "Hello API"', () => {
+    it('should return "Hello API"', async () => {
       const appController = app.get<AppController>(AppController);
-      expect(appController.getData()).toEqual({ message: 'Hello API' });
+      await expect(appController.getData()).resolves.toEqual({
+        message: 'Hello API',
+      });
     });
   });
 });

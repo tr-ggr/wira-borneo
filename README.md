@@ -107,3 +107,57 @@ And join the Nx community:
 - [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Our Youtube channel](https://www.youtube.com/@nxdevtools)
 - [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+
+## API Prisma Workflow
+
+Prisma is configured in `apps/api` with a PostgreSQL datasource.
+
+### Local setup
+
+1. Create `apps/api/.env` from `apps/api/.env.example` and set `DATABASE_URL`.
+2. Validate schema:
+
+```sh
+npm run prisma:validate -w @wira-borneo/api
+```
+
+3. Generate client:
+
+```sh
+npm run prisma:generate -w @wira-borneo/api
+```
+
+4. Check migration status:
+
+```sh
+npm run prisma:migrate:status -w @wira-borneo/api
+```
+
+### CI checks
+
+Use these tasks in CI after installing dependencies and setting `DATABASE_URL`:
+
+```sh
+npx nx run api:prisma-validate
+npx nx run api:prisma-generate
+npx nx test api
+```
+
+### Deployment order
+
+Run Prisma client generation before applying migrations:
+
+```sh
+npx nx run api:prisma-prepare-deploy
+```
+
+This runs:
+1. `api:prisma-generate`
+2. `api:prisma-migrate-deploy`
+
+### Rollback guidance
+
+If deployment fails after migrations:
+1. Roll back application deployment to the previous version.
+2. Restore database from backup or apply a reviewed reverse SQL script for the specific migration.
+3. Regenerate Prisma client for the rolled-back schema version before re-deploying.
