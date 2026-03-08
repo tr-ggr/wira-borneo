@@ -5,7 +5,8 @@
   "scripts": {
     "dev:mobile": "nx run mobile:dev",
     "dev:tracker": "nx run tracker:dev",
-    "dev:api": "nx serve api"
+    "dev:api": "nx serve api",
+    "migrate:dev": "nx run api:migrate-dev"
   },
   "private": true,
   "devDependencies": {

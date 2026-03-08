@@ -161,3 +161,30 @@ If deployment fails after migrations:
 1. Roll back application deployment to the previous version.
 2. Restore database from backup or apply a reviewed reverse SQL script for the specific migration.
 3. Regenerate Prisma client for the rolled-back schema version before re-deploying.
+
+## API Authentication (Better Auth)
+
+The NestJS API (`apps/api`) uses Better Auth for credential authentication and
+session management.
+
+### Required environment variables
+
+Configure these in `apps/api/.env`:
+
+- `AUTH_SECRET`: long random secret for token/cookie signing.
+- `AUTH_BASE_URL`: API origin (for local dev: `http://localhost:3000`).
+- `AUTH_TRUSTED_ORIGINS` (optional): comma-separated origins allowed to send
+	credentialed auth requests.
+
+### Auth endpoints
+
+All routes are under the global prefix `/api`:
+
+- `POST /api/auth/sign-up`
+- `POST /api/auth/sign-in`
+- `POST /api/auth/sign-out`
+- `GET /api/auth/session`
+
+Protected route example:
+
+- `GET /api/protected` (requires active authenticated session)

@@ -7,6 +7,7 @@ import 'dotenv/config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import { getAuthRuntimeConfig } from './app/auth/auth.config';
 
 async function bootstrap() {
   if (!process.env.DATABASE_URL) {
@@ -15,7 +16,15 @@ async function bootstrap() {
     );
   }
 
+  const authConfig = getAuthRuntimeConfig();
+
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: authConfig.trustedOrigins,
+    credentials: true,
+  });
+
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   const port = process.env.PORT || 3000;
