@@ -6,7 +6,7 @@ module.exports = {
     output: {
       mode: 'single',
       target: './src/generated/api-client.ts',
-      client: 'axios',
+      client: 'react-query',
       clean: true,
       prettier: true,
     },
