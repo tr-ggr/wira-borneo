@@ -52,7 +52,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 6666,
+    port: 8888,
     host: 'localhost',
     fs: {
       // Allow serving files from one level up to the project root

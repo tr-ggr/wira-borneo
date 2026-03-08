@@ -37,7 +37,7 @@ Use these defaults when running apps locally:
 - API: `http://localhost:3333/api`
 - Tracker: `http://localhost:4444`
 - Admin: `http://localhost:5555`
-- Mobile (web dev server): `http://localhost:6666`
+- Mobile (web dev server): `http://localhost:8888`
 
 These ports are the default local development contract for contributors.
 
@@ -189,7 +189,7 @@ Configure these in `apps/api/.env`:
 
 Example local trusted origins:
 
-- `AUTH_TRUSTED_ORIGINS="http://localhost:4444,http://localhost:5555,http://localhost:6666"`
+- `AUTH_TRUSTED_ORIGINS="http://localhost:4444,http://localhost:5555,http://localhost:8888"`
 
 ### Auth endpoints
 

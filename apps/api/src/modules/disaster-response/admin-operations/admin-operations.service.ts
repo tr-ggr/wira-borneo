@@ -9,6 +9,24 @@ export class AdminOperationsService {
     private readonly riskService: RiskIntelligenceService,
   ) {}
 
+  async listVolunteerApplications(status?: 'PENDING' | 'APPROVED' | 'REJECTED') {
+    return this.prisma.volunteerApplication.findMany({
+      where: {
+        ...(status ? { status } : {}),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [{ createdAt: 'desc' }],
+    });
+  }
+
   async reviewVolunteerApplication(input: {
     applicationId: string;
     reviewerId: string;
@@ -21,6 +39,12 @@ export class AdminOperationsService {
 
     if (!application) {
       throw new BadRequestException('Volunteer application does not exist.');
+    }
+
+    if (application.status !== 'PENDING') {
+      throw new BadRequestException(
+        'Volunteer application already has a final decision.',
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
