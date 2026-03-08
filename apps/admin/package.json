@@ -2,6 +2,17 @@
   "name": "@wira-borneo/admin",
   "version": "0.0.1",
   "private": true,
+  "nx": {
+    "targets": {
+      "dev": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "next dev --port 5555",
+          "cwd": "apps/admin"
+        }
+      }
+    }
+  },
   "dependencies": {
     "next": "~16.0.1",
     "react": "^19.0.0",
