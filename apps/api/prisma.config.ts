@@ -5,7 +5,8 @@ export default defineConfig({
   schema: 'prisma/schema',
   migrations: {
     path: 'prisma/migrations',
-    seed: 'ts-node prisma/seed.ts',
+    // Run seed through a wrapper so Prisma CLI extra args do not interfere with tsc -p.
+    seed: 'node scripts/run-prisma-seed.mjs',
   },
   datasource: {
     url: env('DATABASE_URL'),
