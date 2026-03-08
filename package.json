@@ -8,7 +8,17 @@
     "admin": "nx run admin:dev",
     "api": "nx serve api",
     "android": "nx run-android mobile",
-    "migrate": "nx run api:migrate-dev",
+    "migrate": "nx run api:prisma-migrate-dev",
+
+    "prisma:validate": "nx run api:prisma-validate",
+    "prisma:format": "nx run api:prisma-format",
+    "prisma:generate": "nx run api:prisma-generate",
+    "prisma:migrate:deploy": "nx run api:prisma-migrate-deploy",
+    "prisma:migrate:status": "nx run api:prisma-migrate-status",
+    "prisma:migrate-dev": "nx run api:prisma-migrate-dev",
+    "prisma:reset": "nx run api:prisma-reset",
+    "prisma:seed": "nx run api:prisma-seed",
+
     "api:openapi:sync": "npm run openapi:sync -w @wira-borneo/api-client",
     "api:client:generate": "npm run generate -w @wira-borneo/api-client",
     "api:client:generate:check": "npm run generate:check -w @wira-borneo/api-client"

@@ -7,7 +7,10 @@
     "prisma:format": "prisma format --config prisma.config.ts",
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "prisma:migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
-    "prisma:migrate:status": "prisma migrate status --config prisma.config.ts"
+    "prisma:migrate:status": "prisma migrate status --config prisma.config.ts",
+    "prisma:migrate-dev": "prisma migrate dev --config prisma.config.ts",
+    "prisma:reset": "prisma migrate reset --config prisma.config.ts --force",
+    "prisma:seed": "prisma db seed --config prisma.config.ts"
   },
   "nx": {
     "targets": {
@@ -94,6 +97,13 @@
           "cwd": "apps/api"
         }
       },
+      "prisma-format": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "npm run prisma:format",
+          "cwd": "apps/api"
+        }
+      },
       "prisma-generate": {
         "executor": "nx:run-commands",
         "options": {
@@ -108,6 +118,43 @@
         "executor": "nx:run-commands",
         "options": {
           "command": "npm run prisma:migrate:deploy",
+          "cwd": "apps/api"
+        }
+      },
+      "prisma-migrate-status": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "npm run prisma:migrate:status",
+          "cwd": "apps/api"
+        }
+      },
+      "prisma-migrate-dev": {
+        "dependsOn": [
+          "prisma-generate"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "npm run prisma:migrate-dev",
+          "cwd": "apps/api"
+        }
+      },
+      "prisma-reset": {
+        "dependsOn": [
+          "prisma-generate"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "npm run prisma:reset",
+          "cwd": "apps/api"
+        }
+      },
+      "prisma-seed": {
+        "dependsOn": [
+          "prisma-generate"
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "npm run prisma:seed",
           "cwd": "apps/api"
         }
       },

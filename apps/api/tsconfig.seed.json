@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist-seed",
+    "rootDir": ".",
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "sourceMap": false,
+    "composite": false,
+    "tsBuildInfoFile": "dist-seed/tsconfig.seed.tsbuildinfo"
+  },
+  "include": ["prisma/seed.ts", "src/generated/prisma/**/*.ts"]
+}
