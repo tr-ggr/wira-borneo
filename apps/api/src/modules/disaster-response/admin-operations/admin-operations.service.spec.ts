@@ -23,6 +23,9 @@ describe('AdminOperationsService', () => {
     mapPinStatus: {
       findMany: jest.fn(),
     },
+    userLocationSnapshot: {
+      findMany: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
@@ -30,11 +33,20 @@ describe('AdminOperationsService', () => {
     getVulnerableRegions: jest.fn(),
   };
 
+  const openMeteoServiceMock = {
+    getForecast: jest.fn(),
+    getGeocoding: jest.fn(),
+  };
+
   let service: AdminOperationsService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminOperationsService(prismaMock as never, riskServiceMock as never);
+    service = new AdminOperationsService(
+      prismaMock as never,
+      riskServiceMock as never,
+      openMeteoServiceMock as never,
+    );
   });
 
   it('prevents duplicate final decisions on volunteer applications', async () => {
@@ -67,5 +79,21 @@ describe('AdminOperationsService', () => {
         where: { status: 'PENDING' },
       }),
     );
+  });
+
+  it('returns consolidated map overview payload', async () => {
+    const regions = [{ id: 'risk-1' }];
+    const pins = [{ id: 'pin-1' }];
+    const locations = [{ id: 'loc-1' }];
+
+    riskServiceMock.getVulnerableRegions.mockResolvedValue(regions);
+    prismaMock.mapPinStatus.findMany.mockResolvedValue(pins);
+    prismaMock.userLocationSnapshot.findMany.mockResolvedValue(locations);
+
+    await expect(service.getMapOverview()).resolves.toEqual({
+      vulnerableRegions: regions,
+      pinStatuses: pins,
+      userLocations: locations,
+    });
   });
 });

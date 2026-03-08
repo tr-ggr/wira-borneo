@@ -13,8 +13,18 @@ import {
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiProperty,
+  ApiPropertyOptional,
   ApiTags,
 } from '@nestjs/swagger';
+import type {
+  OpenMeteoForecastDailyVariable,
+  OpenMeteoForecastHourlyVariable,
+  OpenMeteoModel,
+  OpenMeteoPrecipitationUnit,
+  OpenMeteoTemperatureUnit,
+  OpenMeteoWindSpeedUnit,
+} from '../../../providers/open-meteo/open-meteo.types';
 import { AuthSessionGuard } from '../../auth/auth-session.guard';
 import { AuthSessionParam } from '../../auth/auth-session.decorator';
 import type { AuthSession } from '../../auth/auth.types';
@@ -53,6 +63,61 @@ class WarningPromptSuggestionDto {
   radiusKm?: number;
 }
 
+class AdminWeatherForecastDto {
+  @ApiProperty()
+  latitude!: number;
+
+  @ApiProperty()
+  longitude!: number;
+
+  @ApiPropertyOptional()
+  hourly?: string;
+
+  @ApiPropertyOptional()
+  daily?: string;
+
+  @ApiPropertyOptional()
+  models?: string;
+
+  @ApiPropertyOptional()
+  timezone?: string;
+
+  @ApiPropertyOptional()
+  current_weather?: boolean;
+
+  @ApiPropertyOptional()
+  temperature_unit?: OpenMeteoTemperatureUnit;
+
+  @ApiPropertyOptional()
+  wind_speed_unit?: OpenMeteoWindSpeedUnit;
+
+  @ApiPropertyOptional()
+  precipitation_unit?: OpenMeteoPrecipitationUnit;
+
+  @ApiPropertyOptional()
+  past_days?: 1 | 2;
+
+  @ApiPropertyOptional()
+  forecast_days?: number;
+}
+
+class AdminWeatherGeocodingDto {
+  @ApiProperty()
+  name!: string;
+
+  @ApiPropertyOptional()
+  count?: number;
+
+  @ApiPropertyOptional()
+  language?: string;
+
+  @ApiPropertyOptional()
+  countryCode?: string;
+
+  @ApiPropertyOptional()
+  format?: 'json' | 'protobuf';
+}
+
 const VOLUNTEER_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 const HAZARD_TYPES = ['FLOOD', 'TYPHOON', 'EARTHQUAKE', 'AFTERSHOCK'] as const;
 const SEVERITY_LEVELS = ['LOW', 'MODERATE', 'HIGH', 'CRITICAL'] as const;
@@ -84,7 +149,7 @@ function assertReviewVolunteerDto(input: ReviewVolunteerDto): void {
     !VOLUNTEER_STATUSES.includes(
       input.nextStatus as (typeof VOLUNTEER_STATUSES)[number],
     ) ||
-    input.nextStatus === 'PENDING'
+    (input.nextStatus as string) === 'PENDING'
   ) {
     throw new BadRequestException(
       'nextStatus must be APPROVED or REJECTED.',
@@ -168,6 +233,67 @@ function assertWarningPromptSuggestionDto(
   }
 }
 
+function assertAdminWeatherForecastDto(input: any): void {
+  if (!input || typeof input !== 'object') {
+    throw new BadRequestException('Query parameters are required.');
+  }
+  if (input.latitude == null || isNaN(Number(input.latitude))) {
+    throw new BadRequestException('latitude is required and must be a number.');
+  }
+  if (input.longitude == null || isNaN(Number(input.longitude))) {
+    throw new BadRequestException('longitude is required and must be a number.');
+  }
+
+  if (input.forecast_days != null) {
+    const parsed = Number(input.forecast_days);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 16) {
+      throw new BadRequestException(
+        'forecast_days must be an integer between 1 and 16.',
+      );
+    }
+  }
+
+  if (input.past_days != null) {
+    const parsed = Number(input.past_days);
+    if (parsed !== 1 && parsed !== 2) {
+      throw new BadRequestException('past_days must be 1 or 2.');
+    }
+  }
+}
+
+function assertAdminWeatherGeocodingDto(input: any): void {
+  if (!input || typeof input !== 'object') {
+    throw new BadRequestException('Query parameters are required.');
+  }
+  if (!input.name || typeof input.name !== 'string') {
+    throw new BadRequestException('name is required and must be a string.');
+  }
+
+  if (input.count != null) {
+    const parsed = Number(input.count);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 100) {
+      throw new BadRequestException('count must be an integer between 1 and 100.');
+    }
+  }
+
+  if (input.format != null && input.format !== 'json' && input.format !== 'protobuf') {
+    throw new BadRequestException("format must be either 'json' or 'protobuf'.");
+  }
+}
+
+function parseCsv<T extends string>(value?: string): T[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean) as T[];
+
+  return parsed.length > 0 ? parsed : undefined;
+}
+
 @ApiTags('admin-operations')
 @ApiBearerAuth()
 @UseGuards(AuthSessionGuard, AdminRoleGuard)
@@ -246,5 +372,57 @@ export class AdminOperationsController {
   getPromptSuggestion(@Body() body: WarningPromptSuggestionDto) {
     assertWarningPromptSuggestionDto(body);
     return this.adminService.getWarningPromptSuggestion(body);
+  }
+
+  @Get('users/locations')
+  @ApiOperation({ summary: 'Get all user location snapshots for the map' })
+  async userLocations() {
+    return this.adminService.getUserLocations();
+  }
+
+  @Get('map/overview')
+  @ApiOperation({ summary: 'Get complete admin map datasets in one response' })
+  async mapOverview() {
+    return this.adminService.getMapOverview();
+  }
+
+  @Get('weather/forecast')
+  @ApiOperation({ summary: 'Get weather forecast from Open-Meteo for the map' })
+  async weatherForecast(@Query() query: AdminWeatherForecastDto) {
+    assertAdminWeatherForecastDto(query);
+
+    return this.adminService.getWeatherForecast({
+      latitude: Number(query.latitude),
+      longitude: Number(query.longitude),
+      hourly: parseCsv<OpenMeteoForecastHourlyVariable>(query.hourly),
+      daily: parseCsv<OpenMeteoForecastDailyVariable>(query.daily),
+      models: query.models as OpenMeteoModel | undefined,
+      timezone: query.timezone,
+      current_weather:
+        query.current_weather === undefined
+          ? undefined
+          : String(query.current_weather) === 'true',
+      temperature_unit: query.temperature_unit,
+      wind_speed_unit: query.wind_speed_unit,
+      precipitation_unit: query.precipitation_unit,
+      past_days:
+        query.past_days === undefined ? undefined : (Number(query.past_days) as 1 | 2),
+      forecast_days:
+        query.forecast_days === undefined ? undefined : Number(query.forecast_days),
+    });
+  }
+
+  @Get('weather/geocoding')
+  @ApiOperation({ summary: 'Search locations using Open-Meteo geocoding' })
+  async weatherGeocoding(@Query() query: AdminWeatherGeocodingDto) {
+    assertAdminWeatherGeocodingDto(query);
+
+    return this.adminService.getWeatherGeocoding({
+      name: query.name,
+      count: query.count == null ? undefined : Number(query.count),
+      language: query.language,
+      countryCode: query.countryCode,
+      format: query.format,
+    });
   }
 }

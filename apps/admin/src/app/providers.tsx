@@ -1,7 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import axios from 'axios';
+import { setApiClientBaseUrl } from '@wira-borneo/api-client';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { AuthProvider } from '../lib/auth';
@@ -11,7 +11,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
   if (apiBaseUrl) {
-    axios.defaults.baseURL = apiBaseUrl;
+    setApiClientBaseUrl(apiBaseUrl);
   }
 
   return (
