@@ -23,6 +23,11 @@ model User {
   mapPinsReported            MapPinStatus[]               @relation("MapPinReporter")
   locationSnapshot           UserLocationSnapshot?
   evacuationRouteSuggestions EvacuationRouteSuggestion[]
+
+  role       String?   @default("user")
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
 }
 
 model Session {
@@ -35,6 +40,8 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
 
   @@index([userId])
 }

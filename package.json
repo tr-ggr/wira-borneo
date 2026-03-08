@@ -13,6 +13,9 @@
     "api:client:generate": "npm run generate -w @wira-borneo/api-client",
     "api:client:generate:check": "npm run generate:check -w @wira-borneo/api-client"
   },
+  "prisma": {
+    "seed": "ts-node apps/api/prisma/seed.ts"
+  },
   "private": true,
   "devDependencies": {
     "@babel/core": "^7.14.5",

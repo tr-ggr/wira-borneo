@@ -1,9 +1,8 @@
-import {
-  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import type { IncomingHttpHeaders } from 'node:http';
 import { getAuthRuntimeConfig } from '../../config/auth.config';
 import { PrismaService } from '../../core/database/database.service';
@@ -55,6 +54,11 @@ interface BetterAuthApi {
       image?: string | null;
     };
   } | null>;
+  admin: {
+    listUsers: (input: { query: any; headers: Headers }) => Promise<any>;
+    removeUser: (input: { body: { userId: string }; headers: Headers }) => Promise<any>;
+    setRole: (input: { body: { userId: string; role: string }; headers: Headers }) => Promise<any>;
+  };
 }
 
 interface BetterAuthRuntime {
@@ -73,9 +77,10 @@ export class AuthService {
     }
 
     this.authPromise = (async () => {
-      const [{ betterAuth }, { prismaAdapter }] = await Promise.all([
+      const [{ betterAuth }, { prismaAdapter }, { admin }] = await Promise.all([
         import('better-auth'),
         import('better-auth/adapters/prisma'),
+        import('better-auth/plugins'),
       ]);
 
       const config = getAuthRuntimeConfig();
@@ -87,7 +92,20 @@ export class AuthService {
         trustedOrigins: config.trustedOrigins,
         emailAndPassword: {
           enabled: true,
+          password: {
+            hash: async (password) => {
+              return await bcrypt.hash(password, 10);
+            },
+            verify: async ({ hash, password }) => {
+              return await bcrypt.compare(password, hash);
+            },
+          },
         },
+        plugins: [
+          admin({
+            adminUserIds: ['seed-user-admin'], // Initial admin ID from seed
+          }),
+        ],
       }) as BetterAuthRuntime;
     })();
 
