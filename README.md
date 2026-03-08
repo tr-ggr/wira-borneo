@@ -30,6 +30,17 @@ These targets are either [inferred automatically](https://nx.dev/concepts/inferr
 
 [More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 
+## Local Development URLs
+
+Use these defaults when running apps locally:
+
+- API: `http://localhost:3333/api`
+- Tracker: `http://localhost:4444`
+- Admin: `http://localhost:5555`
+- Mobile (web dev server): `http://localhost:6666`
+
+These ports are the default local development contract for contributors.
+
 ## Versioning and releasing
 
 To version and release the library use
@@ -172,9 +183,13 @@ session management.
 Configure these in `apps/api/.env`:
 
 - `AUTH_SECRET`: long random secret for token/cookie signing.
-- `AUTH_BASE_URL`: API origin (for local dev: `http://localhost:3000`).
+- `AUTH_BASE_URL`: API origin (for local dev: `http://localhost:3333`).
 - `AUTH_TRUSTED_ORIGINS` (optional): comma-separated origins allowed to send
 	credentialed auth requests.
+
+Example local trusted origins:
+
+- `AUTH_TRUSTED_ORIGINS="http://localhost:4444,http://localhost:5555,http://localhost:6666"`
 
 ### Auth endpoints
 

@@ -5,9 +5,9 @@ export interface AuthRuntimeConfig {
 }
 
 const DEFAULT_LOCAL_TRUSTED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:4200',
+  'http://localhost:4444',
+  'http://localhost:5555',
+  'http://localhost:6666',
 ];
 
 function requireEnv(name: string): string {
