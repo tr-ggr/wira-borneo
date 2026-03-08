@@ -1,240 +1,171 @@
-# Ticket Guidelines
+# Ticket Guidelines (Wira-Borneo)
 
-This document explains how to write and format tickets for the CIT-U Intramurals 2026 project.
+This guide defines how to write tickets in this monorepo.
 
-## When to Create a Ticket
+## Non-Negotiable Rules
 
-Create a ticket when you discover or plan:
-- A bug or unexpected behavior
-- A missing feature or user-facing capability
-- A refactoring need
-- A technical debt issue
-- A test case or edge case
+1. One ticket = one problem only.
+2. All tickets live in `tickets/`.
+3. Ticket content must be **<= 1000 characters total**.
+4. If it cannot fit, split into linked tickets.
+5. Use this stack context: Next.js apps (`admin`, `mobile`, `tracker`) + NestJS API + Prisma + generated API client.
 
-**One ticket per problem.** Each file should address a single, self-contained issue.
+## Character Limit Policy
 
-## Ticket Format
+- Scope: full `.md` file content in `tickets/*.md`.
+- Limit: `1000` characters max.
+- Enforcement: hard fail in pre-commit/CI.
+- No exceptions for `**[PRIORITY]**` or `**[CRITICAL]**`.
 
-All tickets should follow this standard structure:
+Recommended section budgets:
 
-### 1. Title (H1)
+- `Problem`: <= 280 chars
+- `Potentially Related Files`: <= 300 chars
+- `What to Fix`: <= 260 chars
+- `Acceptance Criteria`: <= 160 chars
 
-Clear, action-oriented title describing the problem or feature.
+### Hard-Fail Check (PowerShell)
 
-```markdown
-# Remove SPORTS link from Navbar
-
-# Implement Login/Register Feature
-
-# Add Daily Facebook Updates Banner to Home Page
+```powershell
+Get-ChildItem tickets -Filter *.md | ForEach-Object {
+	$content = Get-Content $_.FullName -Raw
+	if ($content.Length -gt 1000) {
+		Write-Error "Ticket '$($_.Name)' exceeds 1000 chars: $($content.Length)"
+		exit 1
+	}
+}
 ```
 
-### 2. Metadata (Optional)
+## Required Ticket Format
 
-For high-priority tickets, add priority marker:
-
-```markdown
-**[PRIORITY]**
-
-or
-
-**[CRITICAL]**
-```
-
-### 3. Problem Section (H2)
-
-Explain **why** this ticket exists. Describe:
-- What is broken or missing
-- Impact on users or development
-- Current state vs. desired state
-
-**Examples:**
+Use exactly these sections:
 
 ```markdown
-## Problem
+# <Area + action title>
 
-The navbar currently displays "Sports" and "Teams" links that should be removed 
-from the public navigation.
-
----
+**[PRIORITY]** or **[CRITICAL]** (optional)
 
 ## Problem
+<2-4 short sentences on current vs target state>
 
-Currently, the application has Supabase auth setup but no public login/register UI. 
-Users cannot create accounts.
-```
-
-### 4. Potentially Related Files (H2)
-
-List file paths that are relevant to this ticket. Include:
-- **Backend:** Server actions ([actions/X.ts]()), routes, migrations
-- **Frontend:** Components ([components/X/]()), hooks, utilities
-- **Database:** Schema files, migrations
-
-**Format:**
-
-```markdown
 ## Potentially Related Files
+- [link](../apps/...#Lx-Ly) - <why this file matters>
 
-- [components/public/navbar.tsx](../app/components/public/navbar.tsx) — Line 18–20: navLinks array
-- [app/(public)/sports/](../app/app/(public)/sports/) — Route page
-- [actions/sport.ts](../app/actions/sport.ts) — Server actions
-```
-
-**Guidelines:**
-- Use relative paths starting with `../app/` (from `/tickets/` directory)
-- Mention line numbers or sections for clarity
-- Include brief description of what's in each file
-
-### 5. What to Fix (H2)
-
-Ordered list of concrete implementation steps.
-
-```markdown
 ## What to Fix
+1. <specific change>
+2. <specific change>
+3. <specific change>
 
-1. Remove `/sports` and `/teams` from navLinks array in navbar.tsx
-2. Verify routes still accessible via direct URL
-3. Update mobile menu navigation
-4. Test navigation state preservation
-```
-
-### 6. Acceptance Criteria (H2)
-
-Testable conditions that define "done." Use narrative or bullet points.
-
-```markdown
 ## Acceptance Criteria
-
-- "Sports" link is not visible in desktop navbar
-- "Teams" link is not visible in mobile menu
-- Routes accessible via direct URL (no 404)
-- All navigation highlights work after change
+- <testable outcome>
+- <testable outcome>
+- <testable outcome>
 ```
+
+Constraints:
+
+- `Potentially Related Files`: 3-5 items max.
+- `What to Fix`: 3-7 items max.
+- `Acceptance Criteria`: 3-5 bullets max.
+- No sub-bullets.
+- If character count is tight, keep links but omit line anchors.
 
 ## File Naming
 
-Use this format:
+Pattern:
 
-```
+```text
 {area}-{feature}.md
 ```
 
-Where `{area}` is:
-- `client-` (public-facing UI, client components)
-- `admin-` (admin dashboard)
-- `utils-` (utilities, seeds, scripts, infrastructure)
+Area prefixes:
 
-**Examples:**
+- `admin-` for `apps/admin` work
+- `client-` for `apps/mobile` or `apps/tracker` user-facing flows
+- `utils-` for infra, scripts, migrations, generated client, cross-cutting work
 
+Examples:
+
+```text
+admin-warning-system-enhancements.md
+client-help-request-system.md
+utils-llm-server-integration.md
 ```
-client-navbar-remove-sports-teams.md
-client-general-login-register.md
-admin-general-pdf-export.md
-utils-seed-script.md
-```
 
-## Code References
+## Codebase-Specific File References
 
-When referencing code:
-- Use markdown links: `[filename.tsx](../app/path/to/filename.tsx)`
-- Include line numbers: `../app/components/navbar.tsx#L18-L20`
-- Avoid backticks for file paths in display text
-- Describe what's in the file (not a code dump)
+Use links relative to `tickets/`.
 
-## Tips for Writing Good Tickets
+Backend (NestJS API):
 
-### ✅ DO
+- Controllers: `../apps/api/src/modules/**/**.controller.ts`
+- Services: `../apps/api/src/modules/**/**.service.ts`
+- Modules: `../apps/api/src/modules/**/**.module.ts`
+- DTOs: `../apps/api/src/modules/**/dto/*.ts`
+- Auth guards/decorators: `../apps/api/src/modules/auth/`
 
-- Focus on **one problem** per ticket
-- Be **specific** about files and line numbers
-- List implementation steps in logical order
-- Write acceptance criteria that are **testable**
-- Mention breaking changes or dependencies
-- Reference related tickets if applicable
+Database (Prisma):
 
-### ❌ DON'T
+- Auth models: `../apps/api/prisma/schema/models/auth.prisma`
+- Domain models: `../apps/api/prisma/schema/models/disaster-response.prisma`
+- Migrations: `../apps/api/prisma/migrations/`
 
-- Mix multiple unrelated features
-- Use vague language ("fix stuff", "improve UI")
-- Assume technical context (explain the "why")
-- Forget acceptance criteria
-- Include full code snippets (link instead)
-- Create tickets for questions (ask in chat first)
+Frontend (Next.js app router):
 
-## Priority Levels
+- Route pages: `../apps/<app>/src/app/**/page.tsx`
+- App layout/providers: `../apps/<app>/src/app/layout.tsx`, `../apps/<app>/src/app/providers.tsx`
+- Screen/components: `../apps/mobile/src/components/`, `../apps/admin/src/app/`
 
-Use these markers for urgent tickets:
+Generated client:
 
-| Level | Marker | Usage |
-|-------|--------|-------|
-| High | `**[PRIORITY]**` | Feature blocks other work, critical for MVP |
-| Critical | `**[CRITICAL]**` | Production bug, system broken |
-| Normal | (no marker) | Standard feature or bug |
+- `../packages/api-client/src/generated/` is generated; do not request manual edits there.
 
-## Example Ticket
+## Ticket Author Checklist
+
+Before submitting, confirm:
+
+- Scope is single-problem and fits under 1000 chars.
+- Roles/permissions are explicit (`public`, `authenticated`, `admin`, `volunteer`, etc.).
+- DB impact is explicit (no schema change vs new migration).
+- API impact is explicit (endpoint/DTO change or no API change).
+- If API changes, ticket states that client regeneration is required (`npm run api:client:generate`).
+- Acceptance criteria are testable and concise.
+
+## Reviewer Checklist
+
+Reject ticket if any is true:
+
+- Over 1000 chars.
+- Missing required sections.
+- Vague fixes (for example: "improve UI", "fix backend").
+- Missing path references for touched layers.
+- Multiple unrelated problems in one ticket.
+
+## Example (Compliant, Short)
 
 ```markdown
-# Implement Community Post Approval System
+# Admin export damage report PDF
 
 ## Problem
-
-Community posts are currently visible without moderation. Admins have no way to 
-review or reject inappropriate discussions.
+Admin map shows bounding-box damage data but has no PDF export for LGU reporting.
 
 ## Potentially Related Files
-
-- [supabase/migrations/20260216100000_add_threads.sql](../app/supabase/migrations/20260216100000_add_threads.sql)
-- [actions/thread.ts](../app/actions/thread.ts)
-- [components/admin/](../app/components/admin/)
+- [page.tsx](../apps/admin/src/app/map/page.tsx) - export trigger UI
+- [admin-operations.service.ts](../apps/api/src/modules/disaster-response/admin-operations/admin-operations.service.ts) - report data
+- [disaster-response.prisma](../apps/api/prisma/schema/models/disaster-response.prisma) - data model
 
 ## What to Fix
-
-1. Add `is_approved` boolean to threads table
-2. Make new threads default to `is_approved = false`
-3. Create approval server actions
-4. Build admin moderation panel
-5. Filter unapproved from public view
+1. Add admin PDF export endpoint using selected bounds
+2. Generate PDF with totals and timestamp
+3. Connect map export button to endpoint
+4. Restrict export to admin session
 
 ## Acceptance Criteria
-
-- Admin can see pending threads in dashboard
-- Unapproved posts hidden from public
-- Admin can approve/reject posts
-- Notification shows pending count
+- Admin can export PDF for selected bounds
+- PDF includes totals and timestamp
+- Non-admin cannot export
 ```
-
-## Directory Structure
-
-All tickets live in `/tickets/` at workspace root:
-
-```
-cituintramurals-2026/
-├── tickets/
-│   ├── client-navbar-remove-sports-teams.md
-│   ├── client-general-login-register.md
-│   ├── admin-general-pdf-export.md
-│   ├── utils-seed-script.md
-│   └── ...
-├── ticketsguideline.md          (this file)
-└── ...
-```
-
-## Project Context
-
-Remember that this project uses:
-
-- **Framework:** Next.js 16 + React 19 (App Router)
-- **Language:** TypeScript (strict)
-- **Database:** Supabase (PostgreSQL) + Prisma ORM
-- **State:** TanStack React Query
-- **Forms:** React Hook Form + Zod
-- **UI:** shadcn/ui + Tailwind CSS v4
-- **Components:** Atomic pattern (ui/ for primitives, components/ for composites)
-- **Server Logic:** Next.js server actions (not tRPC/API routes)
-
-See [CLAUDE.md](../CLAUDE.md) for full tech stack and conventions.
 
 ---
 
-**Last updated:** February 21, 2026
+**Last updated:** March 9, 2026
