@@ -9,7 +9,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
     "prisma:migrate:status": "prisma migrate status --config prisma.config.ts",
     "prisma:migrate-dev": "prisma migrate dev --config prisma.config.ts",
-    "prisma:reset": "prisma migrate reset --config prisma.config.ts",
+    "prisma:reset": "prisma migrate reset --config prisma.config.ts --force",
     "prisma:seed": "prisma db seed --config prisma.config.ts"
   },
   "nx": {
