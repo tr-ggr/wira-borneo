@@ -1,5 +1,5 @@
-import { Logger } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
+
 
 export function httpRequestLoggerMiddleware(
   req: Request,
@@ -7,12 +7,15 @@ export function httpRequestLoggerMiddleware(
   next: NextFunction,
 ): void {
   const startedAt = Date.now();
+  const { method, originalUrl } = req;
 
   res.on('finish', () => {
     const durationMs = Date.now() - startedAt;
-    Logger.log(
-      `${req.method} ${req.originalUrl} ${res.statusCode} - ${durationMs}ms`,
-      'HTTP',
+    const { statusCode } = res;
+    
+    // Log with clear prefix for visibility
+    console.log(
+      `[HTTP] ${method} ${originalUrl} ${statusCode} - ${durationMs}ms`,
     );
   });
 

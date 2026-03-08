@@ -12,6 +12,12 @@ export default defineConfig({
       client: 'react-query',
       clean: true,
       prettier: true,
+      override: {
+        mutator: {
+          path: './src/custom-instance.ts',
+          name: 'customInstance',
+        },
+      },
     },
   },
 });
