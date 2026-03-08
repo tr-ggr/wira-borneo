@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import { setApiClientBaseUrl } from '@wira-borneo/api-client';
 
 const NATIVE_ANDROID_EMULATOR_BASE = 'http://10.0.2.2:5555';
 const NATIVE_LOCALHOST_BASE = 'http://localhost:5555';
@@ -26,7 +27,9 @@ export const resolveApiBaseUrl = () => {
 };
 
 export const configureApiClient = () => {
-  axios.defaults.baseURL = resolveApiBaseUrl();
+  const baseUrl = resolveApiBaseUrl();
+  setApiClientBaseUrl(baseUrl);
+  axios.defaults.baseURL = baseUrl;
   axios.defaults.withCredentials = true;
   axios.defaults.timeout = 10000;
 };
