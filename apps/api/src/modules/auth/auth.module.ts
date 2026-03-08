@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../prisma/prisma.module';
+import { DatabaseModule } from '../../core/database/database.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthSessionGuard } from './auth-session.guard';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [DatabaseModule],
   controllers: [AuthController],
   providers: [AuthService, AuthSessionGuard],
   exports: [AuthService, AuthSessionGuard],

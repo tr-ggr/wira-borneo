@@ -5,8 +5,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { IncomingHttpHeaders } from 'node:http';
-import { PrismaService } from '../prisma/prisma.service';
-import { getAuthRuntimeConfig } from './auth.config';
+import { getAuthRuntimeConfig } from '../../config/auth.config';
+import { PrismaService } from '../../core/database/database.service';
 import {
   type AuthSession,
   type AuthenticatedUser,

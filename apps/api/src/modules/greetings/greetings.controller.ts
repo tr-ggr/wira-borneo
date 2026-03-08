@@ -1,21 +1,24 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthSessionParam } from './auth/auth-session.decorator';
-import { AuthSessionGuard } from './auth/auth-session.guard';
-import type { AuthSession } from './auth/auth.types';
-import { AppService } from './app.service';
-import { MessageResponseDto, ProtectedDataResponseDto } from './dto/app.dto';
+import { AuthSessionParam } from '../auth/auth-session.decorator';
+import { AuthSessionGuard } from '../auth/auth-session.guard';
+import type { AuthSession } from '../auth/auth.types';
+import { GreetingsService } from './greetings.service';
+import {
+  MessageResponseDto,
+  ProtectedDataResponseDto,
+} from './dto/greetings.dto';
 
 @Controller()
 @ApiTags('app')
-export class AppController {
-  constructor(private readonly appService: AppService) {}
+export class GreetingsController {
+  constructor(private readonly greetingsService: GreetingsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get a greeting message' })
   @ApiOkResponse({ type: MessageResponseDto })
   async getData(): Promise<MessageResponseDto> {
-    return this.appService.getData();
+    return this.greetingsService.getData();
   }
 
   @Get('protected')

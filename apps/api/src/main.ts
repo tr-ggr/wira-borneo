@@ -7,8 +7,8 @@ import 'dotenv/config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app/app.module';
-import { getAuthRuntimeConfig } from './app/auth/auth.config';
+import { AppModule } from './app.module';
+import { getAuthRuntimeConfig } from './config/auth.config';
 
 async function bootstrap() {
   if (!process.env.DATABASE_URL) {

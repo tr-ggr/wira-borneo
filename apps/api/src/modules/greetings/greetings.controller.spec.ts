@@ -1,22 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthSessionGuard } from './auth/auth-session.guard';
-import { AuthService } from './auth/auth.service';
+import { AuthSessionGuard } from '../auth/auth-session.guard';
+import { AuthService } from '../auth/auth.service';
+import { GreetingsController } from './greetings.controller';
+import { GreetingsService } from './greetings.service';
 
-describe('AppController', () => {
+describe('GreetingsController', () => {
   let app: TestingModule;
-  const appServiceMock = {
+  const greetingsServiceMock = {
     getData: jest.fn().mockResolvedValue({ message: 'Hello API' }),
   };
 
   beforeAll(async () => {
     app = await Test.createTestingModule({
-      controllers: [AppController],
+      controllers: [GreetingsController],
       providers: [
         {
-          provide: AppService,
-          useValue: appServiceMock,
+          provide: GreetingsService,
+          useValue: greetingsServiceMock,
         },
         {
           provide: AuthSessionGuard,
@@ -32,8 +32,8 @@ describe('AppController', () => {
 
   describe('getData', () => {
     it('should return "Hello API"', async () => {
-      const appController = app.get<AppController>(AppController);
-      await expect(appController.getData()).resolves.toEqual({
+      const controller = app.get<GreetingsController>(GreetingsController);
+      await expect(controller.getData()).resolves.toEqual({
         message: 'Hello API',
       });
     });
