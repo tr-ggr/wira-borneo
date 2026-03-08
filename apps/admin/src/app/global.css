@@ -329,21 +329,122 @@ a {
   display: grid;
   grid-template-columns: 300px 1fr 300px;
   gap: 16px;
+  align-items: stretch;
 }
 
 .map-card {
   min-height: 560px;
 }
 
+.map-layout-large {
+  grid-template-columns: 320px minmax(0, 1fr) 320px;
+}
+
+.map-card-large {
+  min-height: calc(100vh - 240px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.legend-hazard {
+  background: #1b5fa8;
+}
+
+.legend-pin {
+  background: #2e7d32;
+}
+
+.legend-user {
+  background: #1c4e80;
+}
+
 .map-canvas {
+  width: 100%;
   min-height: 520px;
+  flex: 1;
   border-radius: 14px;
   overflow: hidden;
+  background: #dfe8ef;
 }
 
 .sidebar {
   max-height: 560px;
   overflow: auto;
+}
+
+.filter-sidebar,
+.details-sidebar {
+  max-height: calc(100vh - 240px);
+}
+
+.map-mobile-actions {
+  display: none;
+  margin-bottom: 12px;
+}
+
+.map-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.map-overlay {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  background: rgba(245, 240, 232, 0.95);
+  border: 1px solid rgba(13, 79, 92, 0.2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  max-width: 320px;
+  z-index: 5;
+}
+
+.map-overlay-warning {
+  border-color: rgba(166, 124, 82, 0.5);
+}
+
+.map-drawer-backdrop {
+  display: none;
+}
+
+.map-toolbar-row {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.map-search-form {
+  margin-bottom: 10px;
+}
+
+.map-search-results {
+  margin-top: 8px;
 }
 
 .error-text {
@@ -378,6 +479,45 @@ a {
 
   .map-layout {
     grid-template-columns: 1fr;
+    position: relative;
+  }
+
+  .map-mobile-actions {
+    display: block;
+  }
+
+  .filter-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(86vw, 340px);
+    max-height: none;
+    border-radius: 0;
+    z-index: 60;
+    transform: translateX(-104%);
+    transition: transform 180ms ease;
+  }
+
+  .filter-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .details-sidebar {
+    max-height: none;
+  }
+
+  .map-card-large {
+    min-height: 72vh;
+  }
+
+  .map-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.22);
+    z-index: 50;
   }
 }
 

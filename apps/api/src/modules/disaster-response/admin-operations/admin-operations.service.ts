@@ -1,12 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/database.service';
 import { RiskIntelligenceService } from '../risk-intelligence/risk-intelligence.service';
+import { OpenMeteoService } from '../../../providers/open-meteo/open-meteo.service';
+import {
+  OpenMeteoForecastParams,
+  OpenMeteoGeocodingParams,
+} from '../../../providers/open-meteo/open-meteo.types';
 
 @Injectable()
 export class AdminOperationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly riskService: RiskIntelligenceService,
+    private readonly openMeteoService: OpenMeteoService,
   ) {}
 
   async listVolunteerApplications(status?: 'PENDING' | 'APPROVED' | 'REJECTED') {
@@ -169,5 +175,33 @@ export class AdminOperationsService {
       reminder:
         'Review and send manually to avoid false alarms. Warning dispatch is never automatic.',
     };
+  }
+
+  async getUserLocations() {
+    return this.prisma.userLocationSnapshot.findMany({
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async getMapOverview() {
+    const [vulnerableRegions, pinStatuses, userLocations] = await Promise.all([
+      this.getVulnerableRegions(),
+      this.getPinStatuses(),
+      this.getUserLocations(),
+    ]);
+
+    return {
+      vulnerableRegions,
+      pinStatuses,
+      userLocations,
+    };
+  }
+
+  async getWeatherForecast(params: OpenMeteoForecastParams) {
+    return this.openMeteoService.getForecast(params);
+  }
+
+  async getWeatherGeocoding(params: OpenMeteoGeocodingParams) {
+    return this.openMeteoService.getGeocoding(params);
   }
 }
