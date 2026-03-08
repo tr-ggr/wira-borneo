@@ -3,11 +3,18 @@
  * This is only a minimal backend to get started.
  */
 
+import 'dotenv/config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      'Missing required environment variable DATABASE_URL. Copy apps/api/.env.example and set a valid PostgreSQL connection string.',
+    );
+  }
+
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
