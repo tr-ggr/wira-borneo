@@ -13,7 +13,7 @@
   },
   "scripts": {
     "openapi:sync": "node ./scripts/sync-openapi.mjs",
-    "generate": "npm run openapi:sync && orval --config ./orval.config.cjs",
+    "generate": "npm run openapi:sync && orval --config ./orval.config.ts",
     "generate:check": "npm run generate && git diff --exit-code -- src/generated"
   },
   "dependencies": {

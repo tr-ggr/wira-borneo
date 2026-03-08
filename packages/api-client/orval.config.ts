@@ -1,4 +1,7 @@
-module.exports = {
+// orval.config.ts
+import { defineConfig } from 'orval';
+
+export default defineConfig({
   wiraApi: {
     input: {
       target: './openapi/openapi.json',
@@ -11,4 +14,4 @@ module.exports = {
       prettier: true,
     },
   },
-};
+});
