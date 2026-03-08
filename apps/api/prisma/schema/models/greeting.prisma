@@ -1,7 +1,0 @@
-model Greeting {
-  id        Int      @id @default(autoincrement())
-  key       String   @unique
-  message   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
