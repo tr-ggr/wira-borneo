@@ -431,10 +431,12 @@ export function OperationsMapPage() {
     const userLayer = new VectorLayer({ source: userSourceRef.current });
     const helpLayer = new VectorLayer({ source: helpSourceRef.current });
 
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3333';
+
     const buildingLayer = new VectorTileLayer({
       source: new VectorTileSource({
         format: new MVT(),
-        url: '/api/risk/tiles/{z}/{x}/{y}.mvt',
+        url: `${apiBaseUrl}/api/risk/tiles/{z}/{x}/{y}.mvt`,
         maxZoom: 14,
       }),
       style: new Style({
