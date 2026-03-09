@@ -1,16 +1,25 @@
 'use client';
 
-import React from 'react';
-import { User, Settings, LogOut, Bell, Shield, Heart, ChevronRight } from 'lucide-react';
-import { useAuthControllerGetSession, useAuthControllerSignOut, getAuthControllerGetSessionQueryKey } from '@wira-borneo/api-client';
+import React, { useState } from 'react';
+import { User, Settings, LogOut, Bell, Shield, Heart, ChevronRight, Home, MapPin } from 'lucide-react';
+import {
+  useAuthControllerGetSession,
+  useAuthControllerSignOut,
+  getAuthControllerGetSessionQueryKey,
+  useVolunteersControllerGetStatus,
+  useVolunteersControllerSetHome,
+  getVolunteersControllerGetStatusQueryKey,
+} from '@wira-borneo/api-client';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function Profile() {
   const { data: session } = useAuthControllerGetSession();
+  const { data: volunteerStatus } = useVolunteersControllerGetStatus();
   const queryClient = useQueryClient();
   const router = useRouter();
-  
+  const [settingHome, setSettingHome] = useState(false);
+
   const signOut = useAuthControllerSignOut({
     mutation: {
       onSuccess: () => {
@@ -20,6 +29,38 @@ export default function Profile() {
       }
     }
   });
+
+  const setHome = useVolunteersControllerSetHome({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getVolunteersControllerGetStatusQueryKey() });
+      },
+    },
+  });
+
+  const status = volunteerStatus as { profile?: { baseLatitude?: number; baseLongitude?: number } } | null | undefined;
+  const profile = status?.profile;
+  const hasHome = profile?.baseLatitude != null && profile?.baseLongitude != null;
+
+  const handleSetHome = () => {
+    if (!('geolocation' in navigator)) {
+      return;
+    }
+    setSettingHome(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setHome.mutate({
+          data: {
+            baseLatitude: pos.coords.latitude,
+            baseLongitude: pos.coords.longitude,
+          },
+        });
+        setSettingHome(false);
+      },
+      () => setSettingHome(false),
+      { enableHighAccuracy: true }
+    );
+  };
 
   const menuItems = [
     { icon: Bell, label: 'Notification Settings', color: 'text-wira-gold' },
@@ -45,6 +86,32 @@ export default function Profile() {
           <p className="text-xs font-body text-wira-earth/60 font-medium uppercase tracking-widest">{session?.user?.email}</p>
         </div>
       </header>
+
+      {profile && (
+        <div className="wira-card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Home size={20} className="text-wira-teal" />
+            <span className="text-sm font-body font-bold wira-card-title">Volunteer Home</span>
+          </div>
+          {hasHome ? (
+            <p className="text-xs font-body text-wira-earth/80 flex items-center gap-1.5">
+              <MapPin size={14} />
+              Set at {profile.baseLatitude?.toFixed(5)}, {profile.baseLongitude?.toFixed(5)}
+            </p>
+          ) : (
+            <p className="text-xs font-body text-wira-earth/60">Not set</p>
+          )}
+          <button
+            type="button"
+            onClick={handleSetHome}
+            disabled={settingHome || setHome.isPending}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-wira-teal/10 text-wira-teal font-body font-bold text-sm hover:bg-wira-teal/20 disabled:opacity-50 transition-colors"
+          >
+            <MapPin size={16} />
+            {settingHome || setHome.isPending ? 'Setting…' : hasHome ? 'Update Home Location' : 'Set Home'}
+          </button>
+        </div>
+      )}
 
       <div className="space-y-3">
         {menuItems.map((item, i) => (
