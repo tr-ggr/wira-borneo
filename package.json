@@ -8,6 +8,7 @@
     "admin": "nx run admin:dev",
     "api": "nx serve api",
     "android": "nx run-android mobile",
+    "llm-server": "nx serve llm-server",
     "migrate": "nx run api:prisma-migrate-dev",
     "prisma:validate": "nx run api:prisma-validate",
     "prisma:format": "nx run api:prisma-format",
