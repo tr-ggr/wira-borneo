@@ -35,6 +35,17 @@ interface HelpRequest {
   hazardType: string;
 }
 
+export interface EvacuationSite {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  type?: string | null;
+  capacity?: string | null;
+  population?: string | null;
+  source?: string | null;
+}
+
 interface MapComponentProps {
   weatherLocation?: { latitude: number; longitude: number };
   vulnerableRegions?: RiskRegion[];
@@ -42,9 +53,36 @@ interface MapComponentProps {
   focusedHelpRequestId?: string | null;
   mapFocus?: { latitude: number; longitude: number } | null;
   homeLocation?: { latitude: number; longitude: number } | null;
+  evacuationSites?: EvacuationSite[];
+  onEvacClick?: (evac: EvacuationSite) => void;
   /** OSRM route geometry (GeoJSON [lon, lat][]). When set, drawn instead of straight line. */
   routeGeometry?: [number, number][] | null;
   routeEta?: { durationSeconds: number; distanceMeters: number } | null;
+}
+
+/** Returns SVG markup for the evac marker based on type so not all look like churches. */
+function getEvacIconSvg(type: string | null | undefined): string {
+  const t = (type ?? '').toLowerCase();
+  const fill = '#0D9488';
+  const stroke = 'white';
+  switch (t) {
+    case 'campus':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4V6z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><path d="M8 10h8M8 14h5" stroke="${stroke}" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+    case 'church':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><path d="M12 8v8M9 11h6" stroke="${stroke}" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+    case 'shelter':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><path d="M9 22V12h6v10" fill="${stroke}" opacity="0.5"/></svg>`;
+    case 'hospital':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><path d="M12 7v10M8 11h8" stroke="${stroke}" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+    case 'sports center':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><path d="M12 5v14M5 12h14" stroke="${stroke}" stroke-width="1.2"/></svg>`;
+    case 'barangay hall':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h6v16H4V4zM14 4h6v8h-6V4z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><path d="M7 8h2M7 11h2M16 6h2" stroke="${stroke}" stroke-width="1"/></svg>`;
+    case 'field':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="12" rx="10" ry="8" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="${stroke}" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+    default:
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><circle cx="12" cy="11" r="3" fill="${stroke}" opacity="0.9"/></svg>`;
+  }
 }
 
 export default function MapComponent({ 
@@ -54,6 +92,8 @@ export default function MapComponent({
   focusedHelpRequestId,
   mapFocus,
   homeLocation,
+  evacuationSites = [],
+  onEvacClick,
   routeGeometry,
 }: MapComponentProps) {
   const mapElement = useRef<HTMLDivElement>(null);
@@ -61,8 +101,11 @@ export default function MapComponent({
   const regionsLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const helpLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const homeLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const evacLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const routeLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const userLocationRef = useRef<HTMLDivElement>(null);
+  const onEvacClickRef = useRef(onEvacClick);
+  onEvacClickRef.current = onEvacClick;
   const [error, setError] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<number[] | null>(null);
 
@@ -171,7 +214,22 @@ export default function MapComponent({
     map.addLayer(homeLayer);
     homeLayerRef.current = homeLayer;
 
-    // 7. Setup Route Layer
+    // 7. Setup Evacuation Sites Layer
+    const evacSource = new VectorSource();
+    const evacLayer = new VectorLayer({
+      source: evacSource,
+      zIndex: 7,
+    });
+    map.addLayer(evacLayer);
+    evacLayerRef.current = evacLayer;
+
+    map.on('click', (evt) => {
+      const hit = map.forEachFeatureAtPixel(evt.pixel, (f) => f);
+      const evac = hit?.get('evac') as EvacuationSite | undefined;
+      if (evac && onEvacClickRef.current) onEvacClickRef.current(evac);
+    });
+
+    // 8. Setup Route Layer
     const routeSource = new VectorSource();
     const routeLayer = new VectorLayer({
       source: routeSource,
@@ -304,6 +362,30 @@ export default function MapComponent({
     }));
     source.addFeature(feature);
   }, [homeLocation]);
+
+  // Update Evacuation Sites layer (icon per type so not all look like churches)
+  useEffect(() => {
+    if (!evacLayerRef.current) return;
+    const source = evacLayerRef.current.getSource();
+    if (!source) return;
+    source.clear();
+    if (!evacuationSites.length) return;
+    const features = evacuationSites.map((evac) => {
+      const point = new Point(fromLonLat([evac.longitude, evac.latitude]));
+      const feature = new Feature({ geometry: point });
+      feature.set('evac', evac);
+      const svg = getEvacIconSvg(evac.type);
+      feature.setStyle(new Style({
+        image: new Icon({
+          src: `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`,
+          scale: 1,
+          anchor: [0.5, 1],
+        })
+      }));
+      return feature;
+    });
+    source.addFeatures(features);
+  }, [evacuationSites]);
 
   // Update Route / Navigation Path (OSRM road route or straight line)
   useEffect(() => {

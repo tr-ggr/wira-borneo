@@ -8,8 +8,9 @@ import {
   useHelpRequestsControllerListOpen,
   useVolunteersControllerGetStatus,
   useRoutingControllerGetRoute,
+  useEvacuationControllerAreas,
 } from '@wira-borneo/api-client';
-import MapComponent from '../MapComponent';
+import MapComponent, { type EvacuationSite } from '../MapComponent';
 import { X, Navigation2, MapPin, Home } from 'lucide-react';
 
 export type RouteOrigin = 'current' | 'home';
@@ -17,11 +18,21 @@ export type RouteOrigin = 'current' | 'home';
 export default function MapForecast({
   focusedHelpRequestId,
   mapFocus,
+  mapFocusLabel,
+  mapFocusEvac,
+  setMapFocus,
+  setMapFocusLabel,
+  setMapFocusEvac,
   showAllPins,
   onCancelRouting
 }: {
   focusedHelpRequestId: string | null;
   mapFocus: { latitude: number, longitude: number } | null;
+  mapFocusLabel: string | null;
+  mapFocusEvac: EvacuationSite | null;
+  setMapFocus: (loc: { latitude: number; longitude: number } | null) => void;
+  setMapFocusLabel: (label: string | null) => void;
+  setMapFocusEvac: (evac: EvacuationSite | null) => void;
   showAllPins: boolean;
   onCancelRouting: () => void;
 }) {
@@ -77,6 +88,20 @@ export default function MapForecast({
       ? { durationSeconds: routeData.durationSeconds, distanceMeters: routeData.distanceMeters }
       : null;
 
+  const { data: areasData } = useEvacuationControllerAreas();
+  const areasList = Array.isArray(areasData) ? areasData : [];
+  type AreaItem = { id: string; name: string; latitude: number; longitude: number; type?: string | null; capacity?: string | null; population?: string | null; source?: string | null };
+  const evacuationSites: EvacuationSite[] = areasList.map((a: AreaItem) => ({
+    id: a.id,
+    name: a.name,
+    latitude: a.latitude,
+    longitude: a.longitude,
+    type: a.type ?? null,
+    capacity: a.capacity ?? null,
+    population: a.population ?? null,
+    source: a.source ?? null,
+  }));
+
   return (
     <div className="space-y-6 animate-fade-in">
       <header className="space-y-1">
@@ -96,6 +121,12 @@ export default function MapForecast({
           focusedHelpRequestId={focusedHelpRequestId}
           mapFocus={mapFocus}
           homeLocation={homeLocation}
+          evacuationSites={evacuationSites}
+          onEvacClick={(evac) => {
+            setMapFocus({ latitude: evac.latitude, longitude: evac.longitude });
+            setMapFocusLabel('Evacuation site');
+            setMapFocusEvac(evac);
+          }}
           routeGeometry={routeGeometry}
           routeEta={routeEta}
         />
@@ -108,7 +139,15 @@ export default function MapForecast({
                   <Navigation2 size={20} className="text-wira-gold animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-display font-bold uppercase tracking-widest text-wira-gold">Navigating to Help Pin</p>
+                  <p className="text-[10px] font-display font-bold uppercase tracking-widest text-wira-gold">
+                    Navigating to {mapFocusLabel ?? 'destination'}
+                    {mapFocusEvac?.type && ` · ${mapFocusEvac.type}`}
+                  </p>
+                  {(mapFocusEvac?.capacity ?? mapFocusEvac?.source) && (
+                    <p className="text-[10px] font-body text-wira-earth/60 mt-0.5">
+                      {[mapFocusEvac?.capacity && `Capacity ${mapFocusEvac.capacity}`, mapFocusEvac?.source].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
                   <p className="text-xs font-body text-wira-earth/60">
                     Route from {routeOrigin === 'home' ? 'home' : 'current location'}
                   </p>

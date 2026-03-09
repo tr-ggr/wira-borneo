@@ -186,6 +186,10 @@ model EvacuationArea {
   longitude        Float
   address          String?
   region           String?
+  type             String?                     // e.g. Campus, Church, Shelter, Hospital
+  capacity         String?                     // e.g. ">500", "100-250"
+  population       String?                     // e.g. pupil count from raw
+  source           String?                     // e.g. "Department of Education, Philippines"
   isActive         Boolean                     @default(true)
   warningLinks     WarningEventEvacuationArea[]
   routeSuggestions EvacuationRouteSuggestion[]

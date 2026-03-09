@@ -17,7 +17,7 @@ export class RiskIntelligenceService implements OnModuleInit {
 
   async onModuleInit() {
     const requiredIso3Codes = ['brn', 'idn', 'mys', 'phl', 'sgp'];
-    const missingFiles = [];
+    const missingFiles: string[] = [];
 
     for (const iso3 of requiredIso3Codes) {
       const filename = `vulnerability_${iso3}.geojson`;
@@ -35,18 +35,13 @@ export class RiskIntelligenceService implements OnModuleInit {
     }
 
     if (missingFiles.length > 0) {
-      this.logger.error(
-        `CRITICAL: Missing required GeoJSON files: ${missingFiles.join(', ')}`,
+      this.logger.warn(
+        `Missing GeoJSON building profiles: ${missingFiles.join(', ')}. ` +
+          'Vulnerable-regions features may be limited. Add files to apps/api/geojson/building_profiles/',
       );
-      this.logger.error(
-        'The application cannot start without these files in apps/api/geojson/building_profiles/',
-      );
-      throw new Error(
-        `Missing mandatory GeoJSON files at startup: ${missingFiles.join(', ')}`,
-      );
+    } else {
+      this.logger.log('GeoJSON building profiles validated successfully.');
     }
-
-    this.logger.log('GeoJSON building profiles validated successfully.');
   }
 
   async getForecast(latitude: number, longitude: number, forecastDays = 3) {
