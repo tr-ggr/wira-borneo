@@ -9,7 +9,6 @@
     "api": "nx serve api",
     "android": "nx run-android mobile",
     "migrate": "nx run api:prisma-migrate-dev",
-
     "prisma:validate": "nx run api:prisma-validate",
     "prisma:format": "nx run api:prisma-format",
     "prisma:generate": "nx run api:prisma-generate",
@@ -18,7 +17,6 @@
     "prisma:migrate-dev": "nx run api:prisma-migrate-dev",
     "prisma:reset": "nx run api:prisma-reset",
     "prisma:seed": "nx run api:prisma-seed",
-
     "api:openapi:sync": "npm run openapi:sync -w @wira-borneo/api-client",
     "api:client:generate": "npm run generate -w @wira-borneo/api-client",
     "api:client:generate:check": "npm run generate:check -w @wira-borneo/api-client"
@@ -47,6 +45,7 @@
     "@nx/vite": "22.5.4",
     "@nx/web": "22.5.4",
     "@nx/webpack": "22.5.4",
+    "@nxlv/python": "^22.1.1",
     "@playwright/test": "^1.36.0",
     "@react-native-community/cli": "~18.0.0",
     "@react-native-community/cli-platform-android": "~18.0.0",
