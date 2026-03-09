@@ -124,3 +124,8 @@ yarn-error.log
 vite.config.*.timestamp*
 
 generated/
+
+# AI guides
+CLAUDE.md
+SKILLS.md
+wira-borneo-prd.md
