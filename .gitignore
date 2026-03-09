@@ -184,3 +184,5 @@ uv.lock
 # Nx App Test Outputs
 apps/coverage/
 apps/reports/
+
+geojson/

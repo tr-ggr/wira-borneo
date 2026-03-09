@@ -53,4 +53,19 @@ export class RiskIntelligenceController {
   async getVulnerableRegions() {
     return this.riskService.getVulnerableRegions();
   }
+  @Get('building-profiles')
+  @ApiOperation({ summary: 'Get building profiles (GeoJSON) for a location' })
+  @ApiQuery({ name: 'latitude', type: Number })
+  @ApiQuery({ name: 'longitude', type: Number })
+  async getBuildingProfiles(
+    @Query('latitude') latitude: string,
+    @Query('longitude') longitude: string,
+  ) {
+    const coords = parseLatitudeLongitude({ latitude, longitude });
+
+    return this.riskService.getBuildingProfileGeoJson(
+      coords.latitude,
+      coords.longitude,
+    );
+  }
 }
