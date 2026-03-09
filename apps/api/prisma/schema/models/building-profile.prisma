@@ -1,0 +1,13 @@
+model BuildingProfile {
+  id        String   @id @default(cuid())
+  iso3      String
+  // PostGIS geometry column. Prisma requires raw SQL/Unsupported for this.
+  // We use SRID 4326 (WGS 84) for GeoJSON compatibility.
+  geom      Unsupported("geometry(Geometry, 4326)")
+  properties Json?
+  createdAt DateTime @default(now())
+
+  @@index([iso3])
+  // Note: We will manually add a GIST index on geom in the migration SQL
+  @@map("building_profiles")
+}
