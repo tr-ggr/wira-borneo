@@ -33,19 +33,19 @@ export default function MainApp() {
     );
   }
 
-  if (!session?.user) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-wira-ivory px-6 wira-batik-bg overflow-hidden">
-        {authView === 'login' ? (
-          <Login onToggleRegister={() => setAuthView('register')} />
-        ) : (
-          <Register onToggleLogin={() => setAuthView('login')} />
-        )}
-      </div>
-    );
-  }
-
   const renderScreen = () => {
+    if (!session?.user && !['/', '/warnings', '/family'].includes(currentScreen)) {
+       return (
+        <div className="flex flex-1 flex-col items-center justify-center bg-wira-ivory px-6 wira-batik-bg overflow-hidden py-10">
+          {authView === 'login' ? (
+            <Login onToggleRegister={() => setAuthView('register')} />
+          ) : (
+            <Register onToggleLogin={() => setAuthView('login')} />
+          )}
+        </div>
+      );
+    }
+
     switch (currentScreen) {
       case '/': return (
         <MapForecast 
