@@ -388,6 +388,7 @@ export const ModelName = {
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
+  BuildingProfile: 'BuildingProfile',
   Family: 'Family',
   FamilyMember: 'FamilyMember',
   UserLocationSnapshot: 'UserLocationSnapshot',
@@ -404,8 +405,7 @@ export const ModelName = {
   WarningEventLog: 'WarningEventLog',
   VolunteerDecisionLog: 'VolunteerDecisionLog',
   HelpRequestEvent: 'HelpRequestEvent',
-  MapPinStatus: 'MapPinStatus',
-  BuildingProfile: 'BuildingProfile'
+  MapPinStatus: 'MapPinStatus'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -421,7 +421,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "family" | "familyMember" | "userLocationSnapshot" | "riskRegionSnapshot" | "volunteerApplication" | "volunteerProfile" | "warningEvent" | "warningTargetArea" | "evacuationArea" | "warningEventEvacuationArea" | "evacuationRouteSuggestion" | "helpRequest" | "helpAssignment" | "warningEventLog" | "volunteerDecisionLog" | "helpRequestEvent" | "mapPinStatus" | "buildingProfile"
+    modelProps: "user" | "session" | "account" | "verification" | "buildingProfile" | "family" | "familyMember" | "userLocationSnapshot" | "riskRegionSnapshot" | "volunteerApplication" | "volunteerProfile" | "warningEvent" | "warningTargetArea" | "evacuationArea" | "warningEventEvacuationArea" | "evacuationRouteSuggestion" | "helpRequest" | "helpAssignment" | "warningEventLog" | "volunteerDecisionLog" | "helpRequestEvent" | "mapPinStatus"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -718,6 +718,64 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.VerificationCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.VerificationCountAggregateOutputType> | number
+        }
+      }
+    }
+    BuildingProfile: {
+      payload: Prisma.$BuildingProfilePayload<ExtArgs>
+      fields: Prisma.BuildingProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BuildingProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BuildingProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.BuildingProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BuildingProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        findMany: {
+          args: Prisma.BuildingProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.BuildingProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        update: {
+          args: Prisma.BuildingProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.BuildingProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BuildingProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BuildingProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>[]
+        }
+        aggregate: {
+          args: Prisma.BuildingProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBuildingProfile>
+        }
+        groupBy: {
+          args: Prisma.BuildingProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BuildingProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BuildingProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BuildingProfileCountAggregateOutputType> | number
         }
       }
     }
@@ -1979,64 +2037,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    BuildingProfile: {
-      payload: Prisma.$BuildingProfilePayload<ExtArgs>
-      fields: Prisma.BuildingProfileFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.BuildingProfileFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.BuildingProfileFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
-        }
-        findFirst: {
-          args: Prisma.BuildingProfileFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.BuildingProfileFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
-        }
-        findMany: {
-          args: Prisma.BuildingProfileFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>[]
-        }
-        delete: {
-          args: Prisma.BuildingProfileDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
-        }
-        update: {
-          args: Prisma.BuildingProfileUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
-        }
-        deleteMany: {
-          args: Prisma.BuildingProfileDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.BuildingProfileUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.BuildingProfileUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>[]
-        }
-        aggregate: {
-          args: Prisma.BuildingProfileAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateBuildingProfile>
-        }
-        groupBy: {
-          args: Prisma.BuildingProfileGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.BuildingProfileGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.BuildingProfileCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.BuildingProfileCountAggregateOutputType> | number
-        }
-      }
-    }
   }
 } & {
   other: {
@@ -2137,6 +2137,16 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const BuildingProfileScalarFieldEnum = {
+  id: 'id',
+  iso3: 'iso3',
+  properties: 'properties',
+  createdAt: 'createdAt'
+} as const
+
+export type BuildingProfileScalarFieldEnum = (typeof BuildingProfileScalarFieldEnum)[keyof typeof BuildingProfileScalarFieldEnum]
 
 
 export const FamilyScalarFieldEnum = {
@@ -2378,17 +2388,6 @@ export const MapPinStatusScalarFieldEnum = {
 export type MapPinStatusScalarFieldEnum = (typeof MapPinStatusScalarFieldEnum)[keyof typeof MapPinStatusScalarFieldEnum]
 
 
-export const BuildingProfileScalarFieldEnum = {
-  id: 'id',
-  osmId: 'osmId',
-  countryIso3: 'countryIso3',
-  properties: 'properties',
-  createdAt: 'createdAt'
-} as const
-
-export type BuildingProfileScalarFieldEnum = (typeof BuildingProfileScalarFieldEnum)[keyof typeof BuildingProfileScalarFieldEnum]
-
-
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2397,11 +2396,12 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
-export const JsonNullValueInput = {
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
   JsonNull: JsonNull
 } as const
 
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -2467,6 +2467,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -2609,20 +2623,6 @@ export type EnumPinStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
 export type ListEnumPinStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PinStatus[]'>
     
 
-
-/**
- * Reference to a field of type 'Json'
- */
-export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-/**
- * Reference to a field of type 'QueryMode'
- */
-export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
-    
-
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -2722,6 +2722,7 @@ export type GlobalOmitConfig = {
   session?: Prisma.SessionOmit
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit
+  buildingProfile?: Prisma.BuildingProfileOmit
   family?: Prisma.FamilyOmit
   familyMember?: Prisma.FamilyMemberOmit
   userLocationSnapshot?: Prisma.UserLocationSnapshotOmit
@@ -2739,7 +2740,6 @@ export type GlobalOmitConfig = {
   volunteerDecisionLog?: Prisma.VolunteerDecisionLogOmit
   helpRequestEvent?: Prisma.HelpRequestEventOmit
   mapPinStatus?: Prisma.MapPinStatusOmit
-  buildingProfile?: Prisma.BuildingProfileOmit
 }
 
 /* Types for Logging */

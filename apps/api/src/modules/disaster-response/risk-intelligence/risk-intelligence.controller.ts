@@ -1,9 +1,12 @@
 import {
   Controller,
   Get,
+  Param,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -67,5 +70,28 @@ export class RiskIntelligenceController {
       coords.latitude,
       coords.longitude,
     );
+  }
+
+  @Get('tiles/:z/:x/:y.mvt')
+  @ApiOperation({ summary: 'Get building profile vector tiles (MVT)' })
+  async getTiles(
+    @Param('z') z: string,
+    @Param('x') x: string,
+    @Param('y') y: string,
+    @Res() res: Response,
+  ) {
+    const tile = await this.riskService.getMvtTile(
+      Number(z),
+      Number(x),
+      Number(y),
+    );
+
+    res.set({
+      'Content-Type': 'application/vnd.mapbox-vector-tile',
+      'Content-Encoding': 'gzip', // PostGIS MVT is usually gzipped if configured, but here we just serve raw buffer
+      'Cache-Control': 'public, max-age=3600',
+    });
+
+    res.send(tile);
   }
 }

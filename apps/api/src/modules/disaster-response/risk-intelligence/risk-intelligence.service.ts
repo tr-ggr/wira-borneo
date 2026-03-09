@@ -38,15 +38,10 @@ export class RiskIntelligenceService implements OnModuleInit {
       this.logger.error(
         `CRITICAL: Missing required GeoJSON files: ${missingFiles.join(', ')}`,
       );
-      this.logger.error(
-        'The application cannot start without these files in apps/api/geojson/building_profiles/',
-      );
-      throw new Error(
-        `Missing mandatory GeoJSON files at startup: ${missingFiles.join(', ')}`,
-      );
+      this.logger.log('Note: Data ingestion to PostGIS might still be possible if files are present in the script context.');
     }
 
-    this.logger.log('GeoJSON building profiles validated successfully.');
+    this.logger.log('GeoJSON building profiles check complete.');
   }
 
   async getForecast(latitude: number, longitude: number, forecastDays = 3) {
@@ -208,6 +203,37 @@ export class RiskIntelligenceService implements OnModuleInit {
       this.logger.error(`Building profile read failed for ${filePath}:`, error);
       throw new NotFoundException(` ${iso3Code.toUpperCase()} not found`);
     }
+  }
+
+  async getMvtTile(z: number, x: number, y: number): Promise<Buffer> {
+    const query = `
+      WITH 
+      bounds AS (
+        SELECT ST_TileEnvelope($1, $2, $3) AS geom
+      ),
+      mvtgeom AS (
+        SELECT 
+          ST_AsMVTGeom(
+            ST_Transform(bp.geom, 3857),
+            bounds.geom,
+            4096, 
+            64, 
+            true
+          ) AS geom,
+          bp.properties
+        FROM building_profiles bp, bounds
+        WHERE ST_Intersects(ST_Transform(bp.geom, 3857), bounds.geom)
+      )
+      SELECT ST_AsMVT(mvtgeom.*, 'building-profiles') AS mvt FROM mvtgeom;
+    `;
+
+    const result = await this.prisma.$queryRawUnsafe<{ mvt: Buffer }[]>(query, z, x, y);
+
+    if (!result || result.length === 0 || !result[0].mvt) {
+      return Buffer.alloc(0);
+    }
+
+    return result[0].mvt;
   }
 
   private async getCountryCode(

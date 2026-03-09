@@ -55,6 +55,7 @@ export const ModelName = {
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
+  BuildingProfile: 'BuildingProfile',
   Family: 'Family',
   FamilyMember: 'FamilyMember',
   UserLocationSnapshot: 'UserLocationSnapshot',
@@ -71,8 +72,7 @@ export const ModelName = {
   WarningEventLog: 'WarningEventLog',
   VolunteerDecisionLog: 'VolunteerDecisionLog',
   HelpRequestEvent: 'HelpRequestEvent',
-  MapPinStatus: 'MapPinStatus',
-  BuildingProfile: 'BuildingProfile'
+  MapPinStatus: 'MapPinStatus'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -152,6 +152,16 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const BuildingProfileScalarFieldEnum = {
+  id: 'id',
+  iso3: 'iso3',
+  properties: 'properties',
+  createdAt: 'createdAt'
+} as const
+
+export type BuildingProfileScalarFieldEnum = (typeof BuildingProfileScalarFieldEnum)[keyof typeof BuildingProfileScalarFieldEnum]
 
 
 export const FamilyScalarFieldEnum = {
@@ -393,17 +403,6 @@ export const MapPinStatusScalarFieldEnum = {
 export type MapPinStatusScalarFieldEnum = (typeof MapPinStatusScalarFieldEnum)[keyof typeof MapPinStatusScalarFieldEnum]
 
 
-export const BuildingProfileScalarFieldEnum = {
-  id: 'id',
-  osmId: 'osmId',
-  countryIso3: 'countryIso3',
-  properties: 'properties',
-  createdAt: 'createdAt'
-} as const
-
-export type BuildingProfileScalarFieldEnum = (typeof BuildingProfileScalarFieldEnum)[keyof typeof BuildingProfileScalarFieldEnum]
-
-
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -412,11 +411,12 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
-export const JsonNullValueInput = {
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
   JsonNull: JsonNull
 } as const
 
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
