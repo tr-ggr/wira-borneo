@@ -4,8 +4,10 @@ import {
   useAdminOperationsControllerMapOverview,
   useAdminOperationsControllerWeatherForecast,
   useAdminOperationsControllerWeatherGeocoding,
+  useRiskIntelligenceControllerGetBuildingProfiles,
 } from '@wira-borneo/api-client';
 import Feature from 'ol/Feature';
+import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { boundingExtent, createEmpty, extend as extendExtent, isEmpty } from 'ol/extent';
@@ -190,6 +192,7 @@ export function OperationsMapPage() {
   const pinSourceRef = useRef(new VectorSource());
   const userSourceRef = useRef(new VectorSource());
   const helpSourceRef = useRef(new VectorSource());
+  const buildingSourceRef = useRef(new VectorSource());
   const aseanExtentRef = useRef(toAseanExtentProjection());
   const firstFitDoneRef = useRef(false);
   const filteredPinsRef = useRef<PinStatus[]>([]);
@@ -212,7 +215,7 @@ export function OperationsMapPage() {
     RECENT: true,
     STALE: true,
   });
-  const [urgencyFilter, setUrgencyFilter] = useState<Record<string, boolean>>({
+  const [urgencyFilter] = useState<Record<string, boolean>>({
     LOW: true,
     MEDIUM: true,
     HIGH: true,
@@ -226,6 +229,7 @@ export function OperationsMapPage() {
   const [geocodeQuery, setGeocodeQuery] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [viewBuildingProfiles, setViewBuildingProfiles] = useState(false);
 
   const overviewQuery = useAdminOperationsControllerMapOverview({
     query: {
@@ -260,6 +264,18 @@ export function OperationsMapPage() {
       query: {
         enabled: Boolean(geocodeQuery),
         select: (response) => toGeocodingResults(response),
+      },
+    },
+  );
+
+  const buildingProfilesQuery = useRiskIntelligenceControllerGetBuildingProfiles(
+    {
+      latitude: selectedCoords?.[1] ?? 0,
+      longitude: selectedCoords?.[0] ?? 0,
+    },
+    {
+      query: {
+        enabled: viewBuildingProfiles && Boolean(selectedCoords),
       },
     },
   );
@@ -422,6 +438,7 @@ export function OperationsMapPage() {
     const pinLayer = new VectorLayer({ source: pinSourceRef.current });
     const userLayer = new VectorLayer({ source: userSourceRef.current });
     const helpLayer = new VectorLayer({ source: helpSourceRef.current });
+    const buildingLayer = new VectorLayer({ source: buildingSourceRef.current });
 
     const view = new View({
       center: fromLonLat(ASEAN_CENTER_LON_LAT),
@@ -435,6 +452,7 @@ export function OperationsMapPage() {
       target: targetElement,
       layers: [
         new TileLayer({ source: new OSM() }),
+        buildingLayer,
         hazardLayer,
         pinLayer,
         userLayer,
@@ -660,6 +678,31 @@ export function OperationsMapPage() {
       source.addFeature(feature);
     });
   }, [filteredHelpRequests]);
+ 
+  useEffect(() => {
+    const source = buildingSourceRef.current;
+    source.clear();
+ 
+    if (!viewBuildingProfiles || !buildingProfilesQuery.data) {
+      return;
+    }
+ 
+    const geojsonFormat = new GeoJSON({
+      dataProjection: 'EPSG:4326',
+      featureProjection: 'EPSG:3857',
+    });
+ 
+    const features = geojsonFormat.readFeatures(buildingProfilesQuery.data);
+    features.forEach((feature) => {
+      feature.setStyle(
+        new Style({
+          stroke: new Stroke({ color: '#E53935', width: 2 }),
+          fill: new Fill({ color: 'rgba(229, 57, 53, 0.4)' }),
+        }),
+      );
+    });
+    source.addFeatures(features);
+  }, [viewBuildingProfiles, buildingProfilesQuery.data]);
 
   return (
     <section className="page-shell">
@@ -683,6 +726,17 @@ export function OperationsMapPage() {
 
       <div className="map-layout map-layout-large">
         <aside className={`card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
+          <h2 className="card-title">Risk & Intelligence</h2>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={viewBuildingProfiles}
+              onChange={(event) => setViewBuildingProfiles(event.target.checked)}
+            />
+            <span>View Building Profiles (Overlay)</span>
+          </label>
+          <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
+ 
           <h2 className="card-title">Hazard Layers</h2>
           {Object.keys(hazardFilter).map((key) => (
             <label className="checkbox-row" key={key}>
