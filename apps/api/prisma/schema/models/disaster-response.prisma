@@ -55,6 +55,12 @@ enum PinStatus {
   RESOLVED
 }
 
+enum PinReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Family {
   id          String         @id @default(cuid())
   name        String
@@ -309,19 +315,26 @@ model HelpRequestEvent {
 }
 
 model MapPinStatus {
-  id          String      @id @default(cuid())
-  title       String
-  hazardType  HazardType
-  status      PinStatus   @default(OPEN)
-  priority    Int         @default(1)
-  latitude    Float
-  longitude   Float
-  region      String?
-  note        String?
-  reporterId  String?
-  reportedAt  DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  reporter    User?       @relation("MapPinReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  id            String          @id @default(cuid())
+  title         String
+  hazardType    HazardType
+  status        PinStatus       @default(OPEN)
+  priority      Int             @default(1)
+  latitude      Float
+  longitude     Float
+  region        String?
+  note          String?
+  photoUrl      String?
+  photoKey      String?
+  reporterId    String?
+  reportedAt    DateTime        @default(now())
+  reviewedById  String?
+  reviewedAt    DateTime?
+  reviewNote    String?
+  reviewStatus  PinReviewStatus?
+  updatedAt     DateTime        @updatedAt
+  reporter      User?           @relation("MapPinReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reviewedBy    User?           @relation("MapPinReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status, hazardType, priority])
   @@index([region])

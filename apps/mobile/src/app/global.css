@@ -64,5 +64,38 @@
   .wira-btn-emergency {
     @apply w-full bg-status-critical hover:bg-red-700 active:scale-95 text-white font-body font-bold text-lg uppercase tracking-wide px-6 py-4 rounded-xl transition-all duration-150 min-h-[56px] shadow-lg shadow-status-critical/30;
   }
+
+  /* Form and nav contrast: readable on light backgrounds */
+  .form-back-link {
+    color: var(--color-wira-earth-brown);
+    @apply text-xs font-display font-bold uppercase tracking-widest;
+  }
+  .form-back-link:hover {
+    color: var(--color-wira-deep-teal);
+  }
+
+  .form-label {
+    color: var(--color-wira-earth-brown);
+    @apply text-xs font-display font-bold uppercase tracking-widest;
+  }
+
+  .form-hint {
+    color: var(--color-wira-earth-brown);
+    opacity: 0.88;
+    @apply text-[10px] font-body;
+  }
+
+  .form-input-placeholder::placeholder {
+    color: var(--color-wira-earth-brown);
+    opacity: 0.7;
+  }
+
+  .nav-inactive {
+    color: var(--color-wira-earth-brown);
+    @apply font-body font-bold;
+  }
+  .nav-inactive:hover {
+    color: var(--color-wira-deep-teal);
+  }
 }
 

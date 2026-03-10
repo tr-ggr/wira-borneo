@@ -7,7 +7,7 @@ import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import Feature from 'ol/Feature';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, toLonLat } from 'ol/proj';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import { Fill, Stroke, Style } from 'ol/style';
@@ -58,6 +58,8 @@ interface MapComponentProps {
   /** OSRM route geometry (GeoJSON [lon, lat][]). When set, drawn instead of straight line. */
   routeGeometry?: [number, number][] | null;
   routeEta?: { durationSeconds: number; distanceMeters: number } | null;
+  /** When set, map click returns lat/lon for location picker (e.g. hazard pin / help request). */
+  onMapClick?: (latitude: number, longitude: number) => void;
 }
 
 /** Returns SVG markup for the evac marker based on type so not all look like churches. */
@@ -95,6 +97,7 @@ export default function MapComponent({
   evacuationSites = [],
   onEvacClick,
   routeGeometry,
+  onMapClick,
 }: MapComponentProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
@@ -106,6 +109,8 @@ export default function MapComponent({
   const userLocationRef = useRef<HTMLDivElement>(null);
   const onEvacClickRef = useRef(onEvacClick);
   onEvacClickRef.current = onEvacClick;
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
   const [error, setError] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<number[] | null>(null);
 
@@ -224,6 +229,14 @@ export default function MapComponent({
     evacLayerRef.current = evacLayer;
 
     map.on('click', (evt) => {
+      if (onMapClickRef.current) {
+        const coord = map.getCoordinateFromPixel(evt.pixel);
+        if (coord) {
+          const [lon, lat] = toLonLat(coord);
+          onMapClickRef.current(lat, lon);
+        }
+        return;
+      }
       const hit = map.forEachFeatureAtPixel(evt.pixel, (f) => f);
       const evac = hit?.get('evac') as EvacuationSite | undefined;
       if (evac && onEvacClickRef.current) onEvacClickRef.current(evac);

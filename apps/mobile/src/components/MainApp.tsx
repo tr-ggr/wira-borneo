@@ -25,6 +25,10 @@ export default function MainApp() {
   const [mapFocusEvac, setMapFocusEvac] = useState<EvacuationSite | null>(null); // evac site when destination is an evac
   const [showAllPins, setShowAllPins] = useState(true); // Default to true as per request "Multiple help pins can also be enabled"
 
+  // Form location (help request / hazard pin): default from geolocation in HelpDashboard, user can reselect on map
+  const [formLocation, setFormLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [pickLocationFor, setPickLocationFor] = useState<'hazard' | 'help' | null>(null);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-wira-ivory">
@@ -66,6 +70,12 @@ export default function MainApp() {
             setMapFocusLabel(null);
             setMapFocusEvac(null);
           }}
+          pickLocationFor={pickLocationFor}
+          onLocationPicked={(latitude, longitude) => {
+            setFormLocation({ latitude, longitude });
+            setPickLocationFor(null);
+            setCurrentScreen('/help');
+          }}
         />
       );
       case '/warnings': return (
@@ -90,6 +100,11 @@ export default function MainApp() {
           }}
           showAllPins={showAllPins}
           onToggleShowAllPins={setShowAllPins}
+          formLocation={formLocation}
+          setFormLocation={setFormLocation}
+          pickLocationFor={pickLocationFor}
+          setPickLocationFor={setPickLocationFor}
+          onNavigateToMap={() => setCurrentScreen('/')}
         />
       );
       case '/profile': return <Profile />;
@@ -108,6 +123,12 @@ export default function MainApp() {
             setMapFocus(null);
             setMapFocusLabel(null);
             setMapFocusEvac(null);
+          }}
+          pickLocationFor={pickLocationFor}
+          onLocationPicked={(latitude, longitude) => {
+            setFormLocation({ latitude, longitude });
+            setPickLocationFor(null);
+            setCurrentScreen('/help');
           }}
         />
       );

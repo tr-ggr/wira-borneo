@@ -24,7 +24,9 @@ export default function MapForecast({
   setMapFocusLabel,
   setMapFocusEvac,
   showAllPins,
-  onCancelRouting
+  onCancelRouting,
+  pickLocationFor = null,
+  onLocationPicked,
 }: {
   focusedHelpRequestId: string | null;
   mapFocus: { latitude: number, longitude: number } | null;
@@ -35,6 +37,8 @@ export default function MapForecast({
   setMapFocusEvac: (evac: EvacuationSite | null) => void;
   showAllPins: boolean;
   onCancelRouting: () => void;
+  pickLocationFor?: 'hazard' | 'help' | null;
+  onLocationPicked?: (latitude: number, longitude: number) => void;
 }) {
   const [userLocation, setUserLocation] = React.useState<{ latitude: number, longitude: number } | null>(null);
   const [routeOrigin, setRouteOrigin] = React.useState<RouteOrigin>('current');
@@ -114,6 +118,16 @@ export default function MapForecast({
 
       {/* Map Interactive Component */}
       <div className="relative">
+        {pickLocationFor && (
+          <div className="absolute top-4 left-4 right-4 z-10 animate-slide-up">
+            <div className="bg-wira-teal text-white rounded-2xl p-4 shadow-xl border border-wira-teal-dark">
+              <p className="text-sm font-body font-semibold">Tap map to set location</p>
+              <p className="text-xs font-body opacity-90 mt-0.5">
+                {pickLocationFor === 'hazard' ? 'Where is the hazard?' : 'Where do you need help?'}
+              </p>
+            </div>
+          </div>
+        )}
         <MapComponent 
           weatherLocation={activeLoc} 
           vulnerableRegions={vulnerableRegions as any} 
@@ -129,9 +143,10 @@ export default function MapForecast({
           }}
           routeGeometry={routeGeometry}
           routeEta={routeEta}
+          onMapClick={pickLocationFor && onLocationPicked ? (lat, lon) => onLocationPicked(lat, lon) : undefined}
         />
 
-        {mapFocus && (
+        {mapFocus && !pickLocationFor && (
           <div className="absolute top-4 left-4 right-4 animate-slide-down space-y-2">
             <div className="bg-white/90 backdrop-blur-md border border-wira-teal/20 rounded-2xl p-4 shadow-xl flex items-center justify-between">
               <div className="flex items-center gap-3">

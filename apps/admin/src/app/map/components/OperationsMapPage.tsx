@@ -2,6 +2,7 @@
 
 import {
   useAdminOperationsControllerMapOverview,
+  useAdminOperationsControllerReviewPin,
   useAdminOperationsControllerWeatherForecast,
   useAdminOperationsControllerWeatherGeocoding,
   useRiskIntelligenceControllerGetFullDetail,
@@ -51,11 +52,16 @@ interface PinStatus {
   id: string;
   title: string;
   hazardType: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
-  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'BLOCKED';
+  status: 'OPEN' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'RESOLVED';
   latitude: number;
   longitude: number;
   region?: string | null;
   note?: string | null;
+  photoUrl?: string | null;
+  reporter?: { name: string } | null;
+  reviewedAt?: string | null;
+  reviewNote?: string | null;
+  reviewStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
   updatedAt?: string;
 }
 
@@ -238,8 +244,8 @@ export function OperationsMapPage() {
   });
   const [pinStatusFilter, setPinStatusFilter] = useState<Record<string, boolean>>({
     OPEN: true,
+    ACKNOWLEDGED: true,
     IN_PROGRESS: true,
-    BLOCKED: true,
     RESOLVED: false,
   });
   const [userFilter, setUserFilter] = useState<Record<string, boolean>>({
@@ -261,12 +267,23 @@ export function OperationsMapPage() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
   const [viewBuildingProfiles, setViewBuildingProfiles] = useState(false);
+  const [pinReviewReason, setPinReviewReason] = useState('');
   const [buildingProfilingBBox, setBuildingProfilingBBox] = useState<string>('92.0,-11.6,141.5,28.8');
   const [buildingProfilingCountry, setBuildingProfilingCountry] = useState('idn');
 
   const overviewQuery = useAdminOperationsControllerMapOverview({
     query: {
       select: (response) => toMapOverview(response),
+    },
+  });
+
+  const reviewPinMutation = useAdminOperationsControllerReviewPin({
+    mutation: {
+      onSuccess: () => {
+        overviewQuery.refetch();
+        setSelectedPin(null);
+        setPinReviewReason('');
+      },
     },
   });
 
@@ -734,7 +751,14 @@ export function OperationsMapPage() {
         new Style({
           image: new CircleStyle({
             radius: 8,
-            fill: new Fill({ color: pin.status === 'BLOCKED' ? '#D72B2B' : '#2E7D32' }),
+            fill: new Fill({
+              color:
+                pin.reviewStatus === 'REJECTED'
+                  ? '#D72B2B'
+                  : pin.reviewStatus === 'APPROVED'
+                    ? '#2E7D32'
+                    : '#1B5FA8',
+            }),
             stroke: new Stroke({ color: '#F5F0E8', width: 2 }),
           }),
         }),
@@ -1128,9 +1152,91 @@ export function OperationsMapPage() {
                 <dd>{selectedPin.region ?? 'Unknown'}</dd>
                 <dt>Hazard</dt>
                 <dd>{selectedPin.hazardType}</dd>
+                {selectedPin.reporter ? (
+                  <>
+                    <dt>Reporter</dt>
+                    <dd>{selectedPin.reporter.name}</dd>
+                  </>
+                ) : null}
+                {selectedPin.note ? (
+                  <>
+                    <dt>Note</dt>
+                    <dd className="small">{selectedPin.note}</dd>
+                  </>
+                ) : null}
                 <dt>Updated</dt>
                 <dd>{selectedPin.updatedAt ?? 'N/A'}</dd>
+                {selectedPin.reviewStatus ? (
+                  <>
+                    <dt>Review</dt>
+                    <dd>{selectedPin.reviewStatus}</dd>
+                    {selectedPin.reviewNote ? (
+                      <>
+                        <dt>Review note</dt>
+                        <dd className="small">{selectedPin.reviewNote}</dd>
+                      </>
+                    ) : null}
+                  </>
+                ) : null}
               </dl>
+              {selectedPin.photoUrl ? (
+                <div className="summary-grid" style={{ marginTop: '0.5rem' }}>
+                  <dt>Photo</dt>
+                  <dd>
+                    <img
+                      src={selectedPin.photoUrl}
+                      alt="Pin attachment"
+                      style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
+                    />
+                  </dd>
+                </div>
+              ) : null}
+              {selectedPin.reviewStatus !== 'APPROVED' && selectedPin.reviewStatus !== 'REJECTED' ? (
+                <div style={{ marginTop: '1rem' }}>
+                  <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>Review pin</h3>
+                  <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      className="field"
+                      placeholder="Reason (required for reject)"
+                      value={pinReviewReason}
+                      onChange={(e) => setPinReviewReason(e.target.value)}
+                      aria-label="Review reason"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-neutral"
+                      disabled={reviewPinMutation.isPending}
+                      onClick={() => {
+                        reviewPinMutation.mutate({
+                          id: selectedPin.id,
+                          data: { action: 'APPROVE' },
+                        });
+                      }}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-warning"
+                      disabled={reviewPinMutation.isPending || !pinReviewReason.trim()}
+                      onClick={() => {
+                        reviewPinMutation.mutate({
+                          id: selectedPin.id,
+                          data: { action: 'REJECT', reason: pinReviewReason.trim() },
+                        });
+                      }}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                  {reviewPinMutation.isError ? (
+                    <p className="error-text small" style={{ marginTop: '0.5rem' }}>
+                      Review failed. Please try again.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : null}
 

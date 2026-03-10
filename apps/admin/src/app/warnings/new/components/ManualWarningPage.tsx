@@ -47,7 +47,7 @@ export function ManualWarningPage() {
   const [selectedEvacuationAreas, setSelectedEvacuationAreas] = useState<string[]>([]);
 
   const areasQuery = useEvacuationControllerAreas({
-    query: { select: (response) => toAreas(response.data) },
+    query: { select: (response: unknown) => toAreas(response) },
   });
   const promptMutation = useAdminOperationsControllerGetPromptSuggestion();
   const createWarningMutation = useAdminOperationsControllerCreateWarning();
@@ -60,9 +60,10 @@ export function ManualWarningPage() {
       severity,
       startsAt: new Date(startsAt).toISOString(),
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
-      suggestedPrompt: promptMutation.data?.data
-        ? String((promptMutation.data.data as { prompt?: string }).prompt ?? '')
-        : undefined,
+      suggestedPrompt: (() => {
+        const d = promptMutation.data as unknown as { data?: { prompt?: string } } | undefined;
+        return d?.data ? String(d.data.prompt ?? '') : undefined;
+      })(),
       targets: [
         {
           areaName: target.areaName,
@@ -185,10 +186,9 @@ export function ManualWarningPage() {
                     },
                   },
                   {
-                    onSuccess: (response) => {
-                      const prompt = String(
-                        ((response.data as { prompt?: string } | undefined)?.prompt ?? ''),
-                      );
+                    onSuccess: (response: unknown) => {
+                      const d = response as { data?: { prompt?: string } } | undefined;
+                      const prompt = String(d?.data?.prompt ?? '');
                       if (prompt) {
                         setMessage(prompt);
                       }

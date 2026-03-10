@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../core/database/database.service';
 import { RiskIntelligenceService } from '../risk-intelligence/risk-intelligence.service';
 import { OpenMeteoService } from '../../../providers/open-meteo/open-meteo.service';
@@ -307,7 +311,39 @@ export class AdminOperationsService {
 
   async getPinStatuses() {
     return this.prisma.mapPinStatus.findMany({
+      include: {
+        reporter: { select: { name: true } },
+      },
       orderBy: [{ priority: 'desc' }, { updatedAt: 'desc' }],
+    });
+  }
+
+  async reviewPin(input: {
+    pinId: string;
+    reviewerId: string;
+    action: 'APPROVE' | 'REJECT';
+    reason?: string;
+  }) {
+    const pin = await this.prisma.mapPinStatus.findUnique({
+      where: { id: input.pinId },
+    });
+
+    if (!pin) {
+      throw new NotFoundException('Pin not found.');
+    }
+
+    const reviewStatus = input.action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+    const status = input.action === 'APPROVE' ? 'RESOLVED' : pin.status;
+
+    return this.prisma.mapPinStatus.update({
+      where: { id: input.pinId },
+      data: {
+        reviewedById: input.reviewerId,
+        reviewedAt: new Date(),
+        reviewNote: input.reason ?? undefined,
+        reviewStatus,
+        status,
+      },
     });
   }
 

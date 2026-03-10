@@ -7,9 +7,10 @@ import { useHelpRequestsControllerCreate } from '@wira-borneo/api-client';
 interface HelpRequestFormProps {
   initialLocation?: { latitude: number; longitude: number };
   onSuccess: () => void;
+  onChangeLocation?: () => void;
 }
 
-export default function HelpRequestForm({ initialLocation, onSuccess }: HelpRequestFormProps) {
+export default function HelpRequestForm({ initialLocation, onSuccess, onChangeLocation }: HelpRequestFormProps) {
   const [hazardType, setHazardType] = useState<'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK'>('FLOOD');
   const [urgency, setUrgency] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
   const [description, setDescription] = useState('');
@@ -46,7 +47,7 @@ export default function HelpRequestForm({ initialLocation, onSuccess }: HelpRequ
     <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
       <div className="space-y-4">
         <label className="block space-y-2">
-          <span className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/60">Type of Emergency</span>
+          <span className="form-label">Type of Emergency</span>
           <div className="grid grid-cols-2 gap-2">
             {(['FLOOD', 'TYPHOON', 'EARTHQUAKE', 'AFTERSHOCK'] as const).map((type) => (
               <button
@@ -62,7 +63,7 @@ export default function HelpRequestForm({ initialLocation, onSuccess }: HelpRequ
         </label>
 
         <label className="block space-y-2">
-          <span className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/60">Urgency Level</span>
+          <span className="form-label">Urgency Level</span>
           <div className="flex gap-2">
             {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const).map((level) => (
               <button
@@ -84,12 +85,12 @@ export default function HelpRequestForm({ initialLocation, onSuccess }: HelpRequ
         </label>
 
         <label className="block space-y-2">
-          <span className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/60">Description</span>
+          <span className="form-label">Description</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Tell us what's happening and what you need..."
-            className="w-full bg-wira-ivory-dark/30 border border-wira-ivory-dark rounded-xl p-4 text-sm font-body focus:outline-none focus:ring-2 focus:ring-wira-teal/20 min-h-[120px]"
+            className="form-input-placeholder w-full bg-wira-ivory-dark/30 border border-wira-ivory-dark rounded-xl p-4 text-sm font-body text-wira-night focus:outline-none focus:ring-2 focus:ring-wira-teal/20 min-h-[120px]"
             required
           />
         </label>
@@ -100,13 +101,17 @@ export default function HelpRequestForm({ initialLocation, onSuccess }: HelpRequ
                  <MapPin size={18} className="text-wira-teal" />
               </div>
               <div className="space-y-0.5">
-                 <p className="text-[11px] font-display font-bold uppercase tracking-wider text-wira-earth">Location Context</p>
-                 <p className="text-[10px] font-body text-wira-earth/60">
+                 <p className="form-label text-[11px] tracking-wider">Location Context</p>
+                 <p className="form-hint">
                     {initialLocation ? `${initialLocation.latitude.toFixed(4)}, ${initialLocation.longitude.toFixed(4)}` : 'Detecting...'}
                  </p>
               </div>
            </div>
-           <button type="button" className="text-[10px] font-bold text-wira-teal underline">Change</button>
+           {onChangeLocation && (
+             <button type="button" onClick={onChangeLocation} className="text-[10px] font-bold text-wira-teal underline shrink-0 hover:text-wira-teal-dark">
+               Change location
+             </button>
+           )}
         </div>
       </div>
 
