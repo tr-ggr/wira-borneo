@@ -16,6 +16,7 @@ module.exports = {
     '!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}',
     //     ...createGlobPatternsForDependencies(__dirname)
   ],
+  darkMode: 'class', // Added from your new requirements
   theme: {
     extend: {
       colors: {
@@ -70,5 +71,9 @@ module.exports = {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    // --- New Plugins ---
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/container-queries')
+  ],
 };

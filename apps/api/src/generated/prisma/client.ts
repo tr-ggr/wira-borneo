@@ -146,3 +146,23 @@ export type HelpRequestEvent = Prisma.HelpRequestEventModel
  * 
  */
 export type MapPinStatus = Prisma.MapPinStatusModel
+/**
+ * Model TrackerShipment
+ * 
+ */
+export type TrackerShipment = Prisma.TrackerShipmentModel
+/**
+ * Model TrackerStats
+ * 
+ */
+export type TrackerStats = Prisma.TrackerStatsModel
+/**
+ * Model TrackerReliefZone
+ * 
+ */
+export type TrackerReliefZone = Prisma.TrackerReliefZoneModel
+/**
+ * Model TrackerValidator
+ * 
+ */
+export type TrackerValidator = Prisma.TrackerValidatorModel

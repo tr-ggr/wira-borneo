@@ -404,7 +404,11 @@ export const ModelName = {
   WarningEventLog: 'WarningEventLog',
   VolunteerDecisionLog: 'VolunteerDecisionLog',
   HelpRequestEvent: 'HelpRequestEvent',
-  MapPinStatus: 'MapPinStatus'
+  MapPinStatus: 'MapPinStatus',
+  TrackerShipment: 'TrackerShipment',
+  TrackerStats: 'TrackerStats',
+  TrackerReliefZone: 'TrackerReliefZone',
+  TrackerValidator: 'TrackerValidator'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -420,7 +424,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "family" | "familyMember" | "userLocationSnapshot" | "riskRegionSnapshot" | "volunteerApplication" | "volunteerProfile" | "warningEvent" | "warningTargetArea" | "evacuationArea" | "warningEventEvacuationArea" | "evacuationRouteSuggestion" | "helpRequest" | "helpAssignment" | "warningEventLog" | "volunteerDecisionLog" | "helpRequestEvent" | "mapPinStatus"
+    modelProps: "user" | "session" | "account" | "verification" | "family" | "familyMember" | "userLocationSnapshot" | "riskRegionSnapshot" | "volunteerApplication" | "volunteerProfile" | "warningEvent" | "warningTargetArea" | "evacuationArea" | "warningEventEvacuationArea" | "evacuationRouteSuggestion" | "helpRequest" | "helpAssignment" | "warningEventLog" | "volunteerDecisionLog" | "helpRequestEvent" | "mapPinStatus" | "trackerShipment" | "trackerStats" | "trackerReliefZone" | "trackerValidator"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1978,6 +1982,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TrackerShipment: {
+      payload: Prisma.$TrackerShipmentPayload<ExtArgs>
+      fields: Prisma.TrackerShipmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TrackerShipmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TrackerShipmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>
+        }
+        findFirst: {
+          args: Prisma.TrackerShipmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TrackerShipmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>
+        }
+        findMany: {
+          args: Prisma.TrackerShipmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>[]
+        }
+        create: {
+          args: Prisma.TrackerShipmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>
+        }
+        createMany: {
+          args: Prisma.TrackerShipmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TrackerShipmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>[]
+        }
+        delete: {
+          args: Prisma.TrackerShipmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>
+        }
+        update: {
+          args: Prisma.TrackerShipmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.TrackerShipmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TrackerShipmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TrackerShipmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.TrackerShipmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerShipmentPayload>
+        }
+        aggregate: {
+          args: Prisma.TrackerShipmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTrackerShipment>
+        }
+        groupBy: {
+          args: Prisma.TrackerShipmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerShipmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TrackerShipmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerShipmentCountAggregateOutputType> | number
+        }
+      }
+    }
+    TrackerStats: {
+      payload: Prisma.$TrackerStatsPayload<ExtArgs>
+      fields: Prisma.TrackerStatsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TrackerStatsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TrackerStatsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>
+        }
+        findFirst: {
+          args: Prisma.TrackerStatsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TrackerStatsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>
+        }
+        findMany: {
+          args: Prisma.TrackerStatsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>[]
+        }
+        create: {
+          args: Prisma.TrackerStatsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>
+        }
+        createMany: {
+          args: Prisma.TrackerStatsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TrackerStatsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>[]
+        }
+        delete: {
+          args: Prisma.TrackerStatsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>
+        }
+        update: {
+          args: Prisma.TrackerStatsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>
+        }
+        deleteMany: {
+          args: Prisma.TrackerStatsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TrackerStatsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TrackerStatsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>[]
+        }
+        upsert: {
+          args: Prisma.TrackerStatsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerStatsPayload>
+        }
+        aggregate: {
+          args: Prisma.TrackerStatsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTrackerStats>
+        }
+        groupBy: {
+          args: Prisma.TrackerStatsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerStatsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TrackerStatsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerStatsCountAggregateOutputType> | number
+        }
+      }
+    }
+    TrackerReliefZone: {
+      payload: Prisma.$TrackerReliefZonePayload<ExtArgs>
+      fields: Prisma.TrackerReliefZoneFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TrackerReliefZoneFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TrackerReliefZoneFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>
+        }
+        findFirst: {
+          args: Prisma.TrackerReliefZoneFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TrackerReliefZoneFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>
+        }
+        findMany: {
+          args: Prisma.TrackerReliefZoneFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>[]
+        }
+        create: {
+          args: Prisma.TrackerReliefZoneCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>
+        }
+        createMany: {
+          args: Prisma.TrackerReliefZoneCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TrackerReliefZoneCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>[]
+        }
+        delete: {
+          args: Prisma.TrackerReliefZoneDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>
+        }
+        update: {
+          args: Prisma.TrackerReliefZoneUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>
+        }
+        deleteMany: {
+          args: Prisma.TrackerReliefZoneDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TrackerReliefZoneUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TrackerReliefZoneUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>[]
+        }
+        upsert: {
+          args: Prisma.TrackerReliefZoneUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerReliefZonePayload>
+        }
+        aggregate: {
+          args: Prisma.TrackerReliefZoneAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTrackerReliefZone>
+        }
+        groupBy: {
+          args: Prisma.TrackerReliefZoneGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerReliefZoneGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TrackerReliefZoneCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerReliefZoneCountAggregateOutputType> | number
+        }
+      }
+    }
+    TrackerValidator: {
+      payload: Prisma.$TrackerValidatorPayload<ExtArgs>
+      fields: Prisma.TrackerValidatorFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TrackerValidatorFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TrackerValidatorFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>
+        }
+        findFirst: {
+          args: Prisma.TrackerValidatorFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TrackerValidatorFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>
+        }
+        findMany: {
+          args: Prisma.TrackerValidatorFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>[]
+        }
+        create: {
+          args: Prisma.TrackerValidatorCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>
+        }
+        createMany: {
+          args: Prisma.TrackerValidatorCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TrackerValidatorCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>[]
+        }
+        delete: {
+          args: Prisma.TrackerValidatorDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>
+        }
+        update: {
+          args: Prisma.TrackerValidatorUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>
+        }
+        deleteMany: {
+          args: Prisma.TrackerValidatorDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TrackerValidatorUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TrackerValidatorUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>[]
+        }
+        upsert: {
+          args: Prisma.TrackerValidatorUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrackerValidatorPayload>
+        }
+        aggregate: {
+          args: Prisma.TrackerValidatorAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTrackerValidator>
+        }
+        groupBy: {
+          args: Prisma.TrackerValidatorGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerValidatorGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TrackerValidatorCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrackerValidatorCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2326,6 +2626,61 @@ export const MapPinStatusScalarFieldEnum = {
 export type MapPinStatusScalarFieldEnum = (typeof MapPinStatusScalarFieldEnum)[keyof typeof MapPinStatusScalarFieldEnum]
 
 
+export const TrackerShipmentScalarFieldEnum = {
+  id: 'id',
+  shipmentId: 'shipmentId',
+  origin: 'origin',
+  destination: 'destination',
+  class: 'class',
+  blockchainHash: 'blockchainHash',
+  status: 'status',
+  verificationStatus: 'verificationStatus',
+  timestamp: 'timestamp',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TrackerShipmentScalarFieldEnum = (typeof TrackerShipmentScalarFieldEnum)[keyof typeof TrackerShipmentScalarFieldEnum]
+
+
+export const TrackerStatsScalarFieldEnum = {
+  id: 'id',
+  totalAidDisbursed: 'totalAidDisbursed',
+  verifiedPayouts: 'verifiedPayouts',
+  networkTrustIndex: 'networkTrustIndex',
+  lastUpdated: 'lastUpdated'
+} as const
+
+export type TrackerStatsScalarFieldEnum = (typeof TrackerStatsScalarFieldEnum)[keyof typeof TrackerStatsScalarFieldEnum]
+
+
+export const TrackerReliefZoneScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  lat: 'lat',
+  lng: 'lng',
+  familyCount: 'familyCount',
+  status: 'status',
+  zoneType: 'zoneType',
+  createdAt: 'createdAt'
+} as const
+
+export type TrackerReliefZoneScalarFieldEnum = (typeof TrackerReliefZoneScalarFieldEnum)[keyof typeof TrackerReliefZoneScalarFieldEnum]
+
+
+export const TrackerValidatorScalarFieldEnum = {
+  id: 'id',
+  nodeId: 'nodeId',
+  location: 'location',
+  latencyMs: 'latencyMs',
+  uptimePercentage: 'uptimePercentage',
+  status: 'status',
+  createdAt: 'createdAt'
+} as const
+
+export type TrackerValidatorScalarFieldEnum = (typeof TrackerValidatorScalarFieldEnum)[keyof typeof TrackerValidatorScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2575,6 +2930,62 @@ export type EnumPinStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
 export type ListEnumPinStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PinStatus[]'>
     
 
+
+/**
+ * Reference to a field of type 'ShipmentStatus'
+ */
+export type EnumShipmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShipmentStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ShipmentStatus[]'
+ */
+export type ListEnumShipmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShipmentStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'VerificationStatus'
+ */
+export type EnumVerificationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VerificationStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'VerificationStatus[]'
+ */
+export type ListEnumVerificationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VerificationStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ZoneStatus'
+ */
+export type EnumZoneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ZoneStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ZoneStatus[]'
+ */
+export type ListEnumZoneStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ZoneStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ValidatorStatus'
+ */
+export type EnumValidatorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ValidatorStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ValidatorStatus[]'
+ */
+export type ListEnumValidatorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ValidatorStatus[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -2691,6 +3102,10 @@ export type GlobalOmitConfig = {
   volunteerDecisionLog?: Prisma.VolunteerDecisionLogOmit
   helpRequestEvent?: Prisma.HelpRequestEventOmit
   mapPinStatus?: Prisma.MapPinStatusOmit
+  trackerShipment?: Prisma.TrackerShipmentOmit
+  trackerStats?: Prisma.TrackerStatsOmit
+  trackerReliefZone?: Prisma.TrackerReliefZoneOmit
+  trackerValidator?: Prisma.TrackerValidatorOmit
 }
 
 /* Types for Logging */

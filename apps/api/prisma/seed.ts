@@ -1,11 +1,135 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
 
-const databaseUrl = process.env.DATABASE_URL;
+const EVAC_GEOJSON_PATH = join(process.cwd(), 'geojson', 'evacuation', 'ph_evacs_cleaned.geojson');
+const EVAC_RAW_GEOJSON_PATH = join(process.cwd(), 'geojson', 'evacuation', 'ph_evacs_raw.geojson');
+const EVAC_IMPORT_LIMIT = 500;
+
+function polygonCentroid(ring: number[][]): [number, number] | null {
+  if (!ring || ring.length === 0) return null;
+  let sumLon = 0;
+  let sumLat = 0;
+  for (const p of ring) {
+    sumLon += p[0];
+    sumLat += p[1];
+  }
+  return [sumLon / ring.length, sumLat / ring.length];
+}
+
+function getCentroid(geom: { type: string; coordinates: number[][][] | number[][][][] }): [number, number] | null {
+  const coords = geom.coordinates;
+  if (!Array.isArray(coords)) return null;
+  if (geom.type === 'Polygon') {
+    const ring = (coords as number[][][])[0];
+    return polygonCentroid(ring);
+  }
+  if (geom.type === 'MultiPolygon') {
+    const firstPoly = (coords as number[][][][])[0];
+    if (!firstPoly || !firstPoly[0]) return null;
+    return polygonCentroid(firstPoly[0]);
+  }
+  return null;
+}
+
+type RawLookup = Map<string, { population: string | null; source: string | null }>;
+
+function buildRawLookup(): RawLookup {
+  const map: RawLookup = new Map();
+  try {
+    const raw = readFileSync(EVAC_RAW_GEOJSON_PATH, 'utf-8');
+    const geojson = JSON.parse(raw) as { features: Array<{ properties: Record<string, unknown> }> };
+    for (const f of geojson.features ?? []) {
+      const props = f.properties ?? {};
+      const atId = props['@id'];
+      const id = atId != null
+        ? String(atId).replace(/^relation\//, '').replace(/^way\//, '')
+        : String(props.id ?? props.ref ?? '');
+      if (!id) continue;
+      let population: string | null = null;
+      if (props['population:pupils:2015'] != null) population = String(props['population:pupils:2015']);
+      else if (props['population:pupils:2012'] != null) population = String(props['population:pupils:2012']);
+      else {
+        const popKey = Object.keys(props).find((k) => k.startsWith('population'));
+        if (popKey && props[popKey] != null) population = String(props[popKey]);
+      }
+      const source = props.source != null ? String(props.source) : null;
+      map.set(id, { population, source });
+    }
+  } catch {
+    // raw file optional
+  }
+  return map;
+}
+
+type EvacRow = {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  region: string | null;
+  type: string | null;
+  capacity: string | null;
+  population: string | null;
+  source: string | null;
+};
+
+function loadEvacuationGeoJson(): EvacRow[] {
+  try {
+    const rawLookup = buildRawLookup();
+    const raw = readFileSync(EVAC_GEOJSON_PATH, 'utf-8');
+    const geojson = JSON.parse(raw) as {
+      features: Array<{
+        geometry: { type: string; coordinates: number[][][] | number[][][][] };
+        properties: Record<string, unknown>;
+      }>;
+    };
+    const out: EvacRow[] = [];
+    const features = (geojson.features ?? []).slice(0, EVAC_IMPORT_LIMIT);
+    for (const f of features) {
+      const geom = f.geometry;
+      const props = f.properties ?? {};
+      if (!geom || !Array.isArray(geom.coordinates)) continue;
+      const centroid = getCentroid(geom);
+      if (!centroid) continue;
+      const [longitude, latitude] = centroid;
+      const id = String(props.id ?? '');
+      const name = String(props.name ?? 'Evacuation site').trim() || 'Evacuation site';
+      const region = props.province != null ? String(props.province) : null;
+      const parts = [props.place, props.city, props.municipality].filter(Boolean).map(String);
+      const address = parts.length > 0 ? parts.join(', ') : null;
+      const type = props.type != null ? String(props.type) : null;
+      const capacity = props.capacity != null ? String(props.capacity) : null;
+      const rawData = rawLookup.get(id);
+      const population = rawData?.population ?? null;
+      const source = rawData?.source ?? null;
+      out.push({
+        id: `evac-ph-${id}`,
+        name,
+        latitude,
+        longitude,
+        address,
+        region,
+        type,
+        capacity,
+        population,
+        source,
+      });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+// Prefer direct connection for seed (required for Supabase; pooler can cause issues)
+const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!databaseUrl) {
-  throw new Error('DATABASE_URL is not set');
+  throw new Error('DATABASE_URL or DIRECT_URL is not set');
 }
 
 const adapter = new PrismaPg({ connectionString: databaseUrl });
@@ -31,6 +155,34 @@ async function main() {
   await prisma.familyMember.deleteMany({ where: { id: { startsWith: 'seed-' } } });
   await prisma.family.deleteMany({ where: { id: { startsWith: 'seed-' } } });
   await prisma.userLocationSnapshot.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.mapPinStatus.deleteMany({
+    where: { id: { startsWith: 'seed-' } },
+  });
+  await prisma.evacuationArea.deleteMany({
+    where: { id: { startsWith: 'seed-' } },
+  });
+  await prisma.riskRegionSnapshot.deleteMany({
+    where: { id: { startsWith: 'seed-' } },
+  });
+  await prisma.account.deleteMany({
+    where: { userId: { startsWith: 'seed-user-' } },
+  });
+  await prisma.user.deleteMany({ where: { id: { startsWith: 'seed-user-' } } });
+
+  // Clear tracker data
+  await prisma.trackerShipment.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+  await prisma.trackerStats.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+  await prisma.trackerReliefZone.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+  await prisma.trackerValidator.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+
   await prisma.mapPinStatus.deleteMany({ where: { id: { startsWith: 'seed-' } } });
   await prisma.evacuationArea.deleteMany({ where: { id: { startsWith: 'seed-' } } });
   await prisma.riskRegionSnapshot.deleteMany({ where: { id: { startsWith: 'seed-' } } });
@@ -44,6 +196,7 @@ async function main() {
   // 2. Seed Users
   console.log('Seeding users...');
 
+  
   // Admin User
   await prisma.user.upsert({
     where: { email: 'admin@wira-borneo.com' },
@@ -341,6 +494,240 @@ async function main() {
       note: 'Initial seeded operational pin',
     },
   });
+
+  // 4. Seed Tracker Data
+  console.log('Seeding tracker data...');
+
+  // Tracker Stats
+  await prisma.trackerStats.upsert({
+    where: { id: 'seed-tracker-stats-1' },
+    update: {},
+    create: {
+      id: 'seed-tracker-stats-1',
+      totalAidDisbursed: 4281902,
+      verifiedPayouts: 12840,
+      networkTrustIndex: 99.98,
+    },
+  });
+
+  // Tracker Relief Zones
+  const reliefZones = [
+    {
+      id: 'seed-tracker-zone-1',
+      name: 'Manila Relief Hub',
+      lat: 14.5995,
+      lng: 120.9842,
+      familyCount: 842,
+      status: 'ACTIVE' as const,
+      zoneType: 'evacuation',
+    },
+    {
+      id: 'seed-tracker-zone-2',
+      name: 'Bangkok Supply Center',
+      lat: 13.7563,
+      lng: 100.5018,
+      familyCount: 620,
+      status: 'ACTIVE' as const,
+      zoneType: 'supply',
+    },
+    {
+      id: 'seed-tracker-zone-3',
+      name: 'Jakarta Medical Station',
+      lat: -6.2088,
+      lng: 106.8456,
+      familyCount: 1150,
+      status: 'ACTIVE' as const,
+      zoneType: 'medical',
+    },
+    {
+      id: 'seed-tracker-zone-4',
+      name: 'Singapore Distribution Point',
+      lat: 1.3521,
+      lng: 103.8198,
+      familyCount: 0,
+      status: 'INACTIVE' as const,
+      zoneType: 'supply',
+    },
+  ];
+
+  for (const zone of reliefZones) {
+    await prisma.trackerReliefZone.upsert({
+      where: { id: zone.id },
+      update: {},
+      create: zone,
+    });
+  }
+
+  // Tracker Validators
+  const validators = [
+    {
+      id: 'seed-tracker-val-1',
+      nodeId: 'PH-Manila-01',
+      location: 'Manila, Philippines',
+      latencyMs: 42,
+      uptimePercentage: 98.2,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-2',
+      nodeId: 'TH-Bangkok-14',
+      location: 'Bangkok, Thailand',
+      latencyMs: 38,
+      uptimePercentage: 99.1,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-3',
+      nodeId: 'MY-KL-09',
+      location: 'Kuala Lumpur, Malaysia',
+      latencyMs: 156,
+      uptimePercentage: 94.5,
+      status: 'DEGRADED' as const,
+    },
+    {
+      id: 'seed-tracker-val-4',
+      nodeId: 'SG-Central-03',
+      location: 'Singapore',
+      latencyMs: 28,
+      uptimePercentage: 99.8,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-5',
+      nodeId: 'ID-Jakarta-07',
+      location: 'Jakarta, Indonesia',
+      latencyMs: 65,
+      uptimePercentage: 97.3,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-6',
+      nodeId: 'VN-Hanoi-12',
+      location: 'Hanoi, Vietnam',
+      latencyMs: 88,
+      uptimePercentage: 96.1,
+      status: 'ONLINE' as const,
+    },
+  ];
+
+  for (const validator of validators) {
+    await prisma.trackerValidator.upsert({
+      where: { id: validator.id },
+      update: {},
+      create: validator,
+    });
+  }
+
+  // Tracker Shipments
+  const shipments = [
+    {
+      id: 'seed-tracker-ship-1',
+      shipmentId: 'AR-8821',
+      origin: 'JKT',
+      destination: 'MNL',
+      class: 'Medical Supplies',
+      status: 'DISPATCHED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x71c7f4e9a2f8d3b1c5e6a9f2d4b8c3e1a7f9d2b6',
+      timestamp: new Date('2025-03-10T14:20:05Z'),
+    },
+    {
+      id: 'seed-tracker-ship-2',
+      shipmentId: 'AR-8790',
+      origin: 'BKK',
+      destination: 'HAN',
+      class: 'Food Rations',
+      status: 'DISPATCHED' as const,
+      verificationStatus: 'PENDING' as const,
+      blockchainHash: '0x44d8e2f1b9c7a5d3e8f2b6c1a9d4e7f3b8c2a6d1',
+      timestamp: new Date('2025-03-10T15:05:41Z'),
+    },
+    {
+      id: 'seed-tracker-ship-3',
+      shipmentId: 'AR-8812',
+      origin: 'SIN',
+      destination: 'KUL',
+      class: 'Shelter Kits',
+      status: 'IN_TRANSIT' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x22a9f3b7d1e5c8a4f2b9d6e3c1a7f8b4d2e9c5a1',
+      timestamp: new Date('2025-03-10T16:30:12Z'),
+    },
+    {
+      id: 'seed-tracker-ship-4',
+      shipmentId: 'AR-8805',
+      origin: 'PNH',
+      destination: 'VTE',
+      class: 'Water Filters',
+      status: 'DISPATCHED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x99e4d7a2f8c1b6e3a9f5d2c8b4e1a7f3d9c6b2a5',
+      timestamp: new Date('2025-03-10T17:12:00Z'),
+    },
+    {
+      id: 'seed-tracker-ship-5',
+      shipmentId: 'AR-8833',
+      origin: 'MNL',
+      destination: 'BKK',
+      class: 'Emergency Kits',
+      status: 'DELIVERED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x55f2a8d3c9e1b7f4a6d2c8e5b1f9a3d7c4e8b6a2',
+      timestamp: new Date('2025-03-09T10:45:22Z'),
+    },
+    {
+      id: 'seed-tracker-ship-6',
+      shipmentId: 'AR-8799',
+      origin: 'HAN',
+      destination: 'MNL',
+      class: 'Medical Equipment',
+      status: 'DELIVERED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x77d9e4a1f6c2b8d5e3a9f7c4b2d8e6a1f3c9b5d7',
+      timestamp: new Date('2025-03-08T08:20:15Z'),
+    },
+    {
+      id: 'seed-tracker-ship-7',
+      shipmentId: 'AR-8856',
+      origin: 'KUL',
+      destination: 'SIN',
+      class: 'Hygiene Supplies',
+      status: 'IN_TRANSIT' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x33c6f8a4d2e9b5c1a7f3d8e6b4a2f9c5d1e7a8b3',
+      timestamp: new Date('2025-03-10T12:30:45Z'),
+    },
+    {
+      id: 'seed-tracker-ship-8',
+      shipmentId: 'AR-8841',
+      origin: 'JKT',
+      destination: 'BKK',
+      class: 'Construction Materials',
+      status: 'IN_TRANSIT' as const,
+      verificationStatus: 'PENDING' as const,
+      blockchainHash: null,
+      timestamp: new Date('2025-03-10T18:15:30Z'),
+    },
+    {
+      id: 'seed-tracker-ship-9',
+      shipmentId: 'AR-8872',
+      origin: 'SIN',
+      destination: 'HAN',
+      class: 'Solar Panels',
+      status: 'DELIVERED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x88e1a7f4c3b9d6e2a5f8c1d4b7e9a3f6c2d8b5a4',
+      timestamp: new Date('2025-03-07T14:55:10Z'),
+    },
+  ];
+
+  for (const shipment of shipments) {
+    await prisma.trackerShipment.upsert({
+      where: { id: shipment.id },
+      update: {},
+      create: shipment,
+    });
+  }
 
   await prisma.mapPinStatus.upsert({
     where: { id: 'seed-pin-2' },

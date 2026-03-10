@@ -100,3 +100,38 @@ export const PinStatus = {
 } as const
 
 export type PinStatus = (typeof PinStatus)[keyof typeof PinStatus]
+
+
+export const ShipmentStatus = {
+  DISPATCHED: 'DISPATCHED',
+  IN_TRANSIT: 'IN_TRANSIT',
+  DELIVERED: 'DELIVERED'
+} as const
+
+export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus]
+
+
+export const VerificationStatus = {
+  VERIFIED: 'VERIFIED',
+  PENDING: 'PENDING',
+  FAILED: 'FAILED'
+} as const
+
+export type VerificationStatus = (typeof VerificationStatus)[keyof typeof VerificationStatus]
+
+
+export const ZoneStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE'
+} as const
+
+export type ZoneStatus = (typeof ZoneStatus)[keyof typeof ZoneStatus]
+
+
+export const ValidatorStatus = {
+  ONLINE: 'ONLINE',
+  OFFLINE: 'OFFLINE',
+  DEGRADED: 'DEGRADED'
+} as const
+
+export type ValidatorStatus = (typeof ValidatorStatus)[keyof typeof ValidatorStatus]

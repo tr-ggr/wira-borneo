@@ -71,7 +71,11 @@ export const ModelName = {
   WarningEventLog: 'WarningEventLog',
   VolunteerDecisionLog: 'VolunteerDecisionLog',
   HelpRequestEvent: 'HelpRequestEvent',
-  MapPinStatus: 'MapPinStatus'
+  MapPinStatus: 'MapPinStatus',
+  TrackerShipment: 'TrackerShipment',
+  TrackerStats: 'TrackerStats',
+  TrackerReliefZone: 'TrackerReliefZone',
+  TrackerValidator: 'TrackerValidator'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -397,6 +401,61 @@ export const MapPinStatusScalarFieldEnum = {
 } as const
 
 export type MapPinStatusScalarFieldEnum = (typeof MapPinStatusScalarFieldEnum)[keyof typeof MapPinStatusScalarFieldEnum]
+
+
+export const TrackerShipmentScalarFieldEnum = {
+  id: 'id',
+  shipmentId: 'shipmentId',
+  origin: 'origin',
+  destination: 'destination',
+  class: 'class',
+  blockchainHash: 'blockchainHash',
+  status: 'status',
+  verificationStatus: 'verificationStatus',
+  timestamp: 'timestamp',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TrackerShipmentScalarFieldEnum = (typeof TrackerShipmentScalarFieldEnum)[keyof typeof TrackerShipmentScalarFieldEnum]
+
+
+export const TrackerStatsScalarFieldEnum = {
+  id: 'id',
+  totalAidDisbursed: 'totalAidDisbursed',
+  verifiedPayouts: 'verifiedPayouts',
+  networkTrustIndex: 'networkTrustIndex',
+  lastUpdated: 'lastUpdated'
+} as const
+
+export type TrackerStatsScalarFieldEnum = (typeof TrackerStatsScalarFieldEnum)[keyof typeof TrackerStatsScalarFieldEnum]
+
+
+export const TrackerReliefZoneScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  lat: 'lat',
+  lng: 'lng',
+  familyCount: 'familyCount',
+  status: 'status',
+  zoneType: 'zoneType',
+  createdAt: 'createdAt'
+} as const
+
+export type TrackerReliefZoneScalarFieldEnum = (typeof TrackerReliefZoneScalarFieldEnum)[keyof typeof TrackerReliefZoneScalarFieldEnum]
+
+
+export const TrackerValidatorScalarFieldEnum = {
+  id: 'id',
+  nodeId: 'nodeId',
+  location: 'location',
+  latencyMs: 'latencyMs',
+  uptimePercentage: 'uptimePercentage',
+  status: 'status',
+  createdAt: 'createdAt'
+} as const
+
+export type TrackerValidatorScalarFieldEnum = (typeof TrackerValidatorScalarFieldEnum)[keyof typeof TrackerValidatorScalarFieldEnum]
 
 
 export const SortOrder = {

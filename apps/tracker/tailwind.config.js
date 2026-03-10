@@ -11,13 +11,33 @@
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './{src,pages,components,app}/**/*.{ts,tsx,js,jsx,html}',
     '!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}',
     //     ...createGlobPatternsForDependencies(__dirname)
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#193ce6',
+        'accent-red': '#e61919',
+        'background-light': '#f6f6f8',
+        'background-dark': '#111421',
+        'asean-red': '#e61919',
+        'asean-yellow': '#ffcc00',
+      },
+      fontFamily: {
+        display: ['Space Grotesk', 'sans-serif'],
+      },
+      borderRadius: {
+        DEFAULT: '0.25rem',
+        lg: '0.5rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
+        full: '9999px',
+      },
+    },
   },
   plugins: [],
 };

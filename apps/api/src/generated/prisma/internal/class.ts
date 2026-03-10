@@ -397,6 +397,46 @@ export interface PrismaClient<
     * ```
     */
   get mapPinStatus(): Prisma.MapPinStatusDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.trackerShipment`: Exposes CRUD operations for the **TrackerShipment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TrackerShipments
+    * const trackerShipments = await prisma.trackerShipment.findMany()
+    * ```
+    */
+  get trackerShipment(): Prisma.TrackerShipmentDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.trackerStats`: Exposes CRUD operations for the **TrackerStats** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TrackerStats
+    * const trackerStats = await prisma.trackerStats.findMany()
+    * ```
+    */
+  get trackerStats(): Prisma.TrackerStatsDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.trackerReliefZone`: Exposes CRUD operations for the **TrackerReliefZone** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TrackerReliefZones
+    * const trackerReliefZones = await prisma.trackerReliefZone.findMany()
+    * ```
+    */
+  get trackerReliefZone(): Prisma.TrackerReliefZoneDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.trackerValidator`: Exposes CRUD operations for the **TrackerValidator** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TrackerValidators
+    * const trackerValidators = await prisma.trackerValidator.findMany()
+    * ```
+    */
+  get trackerValidator(): Prisma.TrackerValidatorDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {
