@@ -68,7 +68,16 @@ export default function MainApp() {
           }}
         />
       );
-      case '/warnings': return <Warnings />;
+      case '/warnings': return (
+        <Warnings
+          onViewSafeRoute={(evac) => {
+            setMapFocus({ latitude: evac.latitude, longitude: evac.longitude });
+            setMapFocusLabel('Evacuation site');
+            setMapFocusEvac(evac);
+            setCurrentScreen('/');
+          }}
+        />
+      );
       case '/family': return <Family />;
       case '/assistant': return <LLMAssistant />;
       case '/help': return (
