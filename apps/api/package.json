@@ -10,7 +10,8 @@
     "prisma:migrate:status": "prisma migrate status --config prisma.config.ts",
     "prisma:migrate-dev": "prisma migrate dev --config prisma.config.ts",
     "prisma:reset": "prisma migrate reset --config prisma.config.ts --force",
-    "prisma:seed": "prisma db seed --config prisma.config.ts"
+    "prisma:seed": "prisma db seed --config prisma.config.ts",
+    "ingest" : "npx tsx --env-file=.env scripts/ingest-building-profiles.ts"
   },
   "nx": {
     "targets": {

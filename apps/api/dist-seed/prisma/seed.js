@@ -1,10 +1,120 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
-const databaseUrl = process.env.DATABASE_URL;
+const EVAC_GEOJSON_PATH = join(process.cwd(), 'geojson', 'evacuation', 'ph_evacs_cleaned.geojson');
+const EVAC_RAW_GEOJSON_PATH = join(process.cwd(), 'geojson', 'evacuation', 'ph_evacs_raw.geojson');
+const EVAC_IMPORT_LIMIT = 500;
+function polygonCentroid(ring) {
+    if (!ring || ring.length === 0)
+        return null;
+    let sumLon = 0;
+    let sumLat = 0;
+    for (const p of ring) {
+        sumLon += p[0];
+        sumLat += p[1];
+    }
+    return [sumLon / ring.length, sumLat / ring.length];
+}
+function getCentroid(geom) {
+    const coords = geom.coordinates;
+    if (!Array.isArray(coords))
+        return null;
+    if (geom.type === 'Polygon') {
+        const ring = coords[0];
+        return polygonCentroid(ring);
+    }
+    if (geom.type === 'MultiPolygon') {
+        const firstPoly = coords[0];
+        if (!firstPoly || !firstPoly[0])
+            return null;
+        return polygonCentroid(firstPoly[0]);
+    }
+    return null;
+}
+function buildRawLookup() {
+    const map = new Map();
+    try {
+        const raw = readFileSync(EVAC_RAW_GEOJSON_PATH, 'utf-8');
+        const geojson = JSON.parse(raw);
+        for (const f of geojson.features ?? []) {
+            const props = f.properties ?? {};
+            const atId = props['@id'];
+            const id = atId != null
+                ? String(atId).replace(/^relation\//, '').replace(/^way\//, '')
+                : String(props.id ?? props.ref ?? '');
+            if (!id)
+                continue;
+            let population = null;
+            if (props['population:pupils:2015'] != null)
+                population = String(props['population:pupils:2015']);
+            else if (props['population:pupils:2012'] != null)
+                population = String(props['population:pupils:2012']);
+            else {
+                const popKey = Object.keys(props).find((k) => k.startsWith('population'));
+                if (popKey && props[popKey] != null)
+                    population = String(props[popKey]);
+            }
+            const source = props.source != null ? String(props.source) : null;
+            map.set(id, { population, source });
+        }
+    }
+    catch {
+        // raw file optional
+    }
+    return map;
+}
+function loadEvacuationGeoJson() {
+    try {
+        const rawLookup = buildRawLookup();
+        const raw = readFileSync(EVAC_GEOJSON_PATH, 'utf-8');
+        const geojson = JSON.parse(raw);
+        const out = [];
+        const features = (geojson.features ?? []).slice(0, EVAC_IMPORT_LIMIT);
+        for (const f of features) {
+            const geom = f.geometry;
+            const props = f.properties ?? {};
+            if (!geom || !Array.isArray(geom.coordinates))
+                continue;
+            const centroid = getCentroid(geom);
+            if (!centroid)
+                continue;
+            const [longitude, latitude] = centroid;
+            const id = String(props.id ?? '');
+            const name = String(props.name ?? 'Evacuation site').trim() || 'Evacuation site';
+            const region = props.province != null ? String(props.province) : null;
+            const parts = [props.place, props.city, props.municipality].filter(Boolean).map(String);
+            const address = parts.length > 0 ? parts.join(', ') : null;
+            const type = props.type != null ? String(props.type) : null;
+            const capacity = props.capacity != null ? String(props.capacity) : null;
+            const rawData = rawLookup.get(id);
+            const population = rawData?.population ?? null;
+            const source = rawData?.source ?? null;
+            out.push({
+                id: `evac-ph-${id}`,
+                name,
+                latitude,
+                longitude,
+                address,
+                region,
+                type,
+                capacity,
+                population,
+                source,
+            });
+        }
+        return out;
+    }
+    catch {
+        return [];
+    }
+}
+// Prefer direct connection for seed (required for Supabase; pooler can cause issues)
+const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!databaseUrl) {
-    throw new Error('DATABASE_URL is not set');
+    throw new Error('DATABASE_URL or DIRECT_URL is not set');
 }
 const adapter = new PrismaPg({ connectionString: databaseUrl });
 const prisma = new PrismaClient({ adapter });
@@ -127,6 +237,39 @@ async function main() {
             isActive: true,
         },
     });
+    const evacFromGeojson = loadEvacuationGeoJson();
+    if (evacFromGeojson.length > 0) {
+        console.log(`Seeding ${evacFromGeojson.length} evacuation areas from GeoJSON...`);
+        for (const e of evacFromGeojson) {
+            await prisma.evacuationArea.upsert({
+                where: { id: e.id },
+                update: {
+                    name: e.name,
+                    latitude: e.latitude,
+                    longitude: e.longitude,
+                    address: e.address,
+                    region: e.region,
+                    type: e.type,
+                    capacity: e.capacity,
+                    population: e.population,
+                    source: e.source,
+                },
+                create: {
+                    id: e.id,
+                    name: e.name,
+                    latitude: e.latitude,
+                    longitude: e.longitude,
+                    address: e.address,
+                    region: e.region,
+                    type: e.type,
+                    capacity: e.capacity,
+                    population: e.population,
+                    source: e.source,
+                    isActive: true,
+                },
+            });
+        }
+    }
     await prisma.mapPinStatus.upsert({
         where: { id: 'seed-pin-1' },
         update: {},

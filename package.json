@@ -20,7 +20,8 @@
     "prisma:seed": "nx run api:prisma-seed",
     "api:openapi:sync": "npm run openapi:sync -w @wira-borneo/api-client",
     "api:client:generate": "npm run generate -w @wira-borneo/api-client",
-    "api:client:generate:check": "npm run generate:check -w @wira-borneo/api-client"
+    "api:client:generate:check": "npm run generate:check -w @wira-borneo/api-client",
+    "ingest-building": "nx run api:ingest"
   },
   "prisma": {
     "seed": "ts-node apps/api/prisma/seed.ts"
