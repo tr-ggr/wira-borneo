@@ -186,3 +186,7 @@ apps/coverage/
 apps/reports/
 
 geojson/
+# Track evacuation GeoJSON used by API seed (do not bundle under src)
+!apps/api/geojson/
+!apps/api/geojson/evacuation/
+!apps/api/geojson/evacuation/*.geojson

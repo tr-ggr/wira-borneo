@@ -6,6 +6,7 @@ import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';
 import LayoutWrapper from '../components/LayoutWrapper';
 import MapForecast from '../components/screens/MapForecast';
+import type { EvacuationSite } from '../components/MapComponent';
 import Warnings from '../components/screens/Warnings';
 import Family from '../components/screens/Family';
 import LLMAssistant from '../components/screens/LLMAssistant';
@@ -20,6 +21,8 @@ export default function MainApp() {
   // Map and Routing State
   const [focusedHelpRequestId, setFocusedHelpRequestId] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<{ latitude: number, longitude: number } | null>(null);
+  const [mapFocusLabel, setMapFocusLabel] = useState<string | null>(null); // e.g. 'Help Pin' or 'Evacuation site'
+  const [mapFocusEvac, setMapFocusEvac] = useState<EvacuationSite | null>(null); // evac site when destination is an evac
   const [showAllPins, setShowAllPins] = useState(true); // Default to true as per request "Multiple help pins can also be enabled"
 
   if (isLoading) {
@@ -51,14 +54,30 @@ export default function MainApp() {
         <MapForecast 
           focusedHelpRequestId={focusedHelpRequestId}
           mapFocus={mapFocus}
+          mapFocusLabel={mapFocusLabel}
+          mapFocusEvac={mapFocusEvac}
+          setMapFocus={setMapFocus}
+          setMapFocusLabel={setMapFocusLabel}
+          setMapFocusEvac={setMapFocusEvac}
           showAllPins={showAllPins}
           onCancelRouting={() => {
             setFocusedHelpRequestId(null);
             setMapFocus(null);
+            setMapFocusLabel(null);
+            setMapFocusEvac(null);
           }}
         />
       );
-      case '/warnings': return <Warnings />;
+      case '/warnings': return (
+        <Warnings
+          onViewSafeRoute={(evac) => {
+            setMapFocus({ latitude: evac.latitude, longitude: evac.longitude });
+            setMapFocusLabel('Evacuation site');
+            setMapFocusEvac(evac);
+            setCurrentScreen('/');
+          }}
+        />
+      );
       case '/family': return <Family />;
       case '/assistant': return <LLMAssistant />;
       case '/help': return (
@@ -66,6 +85,7 @@ export default function MainApp() {
           onNavigateToRequest={(id, loc) => {
             setFocusedHelpRequestId(id);
             setMapFocus(loc);
+            setMapFocusLabel('Help Pin');
             setCurrentScreen('/');
           }}
           showAllPins={showAllPins}
@@ -77,10 +97,17 @@ export default function MainApp() {
         <MapForecast 
           focusedHelpRequestId={focusedHelpRequestId}
           mapFocus={mapFocus}
+          mapFocusLabel={mapFocusLabel}
+          mapFocusEvac={mapFocusEvac}
+          setMapFocus={setMapFocus}
+          setMapFocusLabel={setMapFocusLabel}
+          setMapFocusEvac={setMapFocusEvac}
           showAllPins={showAllPins}
           onCancelRouting={() => {
             setFocusedHelpRequestId(null);
             setMapFocus(null);
+            setMapFocusLabel(null);
+            setMapFocusEvac(null);
           }}
         />
       );
