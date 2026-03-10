@@ -1,6 +1,7 @@
 export interface LlmRuntimeConfig {
     llmServerUrl: string;
     llmTimeoutMs: number;
+    llmInternalSecret: string;
 }
 
 function requireEnv(name: string): string {
@@ -15,6 +16,7 @@ function requireEnv(name: string): string {
 
 export function getLlmRuntimeConfig(): LlmRuntimeConfig {
     const llmServerUrl = requireEnv('LLM_SERVER_URL');
+    const llmInternalSecret = requireEnv('LLM_INTERNAL_SECRET');
     const llmTimeoutMs = parseInt(
         process.env.LLM_TIMEOUT_MS?.trim() || '15000',
         10,
@@ -26,5 +28,5 @@ export function getLlmRuntimeConfig(): LlmRuntimeConfig {
         );
     }
 
-    return { llmServerUrl, llmTimeoutMs };
+    return { llmServerUrl, llmTimeoutMs, llmInternalSecret };
 }

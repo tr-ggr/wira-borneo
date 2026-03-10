@@ -574,8 +574,15 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantInquiryResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1180,6 +1187,34 @@
           "role": {
             "type": "object",
             "nullable": true
+          },
+          "age": {
+            "type": "object",
+            "nullable": true
+          },
+          "housingType": {
+            "type": "object",
+            "nullable": true
+          },
+          "personalInfo": {
+            "type": "object",
+            "nullable": true
+          },
+          "vulnerabilities": {
+            "type": "object",
+            "nullable": true
+          },
+          "householdComposition": {
+            "type": "object",
+            "nullable": true
+          },
+          "emergencySkills": {
+            "type": "object",
+            "nullable": true
+          },
+          "assets": {
+            "type": "object",
+            "nullable": true
           }
         },
         "required": [
@@ -1271,7 +1306,90 @@
       },
       "AssistantInquiryDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "question": {
+            "type": "string",
+            "example": "What should I do during a flood?",
+            "description": "User question (max 500 chars)"
+          },
+          "location": {
+            "type": "string",
+            "example": "Kuching",
+            "description": "Current location of the user"
+          },
+          "hazardType": {
+            "type": "string",
+            "example": "FLOOD",
+            "description": "Type of hazard relevant to the inquiry"
+          }
+        },
+        "required": [
+          "question"
+        ]
+      },
+      "AssistantStructuredDataDto": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "example": "Move to higher ground immediately.",
+            "description": "Brief summary of advice"
+          },
+          "steps": {
+            "example": [
+              "Pack a go bag",
+              "Listen to radio"
+            ],
+            "description": "Actionable steps",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "safetyReminder": {
+            "type": "string",
+            "example": "Stay clear of power lines.",
+            "description": "Safety reminder"
+          }
+        },
+        "required": [
+          "summary",
+          "steps",
+          "safetyReminder"
+        ]
+      },
+      "AssistantInquiryResponseDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "example": "Move to higher ground immediately.",
+            "description": "AI-generated answer to the inquiry"
+          },
+          "disclaimer": {
+            "type": "string",
+            "example": "This is general guidance only. Always follow local authorities.",
+            "description": "Disclaimer regarding AI-generated content"
+          },
+          "provider": {
+            "type": "string",
+            "example": "sea-lion",
+            "description": "The LLM provider that generated the response"
+          },
+          "structuredData": {
+            "description": "Structured formulation of the advice",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssistantStructuredDataDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "answer",
+          "disclaimer",
+          "provider"
+        ]
       },
       "ReviewVolunteerDto": {
         "type": "object",

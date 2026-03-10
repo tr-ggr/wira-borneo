@@ -8,11 +8,14 @@ Routing logic:
 """
 
 import logging
+from typing import Optional
 
 from llm_server.providers.base import LLMProvider
-
+ 
 logger = logging.getLogger(__name__)
 
+# Kept for backwards-compatibility with existing tests; no longer used for
+# truncation so that callers receive the full model output.
 MAX_RESPONSE_CHARS = 2000
 
 
@@ -23,15 +26,29 @@ class LLMRouter:
         self._primary = primary
         self._fallback = fallback
 
-    def generate(self, prompt: str) -> tuple[str, str]:
+    def generate(
+        self, 
+        prompt: str, 
+        system_instruction: Optional[str] = None, 
+        demographics: Optional[dict] = None,
+        user_id: Optional[str] = None,
+    ) -> tuple[str, str]:
         """Return ``(answer_text, provider_name)``.
 
         Raises ``RuntimeError`` only when *every* provider fails.
         """
+        kwargs = {}
+        if system_instruction is not None:
+            kwargs["system_instruction"] = system_instruction
+        if demographics is not None:
+            kwargs["demographics"] = demographics
+        if user_id is not None:
+            kwargs["user_id"] = user_id
+
         if self._primary.is_available():
             try:
-                text = self._primary.generate(prompt)
-                return self._truncate(self._clean_json(text)), self._primary.name
+                text = self._primary.generate(prompt, **kwargs)
+                return self._clean_json(text), self._primary.name
             except Exception as exc:
                 logger.warning(
                     "Primary provider (%s) failed, falling back: %s",
@@ -41,8 +58,8 @@ class LLMRouter:
 
         # Overflow / fallback
         try:
-            text = self._fallback.generate(prompt)
-            return self._truncate(self._clean_json(text)), self._fallback.name
+            text = self._fallback.generate(prompt, **kwargs)
+            return self._clean_json(text), self._fallback.name
         except Exception as exc:
             logger.error("Fallback provider (%s) also failed: %s", self._fallback.name, exc)
             raise RuntimeError("All LLM providers are unavailable.") from exc
@@ -61,8 +78,3 @@ class LLMRouter:
                 text = text[:-3]
         return text.strip()
 
-    @staticmethod
-    def _truncate(text: str) -> str:
-        if len(text) > MAX_RESPONSE_CHARS:
-            return text[:MAX_RESPONSE_CHARS] + "…"
-        return text

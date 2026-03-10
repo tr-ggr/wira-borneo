@@ -1,19 +1,30 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, MessageSquare, ShieldCheck, Sparkle } from 'lucide-react';
+import { Send, MessageSquare, ShieldCheck, Sparkle, MapPin, AlertCircle } from 'lucide-react';
 import { useAssistantControllerInquire } from '@wira-borneo/api-client';
 
 export default function LLMAssistant() {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+  const [messages, setMessages] = useState<{
+    role: 'user' | 'assistant';
+    content: string;
+    disclaimer?: string;
+    structuredData?: { summary: string; steps: string[]; safetyReminder: string; };
+  }[]>([
     { role: 'assistant', content: 'Welcome to WIRA Assistant. I am here to help you with disaster information, safety tips, or any emergency inquiries. How can I assist you today?' }
   ]);
 
   const inquire = useAssistantControllerInquire({
     mutation: {
-      onSuccess: (data: any) => {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.answer || 'Sorry, I cannot process that information right now.' }]);
+      onSuccess: (data) => {
+        // data is now AssistantInquiryResponseDto
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.answer,
+          disclaimer: data.disclaimer,
+          structuredData: data.structuredData
+        }]);
       },
       onError: () => {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, the system is experiencing some issues. Please try again in a moment.' }]);
@@ -36,7 +47,15 @@ export default function LLMAssistant() {
     const userMessage = input.trim();
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setInput('');
-    inquire.mutate({ data: { question: userMessage } });
+
+    // In a production app, these would come from the user's current location/forecast
+    inquire.mutate({
+      data: {
+        question: userMessage,
+        location: 'Kuching',
+        hazardType: 'FLOOD'
+      }
+    });
   };
 
   return (
@@ -58,16 +77,55 @@ export default function LLMAssistant() {
         <ShieldCheck className="text-wira-gold w-5 h-5" />
       </div>
 
+      {/* Context Indicator */}
+      <div className="px-6 py-2 bg-wira-ivory border-b border-wira-ivory-dark flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 bg-wira-teal/10 px-2 py-0.5 rounded-full border border-wira-teal/20">
+          <MapPin size={10} className="text-wira-teal" />
+          <span className="text-[10px] font-bold text-wira-teal uppercase tracking-tight">Kuching</span>
+        </div>
+        <div className="flex items-center gap-1 bg-status-critical/10 px-2 py-0.5 rounded-full border border-status-critical/20">
+          <AlertCircle size={10} className="text-status-critical" />
+          <span className="text-[10px] font-bold text-status-critical uppercase tracking-tight">Flood Risk</span>
+        </div>
+      </div>
+
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
+          <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-slide-up space-y-1`}>
             <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm font-body leading-relaxed shadow-sm ${msg.role === 'user'
-                ? 'bg-wira-teal text-white rounded-br-none'
-                : 'bg-white text-wira-night border border-wira-ivory-dark rounded-bl-none'
+              ? 'bg-wira-teal text-white rounded-br-none'
+              : 'bg-white text-wira-night border border-wira-ivory-dark rounded-bl-none'
               }`}>
-              {msg.content}
+              {msg.structuredData ? (
+                <div className="space-y-3">
+                  <p className="font-bold text-wira-night/90 leading-tight block">{msg.structuredData.summary}</p>
+                  {msg.structuredData.steps && msg.structuredData.steps.length > 0 && (
+                    <ul className="list-decimal pl-4 space-y-1.5 text-wira-night/80 marker:text-wira-teal marker:font-bold">
+                      {msg.structuredData.steps.map((step: string, j: number) => (
+                        <li key={j} className="pl-1">
+                          {step}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {msg.structuredData.safetyReminder && (
+                    <div className="bg-status-critical/5 border-l-2 border-status-critical/40 p-2.5 rounded-r-lg mt-2">
+                      <p className="text-status-critical/90 font-medium text-xs">
+                        ⚠️ {msg.structuredData.safetyReminder}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                msg.content
+              )}
             </div>
+            {msg.disclaimer && (
+              <p className="text-[10px] text-wira-earth/40 max-w-[80%] italic px-1">
+                {msg.disclaimer}
+              </p>
+            )}
           </div>
         ))}
         {inquire.isPending && (

@@ -28,6 +28,24 @@ model User {
   banned     Boolean?  @default(false)
   banReason  String?
   banExpires DateTime?
+
+  // Demographic & Vulnerability data
+  age                  Int?
+  housingType          HousingType?
+  personalInfo         Json?
+  vulnerabilities      Json?
+  householdComposition Json?
+  emergencySkills      Json?
+  assets               Json?
+}
+
+enum HousingType {
+  LONGHOUSE
+  DETACHED
+  SEMI_DETACHED
+  TERRACE
+  APARTMENT
+  OTHER
 }
 
 model Session {

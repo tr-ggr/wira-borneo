@@ -20,8 +20,18 @@ export type UserModel = runtime.Types.Result.DefaultSelection<Prisma.$UserPayloa
 
 export type AggregateUser = {
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
+}
+
+export type UserAvgAggregateOutputType = {
+  age: number | null
+}
+
+export type UserSumAggregateOutputType = {
+  age: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -36,6 +46,8 @@ export type UserMinAggregateOutputType = {
   banned: boolean | null
   banReason: string | null
   banExpires: Date | null
+  age: number | null
+  housingType: $Enums.HousingType | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -50,6 +62,8 @@ export type UserMaxAggregateOutputType = {
   banned: boolean | null
   banReason: string | null
   banExpires: Date | null
+  age: number | null
+  housingType: $Enums.HousingType | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -64,9 +78,24 @@ export type UserCountAggregateOutputType = {
   banned: number
   banReason: number
   banExpires: number
+  age: number
+  housingType: number
+  personalInfo: number
+  vulnerabilities: number
+  householdComposition: number
+  emergencySkills: number
+  assets: number
   _all: number
 }
 
+
+export type UserAvgAggregateInputType = {
+  age?: true
+}
+
+export type UserSumAggregateInputType = {
+  age?: true
+}
 
 export type UserMinAggregateInputType = {
   id?: true
@@ -80,6 +109,8 @@ export type UserMinAggregateInputType = {
   banned?: true
   banReason?: true
   banExpires?: true
+  age?: true
+  housingType?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -94,6 +125,8 @@ export type UserMaxAggregateInputType = {
   banned?: true
   banReason?: true
   banExpires?: true
+  age?: true
+  housingType?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -108,6 +141,13 @@ export type UserCountAggregateInputType = {
   banned?: true
   banReason?: true
   banExpires?: true
+  age?: true
+  housingType?: true
+  personalInfo?: true
+  vulnerabilities?: true
+  householdComposition?: true
+  emergencySkills?: true
+  assets?: true
   _all?: true
 }
 
@@ -149,6 +189,18 @@ export type UserAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: UserAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: UserSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: UserMinAggregateInputType
@@ -179,6 +231,8 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   _count?: UserCountAggregateInputType | true
+  _avg?: UserAvgAggregateInputType
+  _sum?: UserSumAggregateInputType
   _min?: UserMinAggregateInputType
   _max?: UserMaxAggregateInputType
 }
@@ -195,7 +249,16 @@ export type UserGroupByOutputType = {
   banned: boolean | null
   banReason: string | null
   banExpires: Date | null
+  age: number | null
+  housingType: $Enums.HousingType | null
+  personalInfo: runtime.JsonValue | null
+  vulnerabilities: runtime.JsonValue | null
+  householdComposition: runtime.JsonValue | null
+  emergencySkills: runtime.JsonValue | null
+  assets: runtime.JsonValue | null
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
 }
@@ -230,6 +293,13 @@ export type UserWhereInput = {
   banned?: Prisma.BoolNullableFilter<"User"> | boolean | null
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  age?: Prisma.IntNullableFilter<"User"> | number | null
+  housingType?: Prisma.EnumHousingTypeNullableFilter<"User"> | $Enums.HousingType | null
+  personalInfo?: Prisma.JsonNullableFilter<"User">
+  vulnerabilities?: Prisma.JsonNullableFilter<"User">
+  householdComposition?: Prisma.JsonNullableFilter<"User">
+  emergencySkills?: Prisma.JsonNullableFilter<"User">
+  assets?: Prisma.JsonNullableFilter<"User">
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   familiesCreated?: Prisma.FamilyListRelationFilter
@@ -261,6 +331,13 @@ export type UserOrderByWithRelationInput = {
   banned?: Prisma.SortOrderInput | Prisma.SortOrder
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
+  housingType?: Prisma.SortOrderInput | Prisma.SortOrder
+  personalInfo?: Prisma.SortOrderInput | Prisma.SortOrder
+  vulnerabilities?: Prisma.SortOrderInput | Prisma.SortOrder
+  householdComposition?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergencySkills?: Prisma.SortOrderInput | Prisma.SortOrder
+  assets?: Prisma.SortOrderInput | Prisma.SortOrder
   sessions?: Prisma.SessionOrderByRelationAggregateInput
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   familiesCreated?: Prisma.FamilyOrderByRelationAggregateInput
@@ -295,6 +372,13 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   banned?: Prisma.BoolNullableFilter<"User"> | boolean | null
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  age?: Prisma.IntNullableFilter<"User"> | number | null
+  housingType?: Prisma.EnumHousingTypeNullableFilter<"User"> | $Enums.HousingType | null
+  personalInfo?: Prisma.JsonNullableFilter<"User">
+  vulnerabilities?: Prisma.JsonNullableFilter<"User">
+  householdComposition?: Prisma.JsonNullableFilter<"User">
+  emergencySkills?: Prisma.JsonNullableFilter<"User">
+  assets?: Prisma.JsonNullableFilter<"User">
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   familiesCreated?: Prisma.FamilyListRelationFilter
@@ -326,9 +410,18 @@ export type UserOrderByWithAggregationInput = {
   banned?: Prisma.SortOrderInput | Prisma.SortOrder
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
+  housingType?: Prisma.SortOrderInput | Prisma.SortOrder
+  personalInfo?: Prisma.SortOrderInput | Prisma.SortOrder
+  vulnerabilities?: Prisma.SortOrderInput | Prisma.SortOrder
+  householdComposition?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergencySkills?: Prisma.SortOrderInput | Prisma.SortOrder
+  assets?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
+  _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
+  _sum?: Prisma.UserSumOrderByAggregateInput
 }
 
 export type UserScalarWhereWithAggregatesInput = {
@@ -346,6 +439,13 @@ export type UserScalarWhereWithAggregatesInput = {
   banned?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
   banReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  age?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  housingType?: Prisma.EnumHousingTypeNullableWithAggregatesFilter<"User"> | $Enums.HousingType | null
+  personalInfo?: Prisma.JsonNullableWithAggregatesFilter<"User">
+  vulnerabilities?: Prisma.JsonNullableWithAggregatesFilter<"User">
+  householdComposition?: Prisma.JsonNullableWithAggregatesFilter<"User">
+  emergencySkills?: Prisma.JsonNullableWithAggregatesFilter<"User">
+  assets?: Prisma.JsonNullableWithAggregatesFilter<"User">
 }
 
 export type UserCreateInput = {
@@ -360,6 +460,13 @@ export type UserCreateInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -391,6 +498,13 @@ export type UserUncheckedCreateInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -422,6 +536,13 @@ export type UserUpdateInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -453,6 +574,13 @@ export type UserUncheckedUpdateInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -484,6 +612,13 @@ export type UserCreateManyInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type UserUpdateManyMutationInput = {
@@ -498,6 +633,13 @@ export type UserUpdateManyMutationInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -512,6 +654,13 @@ export type UserUncheckedUpdateManyInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -526,6 +675,17 @@ export type UserCountOrderByAggregateInput = {
   banned?: Prisma.SortOrder
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  housingType?: Prisma.SortOrder
+  personalInfo?: Prisma.SortOrder
+  vulnerabilities?: Prisma.SortOrder
+  householdComposition?: Prisma.SortOrder
+  emergencySkills?: Prisma.SortOrder
+  assets?: Prisma.SortOrder
+}
+
+export type UserAvgOrderByAggregateInput = {
+  age?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -540,6 +700,8 @@ export type UserMaxOrderByAggregateInput = {
   banned?: Prisma.SortOrder
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  housingType?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -554,6 +716,12 @@ export type UserMinOrderByAggregateInput = {
   banned?: Prisma.SortOrder
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  housingType?: Prisma.SortOrder
+}
+
+export type UserSumOrderByAggregateInput = {
+  age?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -588,6 +756,18 @@ export type NullableBoolFieldUpdateOperationsInput = {
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
+}
+
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type NullableEnumHousingTypeFieldUpdateOperationsInput = {
+  set?: $Enums.HousingType | null
 }
 
 export type UserCreateNestedOneWithoutSessionsInput = {
@@ -852,6 +1032,13 @@ export type UserCreateWithoutSessionsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
   familyMemberships?: Prisma.FamilyMemberCreateNestedManyWithoutUserInput
@@ -882,6 +1069,13 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
   familyMemberships?: Prisma.FamilyMemberUncheckedCreateNestedManyWithoutUserInput
@@ -928,6 +1122,13 @@ export type UserUpdateWithoutSessionsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
   familyMemberships?: Prisma.FamilyMemberUpdateManyWithoutUserNestedInput
@@ -958,6 +1159,13 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
   familyMemberships?: Prisma.FamilyMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -988,6 +1196,13 @@ export type UserCreateWithoutAccountsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
   familyMemberships?: Prisma.FamilyMemberCreateNestedManyWithoutUserInput
@@ -1018,6 +1233,13 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
   familyMemberships?: Prisma.FamilyMemberUncheckedCreateNestedManyWithoutUserInput
@@ -1064,6 +1286,13 @@ export type UserUpdateWithoutAccountsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
   familyMemberships?: Prisma.FamilyMemberUpdateManyWithoutUserNestedInput
@@ -1094,6 +1323,13 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
   familyMemberships?: Prisma.FamilyMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -1124,6 +1360,13 @@ export type UserCreateWithoutFamiliesCreatedInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familyMemberships?: Prisma.FamilyMemberCreateNestedManyWithoutUserInput
@@ -1154,6 +1397,13 @@ export type UserUncheckedCreateWithoutFamiliesCreatedInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familyMemberships?: Prisma.FamilyMemberUncheckedCreateNestedManyWithoutUserInput
@@ -1200,6 +1450,13 @@ export type UserUpdateWithoutFamiliesCreatedInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familyMemberships?: Prisma.FamilyMemberUpdateManyWithoutUserNestedInput
@@ -1230,6 +1487,13 @@ export type UserUncheckedUpdateWithoutFamiliesCreatedInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familyMemberships?: Prisma.FamilyMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -1260,6 +1524,13 @@ export type UserCreateWithoutFamilyMembershipsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -1290,6 +1561,13 @@ export type UserUncheckedCreateWithoutFamilyMembershipsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1336,6 +1614,13 @@ export type UserUpdateWithoutFamilyMembershipsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -1366,6 +1651,13 @@ export type UserUncheckedUpdateWithoutFamilyMembershipsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1396,6 +1688,13 @@ export type UserCreateWithoutLocationSnapshotInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -1426,6 +1725,13 @@ export type UserUncheckedCreateWithoutLocationSnapshotInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1472,6 +1778,13 @@ export type UserUpdateWithoutLocationSnapshotInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -1502,6 +1815,13 @@ export type UserUncheckedUpdateWithoutLocationSnapshotInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1532,6 +1852,13 @@ export type UserCreateWithoutVolunteerApplicationsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -1562,6 +1889,13 @@ export type UserUncheckedCreateWithoutVolunteerApplicationsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1597,6 +1931,13 @@ export type UserCreateWithoutVolunteerReviewsGivenInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -1627,6 +1968,13 @@ export type UserUncheckedCreateWithoutVolunteerReviewsGivenInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1673,6 +2021,13 @@ export type UserUpdateWithoutVolunteerApplicationsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -1703,6 +2058,13 @@ export type UserUncheckedUpdateWithoutVolunteerApplicationsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1744,6 +2106,13 @@ export type UserUpdateWithoutVolunteerReviewsGivenInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -1774,6 +2143,13 @@ export type UserUncheckedUpdateWithoutVolunteerReviewsGivenInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1804,6 +2180,13 @@ export type UserCreateWithoutVolunteerProfileInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -1834,6 +2217,13 @@ export type UserUncheckedCreateWithoutVolunteerProfileInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1869,6 +2259,13 @@ export type UserCreateWithoutVolunteerApprovalsGivenInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -1899,6 +2296,13 @@ export type UserUncheckedCreateWithoutVolunteerApprovalsGivenInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1945,6 +2349,13 @@ export type UserUpdateWithoutVolunteerProfileInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -1975,6 +2386,13 @@ export type UserUncheckedUpdateWithoutVolunteerProfileInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2016,6 +2434,13 @@ export type UserUpdateWithoutVolunteerApprovalsGivenInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2046,6 +2471,13 @@ export type UserUncheckedUpdateWithoutVolunteerApprovalsGivenInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2076,6 +2508,13 @@ export type UserCreateWithoutWarningsCreatedInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -2106,6 +2545,13 @@ export type UserUncheckedCreateWithoutWarningsCreatedInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2152,6 +2598,13 @@ export type UserUpdateWithoutWarningsCreatedInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2182,6 +2635,13 @@ export type UserUncheckedUpdateWithoutWarningsCreatedInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2212,6 +2672,13 @@ export type UserCreateWithoutEvacuationRouteSuggestionsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -2242,6 +2709,13 @@ export type UserUncheckedCreateWithoutEvacuationRouteSuggestionsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2288,6 +2762,13 @@ export type UserUpdateWithoutEvacuationRouteSuggestionsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2318,6 +2799,13 @@ export type UserUncheckedUpdateWithoutEvacuationRouteSuggestionsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2348,6 +2836,13 @@ export type UserCreateWithoutHelpRequestsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -2378,6 +2873,13 @@ export type UserUncheckedCreateWithoutHelpRequestsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2424,6 +2926,13 @@ export type UserUpdateWithoutHelpRequestsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2454,6 +2963,13 @@ export type UserUncheckedUpdateWithoutHelpRequestsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2484,6 +3000,13 @@ export type UserCreateWithoutHelpAssignmentsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -2514,6 +3037,13 @@ export type UserUncheckedCreateWithoutHelpAssignmentsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2560,6 +3090,13 @@ export type UserUpdateWithoutHelpAssignmentsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2590,6 +3127,13 @@ export type UserUncheckedUpdateWithoutHelpAssignmentsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2620,6 +3164,13 @@ export type UserCreateWithoutWarningEventLogsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -2650,6 +3201,13 @@ export type UserUncheckedCreateWithoutWarningEventLogsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2696,6 +3254,13 @@ export type UserUpdateWithoutWarningEventLogsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2726,6 +3291,13 @@ export type UserUncheckedUpdateWithoutWarningEventLogsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2756,6 +3328,13 @@ export type UserCreateWithoutVolunteerDecisionLogsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -2786,6 +3365,13 @@ export type UserUncheckedCreateWithoutVolunteerDecisionLogsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2832,6 +3418,13 @@ export type UserUpdateWithoutVolunteerDecisionLogsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2862,6 +3455,13 @@ export type UserUncheckedUpdateWithoutVolunteerDecisionLogsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2892,6 +3492,13 @@ export type UserCreateWithoutHelpRequestEventsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -2922,6 +3529,13 @@ export type UserUncheckedCreateWithoutHelpRequestEventsInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2968,6 +3582,13 @@ export type UserUpdateWithoutHelpRequestEventsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -2998,6 +3619,13 @@ export type UserUncheckedUpdateWithoutHelpRequestEventsInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3028,6 +3656,13 @@ export type UserCreateWithoutMapPinsReportedInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyCreateNestedManyWithoutCreatedByInput
@@ -3058,6 +3693,13 @@ export type UserUncheckedCreateWithoutMapPinsReportedInput = {
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
+  age?: number | null
+  housingType?: $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   familiesCreated?: Prisma.FamilyUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3104,6 +3746,13 @@ export type UserUpdateWithoutMapPinsReportedInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUpdateManyWithoutCreatedByNestedInput
@@ -3134,6 +3783,13 @@ export type UserUncheckedUpdateWithoutMapPinsReportedInput = {
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
+  personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  householdComposition?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  emergencySkills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  assets?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   familiesCreated?: Prisma.FamilyUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3321,6 +3977,13 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
+  age?: boolean
+  housingType?: boolean
+  personalInfo?: boolean
+  vulnerabilities?: boolean
+  householdComposition?: boolean
+  emergencySkills?: boolean
+  assets?: boolean
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   familiesCreated?: boolean | Prisma.User$familiesCreatedArgs<ExtArgs>
@@ -3353,6 +4016,13 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
+  age?: boolean
+  housingType?: boolean
+  personalInfo?: boolean
+  vulnerabilities?: boolean
+  householdComposition?: boolean
+  emergencySkills?: boolean
+  assets?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -3367,6 +4037,13 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
+  age?: boolean
+  housingType?: boolean
+  personalInfo?: boolean
+  vulnerabilities?: boolean
+  householdComposition?: boolean
+  emergencySkills?: boolean
+  assets?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -3381,9 +4058,16 @@ export type UserSelectScalar = {
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
+  age?: boolean
+  housingType?: boolean
+  personalInfo?: boolean
+  vulnerabilities?: boolean
+  householdComposition?: boolean
+  emergencySkills?: boolean
+  assets?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires" | "age" | "housingType" | "personalInfo" | "vulnerabilities" | "householdComposition" | "emergencySkills" | "assets", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
@@ -3440,6 +4124,13 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     banned: boolean | null
     banReason: string | null
     banExpires: Date | null
+    age: number | null
+    housingType: $Enums.HousingType | null
+    personalInfo: runtime.JsonValue | null
+    vulnerabilities: runtime.JsonValue | null
+    householdComposition: runtime.JsonValue | null
+    emergencySkills: runtime.JsonValue | null
+    assets: runtime.JsonValue | null
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -3891,6 +4582,13 @@ export interface UserFieldRefs {
   readonly banned: Prisma.FieldRef<"User", 'Boolean'>
   readonly banReason: Prisma.FieldRef<"User", 'String'>
   readonly banExpires: Prisma.FieldRef<"User", 'DateTime'>
+  readonly age: Prisma.FieldRef<"User", 'Int'>
+  readonly housingType: Prisma.FieldRef<"User", 'HousingType'>
+  readonly personalInfo: Prisma.FieldRef<"User", 'Json'>
+  readonly vulnerabilities: Prisma.FieldRef<"User", 'Json'>
+  readonly householdComposition: Prisma.FieldRef<"User", 'Json'>
+  readonly emergencySkills: Prisma.FieldRef<"User", 'Json'>
+  readonly assets: Prisma.FieldRef<"User", 'Json'>
 }
     
 

@@ -9,6 +9,18 @@
 * 🟢 You can import this file directly.
 */
 
+export const HousingType = {
+  LONGHOUSE: 'LONGHOUSE',
+  DETACHED: 'DETACHED',
+  SEMI_DETACHED: 'SEMI_DETACHED',
+  TERRACE: 'TERRACE',
+  APARTMENT: 'APARTMENT',
+  OTHER: 'OTHER'
+} as const
+
+export type HousingType = (typeof HousingType)[keyof typeof HousingType]
+
+
 export const HazardType = {
   FLOOD: 'FLOOD',
   TYPHOON: 'TYPHOON',

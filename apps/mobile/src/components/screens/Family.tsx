@@ -2,11 +2,9 @@
 
 import React, { useState } from 'react';
 import { Users, UserPlus, Copy, Map as MapIcon } from 'lucide-react';
-import { useFamiliesControllerGetMyFamilyMap } from '@wira-borneo/api-client';
-
 export default function Family() {
   const [familyCode] = useState('');
-  
+
   const members: any[] = [];
 
   return (
@@ -33,32 +31,32 @@ export default function Family() {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
-            <h3 className="text-sm font-display font-bold wira-card-title">Family on Map</h3>
-            <button className="text-xs font-body font-bold text-wira-teal uppercase tracking-widest flex items-center gap-1">
-                <MapIcon size={14} /> View All
-            </button>
+          <h3 className="text-sm font-display font-bold wira-card-title">Family on Map</h3>
+          <button className="text-xs font-body font-bold text-wira-teal uppercase tracking-widest flex items-center gap-1">
+            <MapIcon size={14} /> View All
+          </button>
         </div>
 
         <div className="space-y-3">
           {members.map((member) => (
             <div key={member.id} className="wira-card flex items-center gap-4 active:scale-[0.98] transition-all">
-               <div className="relative shrink-0">
-                  <div className="h-12 w-12 rounded-full bg-wira-ivory-dark flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
-                      <Users className="text-wira-teal-light w-6 h-6" />
-                  </div>
-                  <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${member.status === 'Selamat' ? 'bg-status-safe' : 'bg-status-warning'}`}></span>
-               </div>
-               
-               <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-display font-bold wira-card-title truncate">{member.name}</h4>
-                  <p className="text-[10px] font-body wira-card-body uppercase font-bold tracking-tighter">{member.role} — <span className="opacity-70">{member.lastSeen}</span></p>
-               </div>
+              <div className="relative shrink-0">
+                <div className="h-12 w-12 rounded-full bg-wira-ivory-dark flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                  <Users className="text-wira-teal-light w-6 h-6" />
+                </div>
+                <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${member.status === 'Selamat' ? 'bg-status-safe' : 'bg-status-warning'}`}></span>
+              </div>
 
-               <div className="text-right space-y-1">
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter bg-opacity-10 ${member.status === 'Selamat' ? 'bg-status-safe text-status-safe' : 'bg-status-warning text-status-warning'}`}>
-                    {member.status}
-                  </span>
-               </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-display font-bold wira-card-title truncate">{member.name}</h4>
+                <p className="text-[10px] font-body wira-card-body uppercase font-bold tracking-tighter">{member.role} — <span className="opacity-70">{member.lastSeen}</span></p>
+              </div>
+
+              <div className="text-right space-y-1">
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter bg-opacity-10 ${member.status === 'Selamat' ? 'bg-status-safe text-status-safe' : 'bg-status-warning text-status-warning'}`}>
+                  {member.status}
+                </span>
+              </div>
             </div>
           ))}
         </div>
