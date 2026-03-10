@@ -497,6 +497,13 @@ export type EnumPinStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumPinStatusFilter<$PrismaModel> | $Enums.PinStatus
 }
 
+export type EnumPinReviewStatusNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PinReviewStatus | Prisma.EnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPinReviewStatusNullableFilter<$PrismaModel> | $Enums.PinReviewStatus | null
+}
+
 export type EnumPinStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.PinStatus | Prisma.EnumPinStatusFieldRefInput<$PrismaModel>
   in?: $Enums.PinStatus[] | Prisma.ListEnumPinStatusFieldRefInput<$PrismaModel>
@@ -505,6 +512,16 @@ export type EnumPinStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPinStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPinStatusFilter<$PrismaModel>
+}
+
+export type EnumPinReviewStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PinReviewStatus | Prisma.EnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPinReviewStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.PinReviewStatus | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPinReviewStatusNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPinReviewStatusNullableFilter<$PrismaModel>
 }
 
 export type EnumShipmentStatusFilter<$PrismaModel = never> = {
@@ -1022,6 +1039,13 @@ export type NestedEnumPinStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumPinStatusFilter<$PrismaModel> | $Enums.PinStatus
 }
 
+export type NestedEnumPinReviewStatusNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PinReviewStatus | Prisma.EnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPinReviewStatusNullableFilter<$PrismaModel> | $Enums.PinReviewStatus | null
+}
+
 export type NestedEnumPinStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.PinStatus | Prisma.EnumPinStatusFieldRefInput<$PrismaModel>
   in?: $Enums.PinStatus[] | Prisma.ListEnumPinStatusFieldRefInput<$PrismaModel>
@@ -1030,6 +1054,16 @@ export type NestedEnumPinStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPinStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPinStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumPinReviewStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PinReviewStatus | Prisma.EnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PinReviewStatus[] | Prisma.ListEnumPinReviewStatusFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPinReviewStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.PinReviewStatus | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPinReviewStatusNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPinReviewStatusNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumShipmentStatusFilter<$PrismaModel = never> = {

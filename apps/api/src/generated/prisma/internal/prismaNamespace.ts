@@ -388,6 +388,7 @@ export const ModelName = {
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
+  BuildingProfile: 'BuildingProfile',
   Family: 'Family',
   FamilyMember: 'FamilyMember',
   UserLocationSnapshot: 'UserLocationSnapshot',
@@ -424,7 +425,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "family" | "familyMember" | "userLocationSnapshot" | "riskRegionSnapshot" | "volunteerApplication" | "volunteerProfile" | "warningEvent" | "warningTargetArea" | "evacuationArea" | "warningEventEvacuationArea" | "evacuationRouteSuggestion" | "helpRequest" | "helpAssignment" | "warningEventLog" | "volunteerDecisionLog" | "helpRequestEvent" | "mapPinStatus" | "trackerShipment" | "trackerStats" | "trackerReliefZone" | "trackerValidator"
+    modelProps: "user" | "session" | "account" | "verification" | "buildingProfile" | "family" | "familyMember" | "userLocationSnapshot" | "riskRegionSnapshot" | "volunteerApplication" | "volunteerProfile" | "warningEvent" | "warningTargetArea" | "evacuationArea" | "warningEventEvacuationArea" | "evacuationRouteSuggestion" | "helpRequest" | "helpAssignment" | "warningEventLog" | "volunteerDecisionLog" | "helpRequestEvent" | "mapPinStatus" | "trackerShipment" | "trackerStats" | "trackerReliefZone" | "trackerValidator"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -721,6 +722,64 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.VerificationCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.VerificationCountAggregateOutputType> | number
+        }
+      }
+    }
+    BuildingProfile: {
+      payload: Prisma.$BuildingProfilePayload<ExtArgs>
+      fields: Prisma.BuildingProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BuildingProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BuildingProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.BuildingProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BuildingProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        findMany: {
+          args: Prisma.BuildingProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.BuildingProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        update: {
+          args: Prisma.BuildingProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.BuildingProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BuildingProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BuildingProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BuildingProfilePayload>[]
+        }
+        aggregate: {
+          args: Prisma.BuildingProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBuildingProfile>
+        }
+        groupBy: {
+          args: Prisma.BuildingProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BuildingProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BuildingProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BuildingProfileCountAggregateOutputType> | number
         }
       }
     }
@@ -2387,6 +2446,16 @@ export const VerificationScalarFieldEnum = {
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
 
 
+export const BuildingProfileScalarFieldEnum = {
+  id: 'id',
+  iso3: 'iso3',
+  properties: 'properties',
+  createdAt: 'createdAt'
+} as const
+
+export type BuildingProfileScalarFieldEnum = (typeof BuildingProfileScalarFieldEnum)[keyof typeof BuildingProfileScalarFieldEnum]
+
+
 export const FamilyScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -2458,6 +2527,8 @@ export const VolunteerProfileScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   status: 'status',
+  baseLatitude: 'baseLatitude',
+  baseLongitude: 'baseLongitude',
   approvedById: 'approvedById',
   approvedAt: 'approvedAt',
   createdAt: 'createdAt',
@@ -2506,6 +2577,10 @@ export const EvacuationAreaScalarFieldEnum = {
   longitude: 'longitude',
   address: 'address',
   region: 'region',
+  type: 'type',
+  capacity: 'capacity',
+  population: 'population',
+  source: 'source',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -2618,8 +2693,14 @@ export const MapPinStatusScalarFieldEnum = {
   longitude: 'longitude',
   region: 'region',
   note: 'note',
+  photoUrl: 'photoUrl',
+  photoKey: 'photoKey',
   reporterId: 'reporterId',
   reportedAt: 'reportedAt',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  reviewNote: 'reviewNote',
+  reviewStatus: 'reviewStatus',
   updatedAt: 'updatedAt'
 } as const
 
@@ -2932,6 +3013,20 @@ export type ListEnumPinStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
 
 
 /**
+ * Reference to a field of type 'PinReviewStatus'
+ */
+export type EnumPinReviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PinReviewStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'PinReviewStatus[]'
+ */
+export type ListEnumPinReviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PinReviewStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'ShipmentStatus'
  */
 export type EnumShipmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShipmentStatus'>
@@ -3085,6 +3180,7 @@ export type GlobalOmitConfig = {
   session?: Prisma.SessionOmit
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit
+  buildingProfile?: Prisma.BuildingProfileOmit
   family?: Prisma.FamilyOmit
   familyMember?: Prisma.FamilyMemberOmit
   userLocationSnapshot?: Prisma.UserLocationSnapshotOmit

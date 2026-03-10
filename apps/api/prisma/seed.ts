@@ -420,6 +420,7 @@ async function main() {
     },
   });
 
+
   // 6. Seed Warning Events
   console.log('Seeding warning events...');
   await prisma.warningEvent.upsert({
@@ -476,6 +477,40 @@ async function main() {
       },
     },
   });
+
+  const evacFromGeojson = loadEvacuationGeoJson();
+  if (evacFromGeojson.length > 0) {
+    console.log(`Seeding ${evacFromGeojson.length} evacuation areas from GeoJSON...`);
+    for (const e of evacFromGeojson) {
+      await prisma.evacuationArea.upsert({
+        where: { id: e.id },
+        update: {
+          name: e.name,
+          latitude: e.latitude,
+          longitude: e.longitude,
+          address: e.address,
+          region: e.region,
+          type: e.type,
+          capacity: e.capacity,
+          population: e.population,
+          source: e.source,
+        },
+        create: {
+          id: e.id,
+          name: e.name,
+          latitude: e.latitude,
+          longitude: e.longitude,
+          address: e.address,
+          region: e.region,
+          type: e.type,
+          capacity: e.capacity,
+          population: e.population,
+          source: e.source,
+          isActive: true,
+        },
+      });
+    }
+  }
 
   // 8. Seed Map Pins
   console.log('Seeding map pins...');

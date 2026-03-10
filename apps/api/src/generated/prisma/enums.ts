@@ -102,6 +102,15 @@ export const PinStatus = {
 export type PinStatus = (typeof PinStatus)[keyof typeof PinStatus]
 
 
+export const PinReviewStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type PinReviewStatus = (typeof PinReviewStatus)[keyof typeof PinReviewStatus]
+
+
 export const ShipmentStatus = {
   DISPATCHED: 'DISPATCHED',
   IN_TRANSIT: 'IN_TRANSIT',

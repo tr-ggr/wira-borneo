@@ -38,6 +38,11 @@ export type Account = Prisma.AccountModel
  */
 export type Verification = Prisma.VerificationModel
 /**
+ * Model BuildingProfile
+ * 
+ */
+export type BuildingProfile = Prisma.BuildingProfileModel
+/**
  * Model Family
  * 
  */
