@@ -37,6 +37,16 @@ class ReviewVolunteerDto {
   reason?: string;
 }
 
+class BulkReviewVolunteerDto {
+  applicationIds!: string[];
+  nextStatus!: 'APPROVED' | 'REJECTED';
+  reason?: string;
+}
+
+class SuspendReactivateVolunteerDto {
+  reason?: string;
+}
+
 class WarningTargetDto {
   areaName!: string;
   latitude?: number;
@@ -175,6 +185,31 @@ class AdminPinStatusDto {
   region?: string;
   @ApiPropertyOptional()
   note?: string;
+  @ApiPropertyOptional()
+  photoUrl?: string;
+  @ApiPropertyOptional()
+  photoKey?: string;
+  @ApiPropertyOptional()
+  reportedAt?: Date;
+  @ApiPropertyOptional({ type: 'object', properties: { name: { type: 'string' } } })
+  reporter?: { name: string };
+  @ApiPropertyOptional()
+  reviewedById?: string;
+  @ApiPropertyOptional()
+  reviewedAt?: Date;
+  @ApiPropertyOptional()
+  reviewNote?: string;
+  @ApiPropertyOptional({ enum: ['PENDING', 'APPROVED', 'REJECTED'] })
+  reviewStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  @ApiPropertyOptional()
+  updatedAt?: Date;
+}
+
+class ReviewPinDto {
+  @ApiProperty({ enum: ['APPROVE', 'REJECT'] })
+  action!: 'APPROVE' | 'REJECT';
+  @ApiPropertyOptional()
+  reason?: string;
 }
 
 class AdminUserLocationDto {
@@ -203,7 +238,7 @@ class MapOverviewResponseDto {
   helpRequests!: AdminHelpRequestDto[];
 }
 
-const VOLUNTEER_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
+const VOLUNTEER_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'] as const;
 const HAZARD_TYPES = ['FLOOD', 'TYPHOON', 'EARTHQUAKE', 'AFTERSHOCK'] as const;
 const SEVERITY_LEVELS = ['LOW', 'MODERATE', 'HIGH', 'CRITICAL'] as const;
 
@@ -211,6 +246,7 @@ function parseVolunteerStatus(value?: string):
   | 'PENDING'
   | 'APPROVED'
   | 'REJECTED'
+  | 'SUSPENDED'
   | undefined {
   if (!value) {
     return undefined;
@@ -222,7 +258,7 @@ function parseVolunteerStatus(value?: string):
     );
   }
 
-  return value as 'PENDING' | 'APPROVED' | 'REJECTED';
+  return value as 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
 }
 
 function assertReviewVolunteerDto(input: ReviewVolunteerDto): void {
@@ -241,8 +277,37 @@ function assertReviewVolunteerDto(input: ReviewVolunteerDto): void {
     );
   }
 
+  if (input.nextStatus === 'REJECTED' && !input.reason) {
+    throw new BadRequestException('reason is required when rejecting.');
+  }
+
   if (input.reason != null && typeof input.reason !== 'string') {
     throw new BadRequestException('reason must be a string.');
+  }
+}
+
+function assertBulkReviewVolunteerDto(input: BulkReviewVolunteerDto): void {
+  if (!input || typeof input !== 'object') {
+    throw new BadRequestException('Request body is required.');
+  }
+
+  if (!Array.isArray(input.applicationIds) || input.applicationIds.length === 0) {
+    throw new BadRequestException('applicationIds must be a non-empty array.');
+  }
+
+  if (
+    !VOLUNTEER_STATUSES.includes(
+      input.nextStatus as (typeof VOLUNTEER_STATUSES)[number],
+    ) ||
+    (input.nextStatus as string) === 'PENDING'
+  ) {
+    throw new BadRequestException(
+      'nextStatus must be APPROVED or REJECTED.',
+    );
+  }
+
+  if (input.nextStatus === 'REJECTED' && !input.reason) {
+    throw new BadRequestException('reason is required when rejecting.');
   }
 }
 
@@ -318,6 +383,30 @@ function assertWarningPromptSuggestionDto(
   }
 }
 
+const PIN_REVIEW_ACTIONS = ['APPROVE', 'REJECT'] as const;
+
+function assertReviewPinDto(input: ReviewPinDto): void {
+  if (!input || typeof input !== 'object') {
+    throw new BadRequestException('Request body is required.');
+  }
+
+  if (
+    !PIN_REVIEW_ACTIONS.includes(input.action as (typeof PIN_REVIEW_ACTIONS)[number])
+  ) {
+    throw new BadRequestException(
+      'action must be one of: APPROVE, REJECT.',
+    );
+  }
+
+  if (input.action === 'REJECT' && !input.reason) {
+    throw new BadRequestException('reason is required when rejecting a pin.');
+  }
+
+  if (input.reason != null && typeof input.reason !== 'string') {
+    throw new BadRequestException('reason must be a string.');
+  }
+}
+
 function assertAdminWeatherForecastDto(input: any): void {
   if (!input || typeof input !== 'object') {
     throw new BadRequestException('Query parameters are required.');
@@ -388,8 +477,16 @@ export class AdminOperationsController {
 
   @Get('volunteers/applications')
   @ApiOperation({ summary: 'List volunteer applications for admin review' })
-  async listVolunteerApplications(@Query('status') status?: string) {
-    return this.adminService.listVolunteerApplications(parseVolunteerStatus(status));
+  async listVolunteerApplications(
+    @Query('status') status?: string,
+    @Query('sortBy') sortBy?: 'createdAt' | 'updatedAt',
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+  ) {
+    return this.adminService.listVolunteerApplications({
+      status: parseVolunteerStatus(status),
+      sortBy,
+      sortOrder,
+    });
   }
 
   @Post('volunteers/applications/:id/review')
@@ -409,6 +506,54 @@ export class AdminOperationsController {
       nextStatus: body.nextStatus,
       reason: body.reason,
     });
+  }
+
+  @Post('volunteers/applications/bulk-review')
+  @ApiOperation({ summary: 'Bulk approve or reject volunteer applications' })
+  @ApiBody({ type: BulkReviewVolunteerDto })
+  async bulkReviewVolunteers(
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: BulkReviewVolunteerDto,
+  ) {
+    assertBulkReviewVolunteerDto(body);
+
+    return this.adminService.bulkReviewVolunteerApplications({
+      applicationIds: body.applicationIds,
+      reviewerId: session.user.id,
+      nextStatus: body.nextStatus,
+      reason: body.reason,
+    });
+  }
+
+  @Post('volunteers/:userId/suspend')
+  @ApiOperation({ summary: 'Suspend volunteer profile' })
+  @ApiParam({ name: 'userId', type: String })
+  @ApiBody({ type: SuspendReactivateVolunteerDto })
+  async suspendVolunteer(
+    @Param('userId') userId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: SuspendReactivateVolunteerDto,
+  ) {
+    return this.adminService.suspendVolunteer(userId, session.user.id, body.reason);
+  }
+
+  @Post('volunteers/:userId/reactivate')
+  @ApiOperation({ summary: 'Reactivate volunteer profile' })
+  @ApiParam({ name: 'userId', type: String })
+  @ApiBody({ type: SuspendReactivateVolunteerDto })
+  async reactivateVolunteer(
+    @Param('userId') userId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: SuspendReactivateVolunteerDto,
+  ) {
+    return this.adminService.reactivateVolunteer(userId, session.user.id, body.reason);
+  }
+
+  @Get('volunteers/applications/:id/history')
+  @ApiOperation({ summary: 'Get decision history for an application' })
+  @ApiParam({ name: 'id', type: String })
+  async getApplicationHistory(@Param('id') applicationId: string) {
+    return this.adminService.getApplicationHistory(applicationId);
   }
 
   @Post('warnings')
@@ -449,6 +594,24 @@ export class AdminOperationsController {
   @ApiOperation({ summary: 'Get operational pin statuses' })
   async pinStatuses() {
     return this.adminService.getPinStatuses();
+  }
+
+  @Post('pins/:id/review')
+  @ApiOperation({ summary: 'Approve or reject a hazard pin (admin only)' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiBody({ type: ReviewPinDto })
+  async reviewPin(
+    @Param('id') pinId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: ReviewPinDto,
+  ) {
+    assertReviewPinDto(body);
+    return this.adminService.reviewPin({
+      pinId,
+      reviewerId: session.user.id,
+      action: body.action,
+      reason: body.reason,
+    });
   }
 
   @Post('warnings/prompt-suggestion')

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { SimpleAssistantProvider } from './simple-assistant.provider';
+import { FlaskAssistantProvider } from './flask-assistant.provider';
 
 @Injectable()
 export class AssistantService {
-  constructor(private readonly provider: SimpleAssistantProvider) {}
+  constructor(private readonly provider: FlaskAssistantProvider) { }
 
   async answerInquiry(input: {
     question: string;

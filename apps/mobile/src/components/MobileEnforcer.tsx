@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Layout } from 'lucide-react';
+import { Layout } from 'lucide-react';
 
 export default function MobileEnforcer({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(true);

@@ -26,7 +26,7 @@ export default function LoginPage() {
       // AuthProvider effect will handle redirecting upon session detection
       window.location.href = '/'; 
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Invalid email or password / Emel atau kata laluan tidak sah');
+      setError(err?.message || err?.response?.data?.message || 'Invalid email or password / Emel atau kata laluan tidak sah');
     }
   };
 

@@ -1,6 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -66,23 +64,38 @@
   .wira-btn-emergency {
     @apply w-full bg-status-critical hover:bg-red-700 active:scale-95 text-white font-body font-bold text-lg uppercase tracking-wide px-6 py-4 rounded-xl transition-all duration-150 min-h-[56px] shadow-lg shadow-status-critical/30;
   }
+
+  /* Form and nav contrast: readable on light backgrounds */
+  .form-back-link {
+    color: var(--color-wira-earth-brown);
+    @apply text-xs font-display font-bold uppercase tracking-widest;
+  }
+  .form-back-link:hover {
+    color: var(--color-wira-deep-teal);
+  }
+
+  .form-label {
+    color: var(--color-wira-earth-brown);
+    @apply text-xs font-display font-bold uppercase tracking-widest;
+  }
+
+  .form-hint {
+    color: var(--color-wira-earth-brown);
+    opacity: 0.88;
+    @apply text-[10px] font-body;
+  }
+
+  .form-input-placeholder::placeholder {
+    color: var(--color-wira-earth-brown);
+    opacity: 0.7;
+  }
+
+  .nav-inactive {
+    color: var(--color-wira-earth-brown);
+    @apply font-body font-bold;
+  }
+  .nav-inactive:hover {
+    color: var(--color-wira-deep-teal);
+  }
 }
 
-@layer utilities {
-  .batik-overlay {
-    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAMUQ5oP8JLaEz7Xyq5B5OaGUEdi_gcq2TTaH8M4HWlGAZ8ZDVFVpJFkMue8Tkiktx6zoWl4yMvT0mpEwMPzojAbFCVa_5OA7Y1eYjmdTlXGWF8PfqiotV_tsPtTUoupoJi7NUcuY3bk_yt-wi0cKbAF345Tpk_v6_-M_AcKh5Q4xQEsHb7TiZ-uicTpSbLzvf67nNLW1zmmoXF4-Me5YRZxwlfUppdvXj97UqnSt2Q-4jMYEXxOlDg-RtfGJQgJW0oHlC_UempqU');
-    opacity: 0.05;
-  }
-  
-  .gradient-border {
-    border-image: linear-gradient(to right, #193ce6, #e61919) 1;
-  }
-  
-  .subtle-glow {
-    box-shadow: 0 0 15px -5px rgba(25, 60, 230, 0.2);
-  }
-  
-  .asean-gradient {
-    background: linear-gradient(135deg, #193ce6 0%, #e61919 100%);
-  }
-}

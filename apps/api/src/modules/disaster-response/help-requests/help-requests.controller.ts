@@ -67,8 +67,8 @@ export class HelpRequestsController {
   @Get()
   @UseGuards(ApprovedVolunteerGuard)
   @ApiOperation({ summary: 'List all open help requests for volunteers' })
-  async listOpen() {
-    return this.helpRequestsService.findAllOpen();
+  async listOpen(@AuthSessionParam() session: AuthSession) {
+    return this.helpRequestsService.findAllOpen(session.user.id);
   }
 
   @Get('assignments')

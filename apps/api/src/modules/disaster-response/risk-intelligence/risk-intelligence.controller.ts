@@ -1,11 +1,14 @@
 import {
   Controller,
   Get,
+  Param,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -52,5 +55,15 @@ export class RiskIntelligenceController {
   @ApiOperation({ summary: 'Get all active risk regions' })
   async getVulnerableRegions() {
     return this.riskService.getVulnerableRegions();
+  }
+  @Get('full-detail/:iso3')
+  @ApiOperation({ summary: 'Get full detail building profiles for a country and bbox' })
+  @ApiQuery({ name: 'bbox', type: String, description: 'minLng,minLat,maxLng,maxLat' })
+  @ApiOkResponse({ description: 'Returns GeoJSON FeatureCollection' })
+  async getFullDetail(
+    @Param('iso3') iso3: string,
+    @Query('bbox') bbox: string,
+  ) {
+    return this.riskService.getFullDetail(iso3, bbox);
   }
 }

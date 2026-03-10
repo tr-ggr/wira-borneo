@@ -2,20 +2,33 @@
 
 import {
   useAdminOperationsControllerMapOverview,
+  useAdminOperationsControllerReviewPin,
   useAdminOperationsControllerWeatherForecast,
   useAdminOperationsControllerWeatherGeocoding,
+  useRiskIntelligenceControllerGetFullDetail,
 } from '@wira-borneo/api-client';
 import Feature from 'ol/Feature';
+import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
+import Overlay from 'ol/Overlay';
 import View from 'ol/View';
 import { boundingExtent, createEmpty, extend as extendExtent, isEmpty } from 'ol/extent';
 import { Point, Polygon } from 'ol/geom';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
+import { transformExtent } from 'ol/proj';
 import { fromLonLat } from 'ol/proj';
 import OSM from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
-import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { Circle as CircleStyle, Fill, Stroke, Style, Text } from 'ol/style';
+import {
+  DoubleClickZoom,
+  MouseWheelZoom,
+  PinchZoom,
+  KeyboardZoom,
+  DragZoom,
+} from 'ol/interaction';
+import { Zoom } from 'ol/control';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import 'ol/ol.css';
 import {
@@ -39,11 +52,16 @@ interface PinStatus {
   id: string;
   title: string;
   hazardType: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
-  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'BLOCKED';
+  status: 'OPEN' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'RESOLVED';
   latitude: number;
   longitude: number;
   region?: string | null;
   note?: string | null;
+  photoUrl?: string | null;
+  reporter?: { name: string } | null;
+  reviewedAt?: string | null;
+  reviewNote?: string | null;
+  reviewStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
   updatedAt?: string;
 }
 
@@ -91,6 +109,14 @@ interface ForecastPayload {
 
 const ASEAN_EXTENT_LON_LAT: [number, number, number, number] = [92.0, -11.6, 141.5, 28.8];
 const ASEAN_CENTER_LON_LAT: [number, number] = [116.2, 4.7];
+
+const COUNTRY_COORDINATES: Record<string, [number, number]> = {
+  brn: [114.9481, 4.5353],
+  idn: [106.8456, -6.2088],
+  mys: [101.6869, 3.1390],
+  phl: [120.9842, 14.5995],
+  sgp: [103.8198, 1.3521],
+};
 
 function toRisks(raw: unknown): RegionRisk[] {
   return Array.isArray(raw) ? (raw as RegionRisk[]) : [];
@@ -182,6 +208,16 @@ function fmt(value: number | string | null | undefined, digits = 1): string {
   return String(value);
 }
 
+function getVulnerabilityColor(score: number): string {
+  // 0 is green, higher is redder. Let's assume 0-10 range for coloring.
+  if (score <= 0) return '#2E7D32'; // Green
+  if (score < 2) return '#4CAF50';  // Light Green
+  if (score < 4) return '#FFEB3B';  // Yellow
+  if (score < 7) return '#FF9800';  // Orange
+  if (score < 10) return '#F44336'; // Red
+  return '#B71C1C'; // Dark Red
+}
+
 export function OperationsMapPage() {
   const mapTargetRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
@@ -190,11 +226,15 @@ export function OperationsMapPage() {
   const pinSourceRef = useRef(new VectorSource());
   const userSourceRef = useRef(new VectorSource());
   const helpSourceRef = useRef(new VectorSource());
+  const clusteringSourceRef = useRef(new VectorSource());
   const aseanExtentRef = useRef(toAseanExtentProjection());
-  const firstFitDoneRef = useRef(false);
   const filteredPinsRef = useRef<PinStatus[]>([]);
   const filteredUsersRef = useRef<UserLocation[]>([]);
   const filteredHelpRequestsRef = useRef<UserHelpRequest[]>([]);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  const overlayRef = useRef<Overlay | null>(null);
+
+  const [hoveredBuilding, setHoveredBuilding] = useState<Record<string, any> | null>(null);
 
   const [hazardFilter, setHazardFilter] = useState<Record<string, boolean>>({
     TYPHOON: true,
@@ -204,15 +244,15 @@ export function OperationsMapPage() {
   });
   const [pinStatusFilter, setPinStatusFilter] = useState<Record<string, boolean>>({
     OPEN: true,
+    ACKNOWLEDGED: true,
     IN_PROGRESS: true,
-    BLOCKED: true,
     RESOLVED: false,
   });
   const [userFilter, setUserFilter] = useState<Record<string, boolean>>({
     RECENT: true,
     STALE: true,
   });
-  const [urgencyFilter, setUrgencyFilter] = useState<Record<string, boolean>>({
+  const [urgencyFilter] = useState<Record<string, boolean>>({
     LOW: true,
     MEDIUM: true,
     HIGH: true,
@@ -226,10 +266,24 @@ export function OperationsMapPage() {
   const [geocodeQuery, setGeocodeQuery] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [viewBuildingProfiles, setViewBuildingProfiles] = useState(false);
+  const [pinReviewReason, setPinReviewReason] = useState('');
+  const [buildingProfilingBBox, setBuildingProfilingBBox] = useState<string>('92.0,-11.6,141.5,28.8');
+  const [buildingProfilingCountry, setBuildingProfilingCountry] = useState('idn');
 
   const overviewQuery = useAdminOperationsControllerMapOverview({
     query: {
       select: (response) => toMapOverview(response),
+    },
+  });
+
+  const reviewPinMutation = useAdminOperationsControllerReviewPin({
+    mutation: {
+      onSuccess: () => {
+        overviewQuery.refetch();
+        setSelectedPin(null);
+        setPinReviewReason('');
+      },
     },
   });
 
@@ -260,6 +314,16 @@ export function OperationsMapPage() {
       query: {
         enabled: Boolean(geocodeQuery),
         select: (response) => toGeocodingResults(response),
+      },
+    },
+  );
+
+  const buildingProfilesQuery = useRiskIntelligenceControllerGetFullDetail(
+    buildingProfilingCountry,
+    { bbox: buildingProfilingBBox },
+    {
+      query: {
+        enabled: viewBuildingProfiles,
       },
     },
   );
@@ -411,6 +475,26 @@ export function OperationsMapPage() {
     setSelectedCoords([result.longitude, result.latitude]);
   }
 
+  function applyBuildingProfileFilter() {
+    const view = mapViewRef.current;
+    if (!view) return;
+
+    const coords = COUNTRY_COORDINATES[buildingProfilingCountry];
+    if (!coords) return;
+
+    // Lock to zoom 22 as requested
+    view.setProperties({
+      minZoom: 18,
+      maxZoom: 18,
+    });
+
+    view.animate({
+      center: fromLonLat(coords),
+      zoom: 18,
+      duration: 1000,
+    });
+  }
+
   useEffect(() => {
     if (!mapTargetRef.current || mapRef.current) {
       return;
@@ -423,24 +507,75 @@ export function OperationsMapPage() {
     const userLayer = new VectorLayer({ source: userSourceRef.current });
     const helpLayer = new VectorLayer({ source: helpSourceRef.current });
 
+    const clusteringLayer = new VectorLayer({
+      source: clusteringSourceRef.current,
+      style: new Style({
+        image: new CircleStyle({
+          radius: 10,
+          fill: new Fill({ color: 'rgba(255, 165, 0, 0.7)' }),
+          stroke: new Stroke({ color: '#fff', width: 2 }),
+        }),
+        text: new Text({
+          text: '', // Set dynamically
+        }),
+      }),
+      visible: viewBuildingProfiles,
+    });
+
+    clusteringLayer.setStyle((feature) => {
+      const featureType = feature.get('featureType');
+      if (featureType === 'building') {
+        const data = feature.get('data') || {};
+        const score = data.data.vulnerability_score || 0;
+        return new Style({
+          fill: new Fill({ color: getVulnerabilityColor(score) }),
+          stroke: new Stroke({ color: '#fff', width: 0.5 }),
+        });
+      }
+
+      const count = feature.get('count') || 1;
+      return new Style({
+        image: new CircleStyle({
+          radius: Math.min(20, 10 + count / 100),
+          fill: new Fill({ color: 'rgba(255, 165, 0, 0.7)' }),
+          stroke: new Stroke({ color: '#fff', width: 2 }),
+        }),
+        text: new Text({
+          text: count.toString(),
+          fill: new Fill({ color: '#fff' }),
+          font: 'bold 12px sans-serif',
+        }),
+      });
+    });
+
+
     const view = new View({
       center: fromLonLat(ASEAN_CENTER_LON_LAT),
       zoom: 4.8,
       minZoom: 3,
-      maxZoom: 13,
+      maxZoom: 22,
     });
 
     mapViewRef.current = view;
+
+    const overlay = new Overlay({
+      element: popupRef.current as HTMLDivElement,
+      autoPan: false,
+    });
+    overlayRef.current = overlay;
+
     mapRef.current = new Map({
       target: targetElement,
       layers: [
         new TileLayer({ source: new OSM() }),
+        clusteringLayer,
         hazardLayer,
         pinLayer,
         userLayer,
         helpLayer,
       ],
       view,
+      overlays: [overlay],
     });
 
     // Ensure OpenLayers recalculates viewport size after layout and future resizes.
@@ -451,17 +586,20 @@ export function OperationsMapPage() {
 
     requestAnimationFrame(() => {
       mapRef.current?.updateSize();
-      refocusAsean();
       setIsMapReady(true);
     });
 
-    mapRef.current.on('singleclick', (event) => {
-      const clickedFeature = mapRef.current
-        ?.getFeaturesAtPixel(event.pixel)
-        .find((feature) => {
-          const featureType = String(feature.get('featureType'));
-          return featureType === 'pin' || featureType === 'user' || featureType === 'help';
-        });
+    const map = mapRef.current;
+    if (!map) return;
+
+    map.on('singleclick', (event) => {
+      const clickedFeatures = map.getFeaturesAtPixel(event.pixel);
+      if (!clickedFeatures || clickedFeatures.length === 0) return;
+
+      const clickedFeature = clickedFeatures.find((feature) => {
+        const featureType = String(feature.get('featureType'));
+        return featureType === 'pin' || featureType === 'user' || featureType === 'help';
+      });
 
       if (!clickedFeature) {
         return;
@@ -507,6 +645,32 @@ export function OperationsMapPage() {
       }
     });
 
+    map.on('pointermove', (event) => {
+      if (event.dragging) return;
+      
+      const pixel = map.getEventPixel(event.originalEvent);
+      const feature = map.forEachFeatureAtPixel(pixel, (f) => f);
+      
+      if (feature && feature.get('featureType') === 'building') {
+        const data = feature.get('data');
+        console.log(data);
+        setHoveredBuilding(data.data);
+        overlay.setPosition(event.coordinate);
+        map.getTargetElement().style.cursor = 'pointer';
+      } else {
+        setHoveredBuilding(null);
+        overlay.setPosition(undefined);
+        map.getTargetElement().style.cursor = '';
+      }
+    });
+
+    map.on('moveend', () => {
+      const view = map.getView();
+      const extent = view.calculateExtent(map.getSize());
+      const transformedExtent = transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+      setBuildingProfilingBBox(transformedExtent.join(','));
+    });
+
     return () => {
       resizeObserver.disconnect();
       mapRef.current?.setTarget(undefined);
@@ -546,12 +710,6 @@ export function OperationsMapPage() {
   const hasAnyMapData =
     filteredRisks.length > 0 || filteredPins.length > 0 || filteredUsers.length > 0;
 
-  useEffect(() => {
-    if (!firstFitDoneRef.current && (filteredPins.length > 0 || filteredUsers.length > 0)) {
-      fitToData();
-      firstFitDoneRef.current = true;
-    }
-  }, [filteredPins.length, filteredUsers.length]);
 
   useEffect(() => {
     const source = hazardSourceRef.current;
@@ -593,7 +751,14 @@ export function OperationsMapPage() {
         new Style({
           image: new CircleStyle({
             radius: 8,
-            fill: new Fill({ color: pin.status === 'BLOCKED' ? '#D72B2B' : '#2E7D32' }),
+            fill: new Fill({
+              color:
+                pin.reviewStatus === 'REJECTED'
+                  ? '#D72B2B'
+                  : pin.reviewStatus === 'APPROVED'
+                    ? '#2E7D32'
+                    : '#1B5FA8',
+            }),
             stroke: new Stroke({ color: '#F5F0E8', width: 2 }),
           }),
         }),
@@ -660,6 +825,97 @@ export function OperationsMapPage() {
       source.addFeature(feature);
     });
   }, [filteredHelpRequests]);
+ 
+  useEffect(() => {
+    const source = clusteringSourceRef.current;
+    if (!viewBuildingProfiles || !buildingProfilesQuery.data) {
+      source.clear();
+      return;
+    }
+
+    const data = (buildingProfilesQuery as any).data;
+    source.clear();
+    const features = new GeoJSON().readFeatures(data as any, {
+      featureProjection: 'EPSG:3857',
+    });
+
+    // Ensure each building feature has required properties for styling and hover
+    features.forEach((feature) => {
+      feature.set('featureType', 'building');
+      feature.set('data', feature.getProperties());
+    });
+
+    source.addFeatures(features);
+  }, [viewBuildingProfiles, buildingProfilesQuery.data]);
+
+  useEffect(() => {
+    const view = mapViewRef.current;
+    if (!view) return;
+
+    if (viewBuildingProfiles) {
+      view.setMinZoom(18);
+      view.setMaxZoom(18);
+      // Force zoom to 18
+      view.setZoom(18);
+
+      // Disable all zoom-related interactions
+      mapRef.current?.getInteractions().forEach((interaction) => {
+        if (
+          interaction instanceof MouseWheelZoom ||
+          interaction instanceof DoubleClickZoom ||
+          interaction instanceof PinchZoom ||
+          interaction instanceof KeyboardZoom ||
+          interaction instanceof DragZoom
+        ) {
+          interaction.setActive(false);
+        }
+      });
+
+      // Disable zoom-related controls
+      mapRef.current?.getControls().forEach((control) => {
+        if (control instanceof Zoom) {
+          control.setTarget(null as any);
+        }
+      });
+    } else {
+      // Restore default constraints and interactions
+      view.setMinZoom(3);
+      view.setMaxZoom(22);
+
+      mapRef.current?.getInteractions().forEach((interaction) => {
+        if (
+          interaction instanceof MouseWheelZoom ||
+          interaction instanceof DoubleClickZoom ||
+          interaction instanceof PinchZoom ||
+          interaction instanceof KeyboardZoom ||
+          interaction instanceof DragZoom
+        ) {
+          interaction.setActive(true);
+        }
+      });
+
+      mapRef.current?.getControls().forEach((control) => {
+        if (control instanceof Zoom) {
+          control.setTarget(undefined as any);
+        }
+      });
+    }
+  }, [viewBuildingProfiles]);
+
+  useEffect(() => {
+    const layers = mapRef.current?.getLayers();
+    if (layers) {
+      const clusteringLayer = layers.getArray().find((l) => {
+        if (l instanceof VectorLayer) {
+          return l.getVisible() !== undefined && (l.getSource() === clusteringSourceRef.current);
+        }
+        return false;
+      });
+      if (clusteringLayer) {
+        clusteringLayer.setVisible(viewBuildingProfiles);
+      }
+    }
+  }, [viewBuildingProfiles]);
 
   return (
     <section className="page-shell">
@@ -683,6 +939,47 @@ export function OperationsMapPage() {
 
       <div className="map-layout map-layout-large">
         <aside className={`card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
+          <h2 className="card-title">Risk & Intelligence</h2>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={viewBuildingProfiles}
+              onChange={(event) => setViewBuildingProfiles(event.target.checked)}
+            />
+            <span>View Building Profiles (Overlay)</span>
+          </label>
+ 
+          {viewBuildingProfiles && (
+            <div className="card-content-stack" style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+              <p className="small muted">Data fetched dynamically based on map area.</p>
+              <label className="field-label">
+                Country
+                <select
+                  className="field"
+                  value={buildingProfilingCountry}
+                  onChange={(e) => setBuildingProfilingCountry(e.target.value)}
+                >
+                  <option value="brn">Brunei</option>
+                  <option value="idn">Indonesia</option>
+                  <option value="mys">Malaysia</option>
+                  <option value="phl">Philippines</option>
+                  <option value="sgp">Singapore</option>
+                </select>
+              </label>
+              <button
+                className="btn btn-warning"
+                type="button"
+                onClick={applyBuildingProfileFilter}
+                style={{ marginTop: '0.5rem' }}
+              >
+                Apply Filter
+              </button>
+              <p className="small muted">Showing full detail profiles</p>
+            </div>
+          )}
+
+          <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
+ 
           <h2 className="card-title">Hazard Layers</h2>
           {Object.keys(hazardFilter).map((key) => (
             <label className="checkbox-row" key={key}>
@@ -799,6 +1096,35 @@ export function OperationsMapPage() {
           {overviewQuery.isLoading ? <p className="muted small">Loading map datasets...</p> : null}
           {overviewQuery.isError ? <p className="error-text">Failed to load map datasets.</p> : null}
           <div ref={mapTargetRef} className="map-canvas" />
+          
+          <div ref={popupRef} className="map-hover-popup card" style={{ 
+            display: hoveredBuilding ? 'block' : 'none',
+            position: 'absolute',
+            zIndex: 100,
+            padding: '1rem',
+            minWidth: '200px',
+            pointerEvents: 'none',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }}>
+            {hoveredBuilding && (
+              <div className="popup-content">
+                <h3 className="small mono">Building Data</h3>
+                <div className="divider" style={{ margin: '0.5rem 0' }} />
+                <dl className="summary-grid" style={{ gridTemplateColumns: '1fr 1fr', fontSize: '0.75rem' }}>
+                  <dt>Stories</dt> <dd>{hoveredBuilding.stories ?? 'N/A'}</dd>
+                  <dt>Population</dt> <dd>{hoveredBuilding.total_pop?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>Children</dt> <dd>{hoveredBuilding.child_count?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>Elderly</dt> <dd>{hoveredBuilding.elderly_count?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>Vulnerability</dt> <dd><strong>{hoveredBuilding.vulnerability_score?.toFixed(2) ?? 'N/A'}</strong></dd>
+                  <dt>Risk Status</dt> <dd>{hoveredBuilding.risk_status ?? 'N/A'}</dd>
+                </dl>
+              </div>
+            )}
+          </div>
+
           {!isMapReady ? (
             <div className="map-overlay">
               <p className="small muted">Initializing map viewport...</p>
@@ -826,9 +1152,91 @@ export function OperationsMapPage() {
                 <dd>{selectedPin.region ?? 'Unknown'}</dd>
                 <dt>Hazard</dt>
                 <dd>{selectedPin.hazardType}</dd>
+                {selectedPin.reporter ? (
+                  <>
+                    <dt>Reporter</dt>
+                    <dd>{selectedPin.reporter.name}</dd>
+                  </>
+                ) : null}
+                {selectedPin.note ? (
+                  <>
+                    <dt>Note</dt>
+                    <dd className="small">{selectedPin.note}</dd>
+                  </>
+                ) : null}
                 <dt>Updated</dt>
                 <dd>{selectedPin.updatedAt ?? 'N/A'}</dd>
+                {selectedPin.reviewStatus ? (
+                  <>
+                    <dt>Review</dt>
+                    <dd>{selectedPin.reviewStatus}</dd>
+                    {selectedPin.reviewNote ? (
+                      <>
+                        <dt>Review note</dt>
+                        <dd className="small">{selectedPin.reviewNote}</dd>
+                      </>
+                    ) : null}
+                  </>
+                ) : null}
               </dl>
+              {selectedPin.photoUrl ? (
+                <div className="summary-grid" style={{ marginTop: '0.5rem' }}>
+                  <dt>Photo</dt>
+                  <dd>
+                    <img
+                      src={selectedPin.photoUrl}
+                      alt="Pin attachment"
+                      style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
+                    />
+                  </dd>
+                </div>
+              ) : null}
+              {selectedPin.reviewStatus !== 'APPROVED' && selectedPin.reviewStatus !== 'REJECTED' ? (
+                <div style={{ marginTop: '1rem' }}>
+                  <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>Review pin</h3>
+                  <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      className="field"
+                      placeholder="Reason (required for reject)"
+                      value={pinReviewReason}
+                      onChange={(e) => setPinReviewReason(e.target.value)}
+                      aria-label="Review reason"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-neutral"
+                      disabled={reviewPinMutation.isPending}
+                      onClick={() => {
+                        reviewPinMutation.mutate({
+                          id: selectedPin.id,
+                          data: { action: 'APPROVE' },
+                        });
+                      }}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-warning"
+                      disabled={reviewPinMutation.isPending || !pinReviewReason.trim()}
+                      onClick={() => {
+                        reviewPinMutation.mutate({
+                          id: selectedPin.id,
+                          data: { action: 'REJECT', reason: pinReviewReason.trim() },
+                        });
+                      }}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                  {reviewPinMutation.isError ? (
+                    <p className="error-text small" style={{ marginTop: '0.5rem' }}>
+                      Review failed. Please try again.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : null}
 

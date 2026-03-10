@@ -18,7 +18,7 @@ export default function Login({ onToggleRegister }: { onToggleRegister: () => vo
         router.refresh();
       },
       onError: (err: any) => {
-        setError(err?.response?.data?.message || 'Invalid Login Credentials');
+        setError(err?.message || err?.response?.data?.message || 'Invalid Login Credentials');
       }
     }
   });

@@ -42,9 +42,12 @@ export class HelpRequestsService {
     });
   }
 
-  async findAllOpen() {
+  async findAllOpen(excludeUserId?: string) {
     return this.prisma.helpRequest.findMany({
-      where: { status: 'OPEN' },
+      where: {
+        status: 'OPEN',
+        ...(excludeUserId ? { requesterId: { not: excludeUserId } } : {}),
+      },
       include: {
         requester: {
           select: {

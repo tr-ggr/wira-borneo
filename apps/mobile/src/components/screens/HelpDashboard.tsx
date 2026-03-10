@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LifeBuoy, 
   HandHeart, 
@@ -12,7 +12,10 @@ import {
   ChevronRight, 
   CheckCircle2, 
   Clock, 
-  User 
+  User,
+  XCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { 
   useVolunteersControllerApply, 
@@ -25,11 +28,33 @@ import {
 } from '@wira-borneo/api-client';
 import HelpRequestForm from '../help/HelpRequestForm';
 import HelpRequestTimeline from '../help/HelpRequestTimeline';
+import HazardPinForm from '../pin/HazardPinForm';
 
-export default function HelpDashboard() {
+const FALLBACK_LOCATION = { latitude: 1.5533, longitude: 110.3592 };
+
+export default function HelpDashboard({ 
+  onNavigateToRequest,
+  showAllPins,
+  onToggleShowAllPins,
+  formLocation,
+  setFormLocation,
+  pickLocationFor,
+  setPickLocationFor,
+  onNavigateToMap,
+}: { 
+  onNavigateToRequest: (id: string, loc: { latitude: number, longitude: number }) => void;
+  showAllPins: boolean;
+  onToggleShowAllPins: (show: boolean) => void;
+  formLocation: { latitude: number; longitude: number } | null;
+  setFormLocation: (loc: { latitude: number; longitude: number } | null) => void;
+  pickLocationFor: 'hazard' | 'help' | null;
+  setPickLocationFor: (v: 'hazard' | 'help' | null) => void;
+  onNavigateToMap: () => void;
+}) {
   const [activeTab, setActiveTab] = useState<'request' | 'volunteer'>('request');
   const [volunteerSubTab, setVolunteerSubTab] = useState<'available' | 'assigned'>('available');
   const [showForm, setShowForm] = useState(false);
+  const [showHazardPinForm, setShowHazardPinForm] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   const { data: volunteerStatus, refetch: refetchVolunteerStatus } = useVolunteersControllerGetStatus();
@@ -41,12 +66,25 @@ export default function HelpDashboard() {
   const { mutate: claimRequest, isPending: isClaiming } = useHelpRequestsControllerClaim();
   const { mutate: updateStatus, isPending: isUpdating } = useHelpRequestsControllerUpdateStatus();
 
-  // Mock location for demo purposes
-  const mockLocation = { latitude: 1.5533, longitude: 110.3592 };
+  // Default form location to user's current position when Help dashboard mounts
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setFormLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true }
+    );
+  }, [setFormLocation]);
+
+  const formLocationOrFallback = formLocation ?? FALLBACK_LOCATION;
 
   const handleFormSuccess = () => {
     setShowForm(false);
     refetchRequests();
+  };
+
+  const handleHazardPinSuccess = () => {
+    setShowHazardPinForm(false);
   };
 
   const handleApply = () => {
@@ -77,7 +115,8 @@ export default function HelpDashboard() {
     });
   };
 
-  const isApprovedVolunteer = volunteerStatus?.status === 'APPROVED';
+  const isApprovedVolunteer = (volunteerStatus as any)?.profile?.status === 'APPROVED';
+  const volunteerProfileStatus = (volunteerStatus as any)?.profile?.status;
 
   // Helper to cast API data to array safely
   const asArray = (data: any) => (Array.isArray(data) ? data : []);
@@ -91,7 +130,7 @@ export default function HelpDashboard() {
               <HelpCircle size={20} className="text-wira-gold" />
             </div>
             
-            {!showForm && !selectedRequest && activeTab === 'request' && (
+            {!showForm && !showHazardPinForm && !selectedRequest && activeTab === 'request' && (
                <button 
                  onClick={() => setShowForm(true)}
                  className="h-10 w-10 rounded-full bg-wira-teal text-white flex items-center justify-center shadow-lg shadow-wira-teal/20"
@@ -103,13 +142,13 @@ export default function HelpDashboard() {
           
           <div className="flex bg-wira-ivory-dark rounded-xl p-1">
             <button 
-              onClick={() => { setActiveTab('request'); setShowForm(false); setSelectedRequest(null); }}
+              onClick={() => { setActiveTab('request'); setShowForm(false); setShowHazardPinForm(false); setSelectedRequest(null); }}
               className={`flex-1 py-2 text-xs font-body font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'request' ? 'bg-white text-wira-teal shadow-sm' : 'text-wira-earth/50'}`}
             >
               Request Help
             </button>
             <button 
-              onClick={() => { setActiveTab('volunteer'); setShowForm(false); setSelectedRequest(null); }}
+              onClick={() => { setActiveTab('volunteer'); setShowForm(false); setShowHazardPinForm(false); setSelectedRequest(null); }}
               className={`flex-1 py-2 text-xs font-body font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'volunteer' ? 'bg-white text-wira-teal shadow-sm' : 'text-wira-earth/50'}`}
             >
               Volunteer
@@ -119,24 +158,54 @@ export default function HelpDashboard() {
 
       {activeTab === 'request' ? (
         <div className="space-y-6 animate-slide-up">
-           {showForm ? (
+           {showHazardPinForm ? (
              <div className="space-y-4">
-                <button 
+                <button
+                  type="button"
+                  onClick={() => setShowHazardPinForm(false)}
+                  className="form-back-link flex items-center gap-2"
+                >
+                  ← Back to Dashboard
+                </button>
+                <div className="wira-card p-6 border-wira-teal/10">
+                   <h3 className="text-xl font-display font-bold wira-card-title mb-6">Report hazard pin</h3>
+                   <HazardPinForm
+                     initialLocation={formLocationOrFallback}
+                     onSuccess={handleHazardPinSuccess}
+                     onChangeLocation={() => {
+                       setPickLocationFor('hazard');
+                       onNavigateToMap();
+                     }}
+                   />
+                </div>
+             </div>
+           ) : showForm ? (
+             <div className="space-y-4">
+                <button
+                  type="button"
                   onClick={() => setShowForm(false)}
-                  className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/50 flex items-center gap-2"
+                  className="form-back-link flex items-center gap-2"
                 >
                   ← Back to Dashboard
                 </button>
                 <div className="wira-card p-6 border-wira-teal/10">
                    <h3 className="text-xl font-display font-bold wira-card-title mb-6">New Help Request</h3>
-                   <HelpRequestForm initialLocation={mockLocation} onSuccess={handleFormSuccess} />
+                   <HelpRequestForm
+                     initialLocation={formLocationOrFallback}
+                     onSuccess={handleFormSuccess}
+                     onChangeLocation={() => {
+                       setPickLocationFor('help');
+                       onNavigateToMap();
+                     }}
+                   />
                 </div>
              </div>
            ) : selectedRequest ? (
              <div className="space-y-6 animate-slide-up">
-                <button 
+                <button
+                  type="button"
                   onClick={() => setSelectedRequest(null)}
-                  className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/50 flex items-center gap-2"
+                  className="form-back-link flex items-center gap-2"
                 >
                   ← Back to My Requests
                 </button>
@@ -190,6 +259,25 @@ export default function HelpDashboard() {
                   </button>
                </div>
 
+               <div className="wira-card p-6 border-wira-teal/20 bg-wira-teal/5 space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-wira-teal/10 flex items-center justify-center">
+                    <MapPin className="text-wira-teal w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-display font-bold wira-card-title">Report hazard pin</h3>
+                    <p className="text-xs font-body wira-card-body">
+                      Report a hazard (flood, damage, etc.) at your location. Admins will review and add it to the operations map.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowHazardPinForm(true)}
+                    className="w-full py-3 rounded-xl border border-wira-teal text-wira-teal text-sm font-bold uppercase tracking-wider hover:bg-wira-teal hover:text-white transition-all"
+                  >
+                    Report hazard
+                  </button>
+               </div>
+
                {asArray(myRequests).length > 0 && (
                  <div className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -229,19 +317,35 @@ export default function HelpDashboard() {
            {!isApprovedVolunteer ? (
              <div className="wira-card p-10 text-center space-y-6">
                 <div className="h-20 w-20 rounded-full bg-wira-gold/10 flex items-center justify-center mx-auto ring-8 ring-wira-gold/5">
-                   <HandHeart size={40} className="text-wira-gold" />
+                   {volunteerProfileStatus === 'SUSPENDED' ? (
+                     <AlertCircle size={40} className="text-status-critical" />
+                   ) : (
+                     <HandHeart size={40} className="text-wira-gold" />
+                   )}
                 </div>
                 <div className="space-y-2">
-                   <h3 className="text-xl font-display font-bold text-wira-earth">Become a Guardian</h3>
+                   <h3 className="text-xl font-display font-bold text-wira-earth">
+                     {volunteerProfileStatus === 'SUSPENDED' ? 'Account Suspended' : 'Become a Guardian'}
+                   </h3>
                    <p className="text-sm font-body text-wira-earth/60 leading-relaxed">
-                      Wira Borneo relies on community volunteers to respond to emergencies. Apply today to help your neighbors.
+                      {volunteerProfileStatus === 'PENDING' ? 'Your application is currently being reviewed by our team.' :
+                       volunteerProfileStatus === 'REJECTED' ? 'Your application was unfortunately rejected. Contact support for more info.' :
+                       volunteerProfileStatus === 'SUSPENDED' ? 'Your volunteer account has been suspended for safety reasons.' :
+                       'Wira Borneo relies on community volunteers to respond to emergencies. Apply today to help your neighbors.'}
                    </p>
                 </div>
                 
-                {volunteerStatus?.status === 'PENDING' ? (
+                {volunteerProfileStatus === 'PENDING' ? (
                    <div className="py-3 px-4 bg-wira-gold/10 rounded-xl border border-wira-gold/20 flex items-center gap-3 justify-center">
                       <Clock size={16} className="text-wira-gold" />
                       <span className="text-xs font-bold text-wira-gold uppercase tracking-wider">Application Pending</span>
+                   </div>
+                ) : volunteerProfileStatus === 'APPROVED' ? (
+                   null // Handled by outer condition
+                ) : volunteerProfileStatus === 'REJECTED' || volunteerProfileStatus === 'SUSPENDED' ? (
+                   <div className="py-3 px-4 bg-status-critical/10 rounded-xl border border-status-critical/20 flex items-center gap-3 justify-center">
+                      <AlertCircle size={16} className="text-status-critical" />
+                      <span className="text-xs font-bold text-status-critical uppercase tracking-wider">{volunteerProfileStatus}</span>
                    </div>
                 ) : (
                   <button 
@@ -269,6 +373,24 @@ export default function HelpDashboard() {
                       My Assignments
                    </button>
                 </div>
+
+                 <div className="wira-card p-4 flex items-center justify-between border-wira-teal/10 bg-wira-teal/5">
+                    <div className="flex items-center gap-3">
+                       <div className="h-8 w-8 rounded-lg bg-wira-teal/10 flex items-center justify-center">
+                          {showAllPins ? <Eye size={16} className="text-wira-teal" /> : <EyeOff size={16} className="text-wira-teal" />}
+                       </div>
+                       <div className="space-y-0.5">
+                          <p className="text-[10px] font-display font-bold uppercase tracking-wider text-wira-earth">Global Map Visibility</p>
+                          <p className="text-[9px] font-body text-wira-earth/50">Show all active help pins on the forecast map</p>
+                       </div>
+                    </div>
+                    <button 
+                      onClick={() => onToggleShowAllPins(!showAllPins)}
+                      className={`h-6 w-12 rounded-full transition-all relative ${showAllPins ? 'bg-wira-teal' : 'bg-wira-earth/20'}`}
+                    >
+                      <div className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${showAllPins ? 'right-1' : 'left-1'}`} />
+                    </button>
+                 </div>
 
                 {volunteerSubTab === 'available' ? (
                    <div className="space-y-4">
@@ -352,32 +474,41 @@ export default function HelpDashboard() {
                                  </p>
                                  <div className="flex items-center justify-between text-[10px] font-body text-wira-earth/40">
                                     <span>{assignment.helpRequest.requester?.name || 'Requester'}</span>
-                                    <div className="flex items-center gap-1 text-wira-teal cursor-pointer">
+                                     <div 
+                                        onClick={() => onNavigateToRequest(
+                                          assignment.helpRequest.id, 
+                                          { latitude: assignment.helpRequest.latitude, longitude: assignment.helpRequest.longitude }
+                                        )}
+                                        className="flex items-center gap-1 text-wira-teal cursor-pointer hover:text-wira-gold transition-colors"
+                                     >
                                        <MapPin size={10} />
                                        <span className="font-bold underline">Navigate</span>
                                     </div>
                                  </div>
                               </div>
 
-                              {assignment.helpRequest.status === 'CLAIMED' && (
-                                 <button 
-                                    onClick={() => handleUpdateStatus(assignment.helpRequest.id, 'IN_PROGRESS')}
-                                    disabled={isUpdating}
-                                    className="w-full wira-btn-primary py-3 text-xs"
-                                 >
-                                    I am On Site
-                                 </button>
-                              )}
+                              <div className="flex gap-2">
+                                 {assignment.helpRequest.status === 'CLAIMED' && (
+                                    <>
+                                       <button 
+                                          onClick={() => handleUpdateStatus(assignment.helpRequest.id, 'IN_PROGRESS')}
+                                          disabled={isUpdating}
+                                          className="flex-1 wira-btn-primary py-3 text-xs"
+                                       >
+                                          I am On Site
+                                       </button>
+                                       <button 
+                                          onClick={() => handleUpdateStatus(assignment.helpRequest.id, 'CANCELLED')}
+                                          disabled={isUpdating}
+                                          className="px-4 bg-wira-ivory-dark text-wira-earth/60 py-3 rounded-xl font-display font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 border border-wira-earth/10 hover:bg-status-critical/10 hover:text-status-critical transition-all"
+                                       >
+                                          <XCircle size={14} />
+                                          Cancel
+                                       </button>
+                                    </>
+                                 )}
+                              </div>
                               
-                              {assignment.helpRequest.status === 'IN_PROGRESS' && (
-                                 <button 
-                                    onClick={() => handleUpdateStatus(assignment.helpRequest.id, 'RESOLVED')}
-                                    disabled={isUpdating}
-                                    className="w-full bg-status-safe text-white py-3 rounded-xl font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-status-safe/20"
-                                 >
-                                    Mark as Resolved
-                                 </button>
-                              )}
                               
                               {assignment.helpRequest.status === 'RESOLVED' && (
                                  <div className="py-2 text-center text-[10px] font-bold text-status-safe uppercase tracking-widest flex items-center justify-center gap-2">
