@@ -8,12 +8,19 @@ import { ReliefZonesMap } from './components/ReliefZonesMap';
 import { RecentImpactLogs } from './components/RecentImpactLogs';
 import { DonationDistribution } from './components/DonationDistribution';
 import { useNetworkStats } from '../lib/blockchain/hooks';
-import { useStats, useValidators } from '../lib/api/hooks';
+import {
+  useTrackerControllerGetStats,
+  useTrackerControllerGetValidators,
+} from '@wira-borneo/api-client';
 
 export default function DashboardPage() {
   const { validatorCount } = useNetworkStats();
-  const { data: stats } = useStats();
-  const { data: validators } = useValidators();
+  const { data: stats } = useTrackerControllerGetStats({
+    query: { refetchInterval: 30000 },
+  });
+  const { data: validators } = useTrackerControllerGetValidators({
+    query: { refetchInterval: 30000 },
+  });
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen relative">

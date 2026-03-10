@@ -4,16 +4,25 @@ import { useState } from 'react';
 import { Header } from '../../components/Header';
 import { ShipmentTable } from './components/ShipmentTable';
 import { TrustBanner } from './components/TrustBanner';
-import { useShipments } from '../../lib/api/hooks';
+import { useTrackerControllerGetShipments } from '@wira-borneo/api-client';
 
 type TabType = 'dispatched' | 'in_transit' | 'delivered';
 
 export default function TransactionsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('dispatched');
 
-  const { data: dispatched = [] } = useShipments('DISPATCHED');
-  const { data: inTransit = [] } = useShipments('IN_TRANSIT');
-  const { data: delivered = [] } = useShipments('DELIVERED');
+  const { data: dispatched = [] } = useTrackerControllerGetShipments({
+    params: { status: 'DISPATCHED' },
+    query: { refetchInterval: 30000 },
+  });
+  const { data: inTransit = [] } = useTrackerControllerGetShipments({
+    params: { status: 'IN_TRANSIT' },
+    query: { refetchInterval: 30000 },
+  });
+  const { data: delivered = [] } = useTrackerControllerGetShipments({
+    params: { status: 'DELIVERED' },
+    query: { refetchInterval: 30000 },
+  });
 
   const tabs: { key: TabType; label: string; icon: string; count: number }[] = [
     {

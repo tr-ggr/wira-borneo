@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useReliefZones } from '../../lib/api/hooks';
+import { useTrackerControllerGetReliefZones } from '@wira-borneo/api-client';
 
 export function ReliefZonesMap() {
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
-  const { data: zones = [] } = useReliefZones();
+  const { data: zones = [] } = useTrackerControllerGetReliefZones({
+    query: { refetchInterval: 30000 },
+  });
 
   // Transform API data to include position information
   const reliefZones = zones.map((zone, index) => ({

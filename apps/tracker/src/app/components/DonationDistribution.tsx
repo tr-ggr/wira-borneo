@@ -1,9 +1,12 @@
 'use client';
 
-import { useDonationDistribution } from '../../lib/api/hooks';
+import { useTrackerControllerGetDonationDistribution } from '@wira-borneo/api-client';
 
 export function DonationDistribution() {
-  const { data: distribution, isLoading } = useDonationDistribution();
+  const { data: distribution, isLoading } =
+    useTrackerControllerGetDonationDistribution({
+      query: { refetchInterval: 30000 },
+    });
 
   const categories = distribution
     ? Object.entries(distribution).map(([name, percentage]) => ({
