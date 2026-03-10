@@ -6,35 +6,7 @@ This guide defines how to write tickets in this monorepo.
 
 1. One ticket = one problem only.
 2. All tickets live in `tickets/`.
-3. Ticket content must be **<= 1000 characters total**.
-4. If it cannot fit, split into linked tickets.
-5. Use this stack context: Next.js apps (`admin`, `mobile`, `tracker`) + NestJS API + Prisma + generated API client.
-
-## Character Limit Policy
-
-- Scope: full `.md` file content in `tickets/*.md`.
-- Limit: `1000` characters max.
-- Enforcement: hard fail in pre-commit/CI.
-- No exceptions for `**[PRIORITY]**` or `**[CRITICAL]**`.
-
-Recommended section budgets:
-
-- `Problem`: <= 280 chars
-- `Potentially Related Files`: <= 300 chars
-- `What to Fix`: <= 260 chars
-- `Acceptance Criteria`: <= 160 chars
-
-### Hard-Fail Check (PowerShell)
-
-```powershell
-Get-ChildItem tickets -Filter *.md | ForEach-Object {
-	$content = Get-Content $_.FullName -Raw
-	if ($content.Length -gt 1000) {
-		Write-Error "Ticket '$($_.Name)' exceeds 1000 chars: $($content.Length)"
-		exit 1
-	}
-}
-```
+3. Use this stack context: Next.js apps (`admin`, `mobile`, `tracker`) + NestJS API + Prisma + generated API client.
 
 ## Required Ticket Format
 
@@ -68,7 +40,6 @@ Constraints:
 - `What to Fix`: 3-7 items max.
 - `Acceptance Criteria`: 3-5 bullets max.
 - No sub-bullets.
-- If character count is tight, keep links but omit line anchors.
 
 ## File Naming
 
@@ -124,7 +95,7 @@ Generated client:
 
 Before submitting, confirm:
 
-- Scope is single-problem and fits under 1000 chars.
+- Scope is single-problem.
 - Roles/permissions are explicit (`public`, `authenticated`, `admin`, `volunteer`, etc.).
 - DB impact is explicit (no schema change vs new migration).
 - API impact is explicit (endpoint/DTO change or no API change).
@@ -135,13 +106,12 @@ Before submitting, confirm:
 
 Reject ticket if any is true:
 
-- Over 1000 chars.
 - Missing required sections.
 - Vague fixes (for example: "improve UI", "fix backend").
 - Missing path references for touched layers.
 - Multiple unrelated problems in one ticket.
 
-## Example (Compliant, Short)
+## Example (Compliant)
 
 ```markdown
 # Admin export damage report PDF

@@ -98,11 +98,15 @@ export class AuthService {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        throw data;
+      }
+
       return {
         response,
         data: {
           token: data.token,
-          user: this.toAuthenticatedUser(data.user),
+          user: data.user ? this.toAuthenticatedUser(data.user) : null,
         },
       };
     } catch (error) {
@@ -129,11 +133,15 @@ export class AuthService {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        throw data;
+      }
+
       return {
         response,
         data: {
           token: data.token,
-          user: this.toAuthenticatedUser(data.user),
+          user: data.user ? this.toAuthenticatedUser(data.user) : null,
         },
       };
     } catch (error) {
@@ -216,15 +224,25 @@ export class AuthService {
       message?: string;
       status?: number;
       code?: string;
+      error?: string | { message?: string; status?: number };
     };
 
-    const message = apiError?.message ?? 'Authentication failed.';
+    let message = apiError?.message || 'Authentication failed.';
+    
+    // Better Auth sometimes puts the message inside an 'error' object or field
+    if (typeof apiError.error === 'string') {
+      message = apiError.error;
+    } else if (apiError.error?.message) {
+      message = apiError.error.message;
+    }
+
     const normalized = message.toLowerCase();
 
     if (
       normalized.includes('already exists') ||
       normalized.includes('duplicate') ||
-      normalized.includes('unique constraint')
+      normalized.includes('unique constraint') ||
+      apiError.code === 'USER_ALREADY_EXISTS'
     ) {
       throw new ConflictException({
         errorCode: 'USER_ALREADY_EXISTS',
@@ -232,7 +250,7 @@ export class AuthService {
       });
     }
 
-    if (apiError?.status === 401 || apiError?.status === 403) {
+    if (apiError?.status === 401 || apiError?.status === 403 || apiError.code === 'UNAUTHORIZED') {
       throw new UnauthorizedException(
         options?.defaultUnauthorizedMessage ?? message,
       );

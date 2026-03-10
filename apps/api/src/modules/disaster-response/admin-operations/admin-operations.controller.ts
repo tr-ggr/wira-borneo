@@ -185,6 +185,31 @@ class AdminPinStatusDto {
   region?: string;
   @ApiPropertyOptional()
   note?: string;
+  @ApiPropertyOptional()
+  photoUrl?: string;
+  @ApiPropertyOptional()
+  photoKey?: string;
+  @ApiPropertyOptional()
+  reportedAt?: Date;
+  @ApiPropertyOptional({ type: 'object', properties: { name: { type: 'string' } } })
+  reporter?: { name: string };
+  @ApiPropertyOptional()
+  reviewedById?: string;
+  @ApiPropertyOptional()
+  reviewedAt?: Date;
+  @ApiPropertyOptional()
+  reviewNote?: string;
+  @ApiPropertyOptional({ enum: ['PENDING', 'APPROVED', 'REJECTED'] })
+  reviewStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  @ApiPropertyOptional()
+  updatedAt?: Date;
+}
+
+class ReviewPinDto {
+  @ApiProperty({ enum: ['APPROVE', 'REJECT'] })
+  action!: 'APPROVE' | 'REJECT';
+  @ApiPropertyOptional()
+  reason?: string;
 }
 
 class AdminUserLocationDto {
@@ -355,6 +380,30 @@ function assertWarningPromptSuggestionDto(
 
   if (input.radiusKm != null && Number(input.radiusKm) <= 0) {
     throw new BadRequestException('radiusKm must be greater than 0.');
+  }
+}
+
+const PIN_REVIEW_ACTIONS = ['APPROVE', 'REJECT'] as const;
+
+function assertReviewPinDto(input: ReviewPinDto): void {
+  if (!input || typeof input !== 'object') {
+    throw new BadRequestException('Request body is required.');
+  }
+
+  if (
+    !PIN_REVIEW_ACTIONS.includes(input.action as (typeof PIN_REVIEW_ACTIONS)[number])
+  ) {
+    throw new BadRequestException(
+      'action must be one of: APPROVE, REJECT.',
+    );
+  }
+
+  if (input.action === 'REJECT' && !input.reason) {
+    throw new BadRequestException('reason is required when rejecting a pin.');
+  }
+
+  if (input.reason != null && typeof input.reason !== 'string') {
+    throw new BadRequestException('reason must be a string.');
   }
 }
 
@@ -545,6 +594,24 @@ export class AdminOperationsController {
   @ApiOperation({ summary: 'Get operational pin statuses' })
   async pinStatuses() {
     return this.adminService.getPinStatuses();
+  }
+
+  @Post('pins/:id/review')
+  @ApiOperation({ summary: 'Approve or reject a hazard pin (admin only)' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiBody({ type: ReviewPinDto })
+  async reviewPin(
+    @Param('id') pinId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: ReviewPinDto,
+  ) {
+    assertReviewPinDto(body);
+    return this.adminService.reviewPin({
+      pinId,
+      reviewerId: session.user.id,
+      action: body.action,
+      reason: body.reason,
+    });
   }
 
   @Post('warnings/prompt-suggestion')

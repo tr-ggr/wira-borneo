@@ -10,7 +10,8 @@
     "prisma:migrate:status": "prisma migrate status --config prisma.config.ts",
     "prisma:migrate-dev": "prisma migrate dev --config prisma.config.ts",
     "prisma:reset": "prisma migrate reset --config prisma.config.ts --force",
-    "prisma:seed": "prisma db seed --config prisma.config.ts"
+    "prisma:seed": "prisma db seed --config prisma.config.ts",
+    "ingest" : "npx tsx --env-file=.env scripts/ingest-building-profiles.ts"
   },
   "nx": {
     "targets": {
@@ -171,21 +172,12 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
-    "@nestjs/swagger": "^11.2.6",
-    "@prisma/adapter-pg": "^7.4.2",
-    "@prisma/client": "^7.4.2",
-    "bcrypt": "^6.0.0",
-    "better-auth": "^1.5.4",
-    "dotenv": "^16.4.7",
-    "pg": "^8.20.0",
-    "prisma": "^7.4.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
     "swagger-ui-express": "^5.0.1",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.0.0",
-    "@types/bcrypt": "^6.0.0"
+    "@nestjs/testing": "^11.0.0"
   }
 }

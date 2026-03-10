@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +19,11 @@ import { VolunteersService } from './volunteers.service';
 
 class VolunteerApplicationDto {
   notes?: string;
+}
+
+class VolunteerHomeDto {
+  baseLatitude!: number;
+  baseLongitude!: number;
 }
 
 @ApiTags('volunteers')
@@ -41,5 +47,19 @@ export class VolunteersController {
   @ApiOperation({ summary: 'Get volunteer profile/application status' })
   async getStatus(@AuthSessionParam() session: AuthSession) {
     return this.volunteersService.myStatus(session.user.id);
+  }
+
+  @Patch('me/home')
+  @ApiOperation({ summary: 'Set volunteer home location' })
+  @ApiBody({ type: VolunteerHomeDto })
+  async setHome(
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: VolunteerHomeDto,
+  ) {
+    return this.volunteersService.setHome(
+      session.user.id,
+      body.baseLatitude,
+      body.baseLongitude,
+    );
   }
 }

@@ -1,10 +1,120 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
-const databaseUrl = process.env.DATABASE_URL;
+const EVAC_GEOJSON_PATH = join(process.cwd(), 'geojson', 'evacuation', 'ph_evacs_cleaned.geojson');
+const EVAC_RAW_GEOJSON_PATH = join(process.cwd(), 'geojson', 'evacuation', 'ph_evacs_raw.geojson');
+const EVAC_IMPORT_LIMIT = 500;
+function polygonCentroid(ring) {
+    if (!ring || ring.length === 0)
+        return null;
+    let sumLon = 0;
+    let sumLat = 0;
+    for (const p of ring) {
+        sumLon += p[0];
+        sumLat += p[1];
+    }
+    return [sumLon / ring.length, sumLat / ring.length];
+}
+function getCentroid(geom) {
+    const coords = geom.coordinates;
+    if (!Array.isArray(coords))
+        return null;
+    if (geom.type === 'Polygon') {
+        const ring = coords[0];
+        return polygonCentroid(ring);
+    }
+    if (geom.type === 'MultiPolygon') {
+        const firstPoly = coords[0];
+        if (!firstPoly || !firstPoly[0])
+            return null;
+        return polygonCentroid(firstPoly[0]);
+    }
+    return null;
+}
+function buildRawLookup() {
+    const map = new Map();
+    try {
+        const raw = readFileSync(EVAC_RAW_GEOJSON_PATH, 'utf-8');
+        const geojson = JSON.parse(raw);
+        for (const f of geojson.features ?? []) {
+            const props = f.properties ?? {};
+            const atId = props['@id'];
+            const id = atId != null
+                ? String(atId).replace(/^relation\//, '').replace(/^way\//, '')
+                : String(props.id ?? props.ref ?? '');
+            if (!id)
+                continue;
+            let population = null;
+            if (props['population:pupils:2015'] != null)
+                population = String(props['population:pupils:2015']);
+            else if (props['population:pupils:2012'] != null)
+                population = String(props['population:pupils:2012']);
+            else {
+                const popKey = Object.keys(props).find((k) => k.startsWith('population'));
+                if (popKey && props[popKey] != null)
+                    population = String(props[popKey]);
+            }
+            const source = props.source != null ? String(props.source) : null;
+            map.set(id, { population, source });
+        }
+    }
+    catch {
+        // raw file optional
+    }
+    return map;
+}
+function loadEvacuationGeoJson() {
+    try {
+        const rawLookup = buildRawLookup();
+        const raw = readFileSync(EVAC_GEOJSON_PATH, 'utf-8');
+        const geojson = JSON.parse(raw);
+        const out = [];
+        const features = (geojson.features ?? []).slice(0, EVAC_IMPORT_LIMIT);
+        for (const f of features) {
+            const geom = f.geometry;
+            const props = f.properties ?? {};
+            if (!geom || !Array.isArray(geom.coordinates))
+                continue;
+            const centroid = getCentroid(geom);
+            if (!centroid)
+                continue;
+            const [longitude, latitude] = centroid;
+            const id = String(props.id ?? '');
+            const name = String(props.name ?? 'Evacuation site').trim() || 'Evacuation site';
+            const region = props.province != null ? String(props.province) : null;
+            const parts = [props.place, props.city, props.municipality].filter(Boolean).map(String);
+            const address = parts.length > 0 ? parts.join(', ') : null;
+            const type = props.type != null ? String(props.type) : null;
+            const capacity = props.capacity != null ? String(props.capacity) : null;
+            const rawData = rawLookup.get(id);
+            const population = rawData?.population ?? null;
+            const source = rawData?.source ?? null;
+            out.push({
+                id: `evac-ph-${id}`,
+                name,
+                latitude,
+                longitude,
+                address,
+                region,
+                type,
+                capacity,
+                population,
+                source,
+            });
+        }
+        return out;
+    }
+    catch {
+        return [];
+    }
+}
+// Prefer direct connection for seed (required for Supabase; pooler can cause issues)
+const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!databaseUrl) {
-    throw new Error('DATABASE_URL is not set');
+    throw new Error('DATABASE_URL or DIRECT_URL is not set');
 }
 const adapter = new PrismaPg({ connectionString: databaseUrl });
 const prisma = new PrismaClient({ adapter });
@@ -12,21 +122,6 @@ async function main() {
     console.log('Seed starting...');
     // 1. Clear existing data (optional, but good for clean seeds)
     // Note: Order matters for deletion due to foreign keys
-    console.log('Clearing existing seed data...');
-    await prisma.helpRequestEvent.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.helpAssignment.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.helpRequest.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.volunteerDecisionLog.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.volunteerApplication.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.volunteerProfile.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.warningEventLog.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.warningEventEvacuationArea.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.evacuationRouteSuggestion.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.warningTargetArea.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.warningEvent.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.familyMember.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.family.deleteMany({ where: { id: { startsWith: 'seed-' } } });
-    await prisma.userLocationSnapshot.deleteMany({ where: { id: { startsWith: 'seed-' } } });
     await prisma.mapPinStatus.deleteMany({ where: { id: { startsWith: 'seed-' } } });
     await prisma.evacuationArea.deleteMany({ where: { id: { startsWith: 'seed-' } } });
     await prisma.riskRegionSnapshot.deleteMany({ where: { id: { startsWith: 'seed-' } } });
@@ -84,113 +179,7 @@ async function main() {
             },
         });
     }
-    // Specific test user for demographics
-    console.log('Seeding demographic test user...');
-    await prisma.user.upsert({
-        where: { id: '1aM6xRLAxxV1D6DfrfLuYaf6ovInp7ui' },
-        update: {
-            age: 65,
-            housingType: 'LONGHOUSE',
-            personalInfo: {
-                languages: ['Malay', 'Iban'],
-            },
-            vulnerabilities: {
-                disabilities: ['Wheelchair user', 'Partially sighted'],
-                assistive_devices: ['Wheelchair', 'Hearing aid'],
-            },
-            householdComposition: {
-                infants: 2,
-                elderly: 2,
-                pwd: 1,
-                pregnant: 1,
-            },
-            emergencySkills: ['First Aid (Red Cross certified)', 'Swimming'],
-            assets: ['Portable Generator', 'Small Motorized Boat'],
-        },
-        create: {
-            id: '1aM6xRLAxxV1D6DfrfLuYaf6ovInp7ui',
-            name: 'Demographic Test User',
-            email: 'demo-test@wira-borneo.com',
-            role: 'user',
-            emailVerified: true,
-            age: 65,
-            housingType: 'LONGHOUSE',
-            personalInfo: {
-                languages: ['Malay', 'Iban'],
-            },
-            vulnerabilities: {
-                disabilities: ['Wheelchair user', 'Partially sighted'],
-                assistive_devices: ['Wheelchair', 'Hearing aid'],
-            },
-            householdComposition: {
-                infants: 2,
-                elderly: 2,
-                pwd: 1,
-                pregnant: 1,
-            },
-            emergencySkills: ['First Aid (Red Cross certified)', 'Swimming'],
-            assets: ['Portable Generator', 'Small Motorized Boat'],
-            accounts: {
-                create: {
-                    id: 'acc-demo-test',
-                    accountId: 'demo-test',
-                    providerId: 'credential',
-                    password: hashedPassword,
-                },
-            },
-        },
-    });
-    // 3. Seed Families
-    console.log('Seeding families...');
-    await prisma.family.upsert({
-        where: { id: 'seed-family-1' },
-        update: {},
-        create: {
-            id: 'seed-family-1',
-            name: 'The One Family',
-            code: 'F1-SEED',
-            createdById: 'seed-user-1',
-            members: {
-                createMany: {
-                    data: [
-                        { id: 'seed-fmem-1', userId: 'seed-user-1', role: 'HEAD' },
-                        { id: 'seed-fmem-2', userId: 'seed-user-2', role: 'MEMBER' },
-                    ],
-                },
-            },
-        },
-    });
-    await prisma.family.upsert({
-        where: { id: 'seed-family-2' },
-        update: {},
-        create: {
-            id: 'seed-family-2',
-            name: 'The Three Family',
-            code: 'F3-SEED',
-            createdById: 'seed-user-3',
-            members: {
-                createMany: {
-                    data: [
-                        { id: 'seed-fmem-3', userId: 'seed-user-3', role: 'HEAD' },
-                    ],
-                },
-            },
-        },
-    });
-    // 4. Seed Volunteer Profiles
-    console.log('Seeding volunteers...');
-    await prisma.volunteerProfile.upsert({
-        where: { userId: 'seed-user-2' },
-        update: {},
-        create: {
-            id: 'seed-vol-2',
-            userId: 'seed-user-2',
-            status: 'APPROVED',
-            approvedById: 'seed-user-admin',
-            approvedAt: new Date(),
-        },
-    });
-    // 5. Seed Disaster Response Data
+    // 3. Seed Disaster Response Data (porting from .sql)
     console.log('Seeding disaster response data...');
     await prisma.riskRegionSnapshot.upsert({
         where: { id: 'seed-risk-flood-1' },
@@ -248,63 +237,39 @@ async function main() {
             isActive: true,
         },
     });
-    // 6. Seed Warning Events
-    console.log('Seeding warning events...');
-    await prisma.warningEvent.upsert({
-        where: { id: 'seed-warning-1' },
-        update: {},
-        create: {
-            id: 'seed-warning-1',
-            title: 'Critical Flood Warning',
-            message: 'Severe flooding expected in Central River area. Please evacuate immediately.',
-            hazardType: 'FLOOD',
-            severity: 'CRITICAL',
-            status: 'SENT',
-            startsAt: new Date(),
-            createdById: 'seed-user-admin',
-            targetAreas: {
-                create: {
-                    id: 'seed-target-1',
-                    areaName: 'Central River Zone',
-                    latitude: 3.1400,
-                    longitude: 113.0400,
-                    radiusKm: 10,
+    const evacFromGeojson = loadEvacuationGeoJson();
+    if (evacFromGeojson.length > 0) {
+        console.log(`Seeding ${evacFromGeojson.length} evacuation areas from GeoJSON...`);
+        for (const e of evacFromGeojson) {
+            await prisma.evacuationArea.upsert({
+                where: { id: e.id },
+                update: {
+                    name: e.name,
+                    latitude: e.latitude,
+                    longitude: e.longitude,
+                    address: e.address,
+                    region: e.region,
+                    type: e.type,
+                    capacity: e.capacity,
+                    population: e.population,
+                    source: e.source,
                 },
-            },
-            evacuationAreas: {
                 create: {
-                    id: 'seed-we-evac-1',
-                    evacuationAreaId: 'seed-evac-1',
+                    id: e.id,
+                    name: e.name,
+                    latitude: e.latitude,
+                    longitude: e.longitude,
+                    address: e.address,
+                    region: e.region,
+                    type: e.type,
+                    capacity: e.capacity,
+                    population: e.population,
+                    source: e.source,
+                    isActive: true,
                 },
-            },
-        },
-    });
-    // 7. Seed Help Requests
-    console.log('Seeding help requests...');
-    await prisma.helpRequest.upsert({
-        where: { id: 'seed-help-1' },
-        update: {},
-        create: {
-            id: 'seed-help-1',
-            requesterId: 'seed-user-1',
-            familyId: 'seed-family-1',
-            hazardType: 'FLOOD',
-            urgency: 'HIGH',
-            status: 'CLAIMED',
-            description: 'Flood water entering ground floor, need assistance moving elderly.',
-            latitude: 3.1450,
-            longitude: 113.0450,
-            assignments: {
-                create: {
-                    id: 'seed-assign-1',
-                    volunteerId: 'seed-user-2',
-                    status: 'CLAIMED',
-                },
-            },
-        },
-    });
-    // 8. Seed Map Pins
-    console.log('Seeding map pins...');
+            });
+        }
+    }
     await prisma.mapPinStatus.upsert({
         where: { id: 'seed-pin-1' },
         update: {},
@@ -318,21 +283,6 @@ async function main() {
             longitude: 113.0600,
             region: 'Kuching',
             note: 'Initial seeded operational pin',
-        },
-    });
-    await prisma.mapPinStatus.upsert({
-        where: { id: 'seed-pin-2' },
-        update: {},
-        create: {
-            id: 'seed-pin-2',
-            title: 'Road collapse at KM 12',
-            hazardType: 'EARTHQUAKE',
-            status: 'OPEN',
-            priority: 4,
-            latitude: 3.1800,
-            longitude: 113.1000,
-            region: 'Kuching',
-            note: 'Foundations weakened by aftershock.',
         },
     });
     console.log('Seed completed successfully.');

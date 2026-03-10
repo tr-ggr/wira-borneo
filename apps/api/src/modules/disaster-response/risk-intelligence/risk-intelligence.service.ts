@@ -132,4 +132,43 @@ export class RiskIntelligenceService {
       take: 100,
     });
   }
+
+  async getFullDetail(iso3: string, bbox: string) {
+    const [minLng, minLat, maxLng, maxLat] = bbox.split(',').map(Number);
+
+    const result = await this.prisma.$queryRawUnsafe<
+      { id: string; iso3: string; properties: any; geojson: string }[]
+    >(
+      `
+      SELECT 
+        id, 
+        iso3, 
+        properties, 
+        ST_AsGeoJSON(geom) AS geojson
+      FROM building_profiles
+      WHERE iso3 = $1
+      AND ST_Intersects(geom, ST_MakeEnvelope($2, $3, $4, $5, 4326))
+      LIMIT 5000
+    `,
+      iso3,
+      minLng,
+      minLat,
+      maxLng,
+      maxLat,
+    );
+
+    return {
+      type: 'FeatureCollection',
+      features: result.map((row) => ({
+        type: 'Feature',
+        geometry: JSON.parse(row.geojson),
+        properties: {
+          id: row.id,
+          iso3: row.iso3,
+          data: row.properties,
+        },
+      })),
+    };
+  }
+
 }

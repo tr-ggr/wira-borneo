@@ -15,9 +15,26 @@ export const customInstance = <T>(
     ...config,
     ...options,
     cancelToken: source.token,
-  }).then(({ data }) => data);
+  })
+    .then(({ data }) => data)
+    .catch((error) => {
+      // Normalize error response
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'An unexpected error occurred';
+      
+      const normalizedError = new Error(message);
+      // @ts-ignore
+      normalizedError.response = error.response;
+      // @ts-ignore
+      normalizedError.status = error.response?.status;
+      
+      throw normalizedError;
+    });
 
-  // @ts-ignore
+  // @ts-expect-error - cancel property is added to promise
   promise.cancel = () => {
     source.cancel('Query was cancelled by React Query');
   };

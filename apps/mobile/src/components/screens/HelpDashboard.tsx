@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LifeBuoy, 
   HandHeart, 
@@ -28,19 +28,33 @@ import {
 } from '@wira-borneo/api-client';
 import HelpRequestForm from '../help/HelpRequestForm';
 import HelpRequestTimeline from '../help/HelpRequestTimeline';
+import HazardPinForm from '../pin/HazardPinForm';
+
+const FALLBACK_LOCATION = { latitude: 1.5533, longitude: 110.3592 };
 
 export default function HelpDashboard({ 
   onNavigateToRequest,
   showAllPins,
-  onToggleShowAllPins
+  onToggleShowAllPins,
+  formLocation,
+  setFormLocation,
+  pickLocationFor,
+  setPickLocationFor,
+  onNavigateToMap,
 }: { 
   onNavigateToRequest: (id: string, loc: { latitude: number, longitude: number }) => void;
   showAllPins: boolean;
   onToggleShowAllPins: (show: boolean) => void;
+  formLocation: { latitude: number; longitude: number } | null;
+  setFormLocation: (loc: { latitude: number; longitude: number } | null) => void;
+  pickLocationFor: 'hazard' | 'help' | null;
+  setPickLocationFor: (v: 'hazard' | 'help' | null) => void;
+  onNavigateToMap: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<'request' | 'volunteer'>('request');
   const [volunteerSubTab, setVolunteerSubTab] = useState<'available' | 'assigned'>('available');
   const [showForm, setShowForm] = useState(false);
+  const [showHazardPinForm, setShowHazardPinForm] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   const { data: volunteerStatus, refetch: refetchVolunteerStatus } = useVolunteersControllerGetStatus();
@@ -52,12 +66,25 @@ export default function HelpDashboard({
   const { mutate: claimRequest, isPending: isClaiming } = useHelpRequestsControllerClaim();
   const { mutate: updateStatus, isPending: isUpdating } = useHelpRequestsControllerUpdateStatus();
 
-  // Mock location for demo purposes
-  const mockLocation = { latitude: 1.5533, longitude: 110.3592 };
+  // Default form location to user's current position when Help dashboard mounts
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setFormLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true }
+    );
+  }, [setFormLocation]);
+
+  const formLocationOrFallback = formLocation ?? FALLBACK_LOCATION;
 
   const handleFormSuccess = () => {
     setShowForm(false);
     refetchRequests();
+  };
+
+  const handleHazardPinSuccess = () => {
+    setShowHazardPinForm(false);
   };
 
   const handleApply = () => {
@@ -103,7 +130,7 @@ export default function HelpDashboard({
               <HelpCircle size={20} className="text-wira-gold" />
             </div>
             
-            {!showForm && !selectedRequest && activeTab === 'request' && (
+            {!showForm && !showHazardPinForm && !selectedRequest && activeTab === 'request' && (
                <button 
                  onClick={() => setShowForm(true)}
                  className="h-10 w-10 rounded-full bg-wira-teal text-white flex items-center justify-center shadow-lg shadow-wira-teal/20"
@@ -115,13 +142,13 @@ export default function HelpDashboard({
           
           <div className="flex bg-wira-ivory-dark rounded-xl p-1">
             <button 
-              onClick={() => { setActiveTab('request'); setShowForm(false); setSelectedRequest(null); }}
+              onClick={() => { setActiveTab('request'); setShowForm(false); setShowHazardPinForm(false); setSelectedRequest(null); }}
               className={`flex-1 py-2 text-xs font-body font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'request' ? 'bg-white text-wira-teal shadow-sm' : 'text-wira-earth/50'}`}
             >
               Request Help
             </button>
             <button 
-              onClick={() => { setActiveTab('volunteer'); setShowForm(false); setSelectedRequest(null); }}
+              onClick={() => { setActiveTab('volunteer'); setShowForm(false); setShowHazardPinForm(false); setSelectedRequest(null); }}
               className={`flex-1 py-2 text-xs font-body font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'volunteer' ? 'bg-white text-wira-teal shadow-sm' : 'text-wira-earth/50'}`}
             >
               Volunteer
@@ -131,24 +158,54 @@ export default function HelpDashboard({
 
       {activeTab === 'request' ? (
         <div className="space-y-6 animate-slide-up">
-           {showForm ? (
+           {showHazardPinForm ? (
              <div className="space-y-4">
-                <button 
+                <button
+                  type="button"
+                  onClick={() => setShowHazardPinForm(false)}
+                  className="form-back-link flex items-center gap-2"
+                >
+                  ← Back to Dashboard
+                </button>
+                <div className="wira-card p-6 border-wira-teal/10">
+                   <h3 className="text-xl font-display font-bold wira-card-title mb-6">Report hazard pin</h3>
+                   <HazardPinForm
+                     initialLocation={formLocationOrFallback}
+                     onSuccess={handleHazardPinSuccess}
+                     onChangeLocation={() => {
+                       setPickLocationFor('hazard');
+                       onNavigateToMap();
+                     }}
+                   />
+                </div>
+             </div>
+           ) : showForm ? (
+             <div className="space-y-4">
+                <button
+                  type="button"
                   onClick={() => setShowForm(false)}
-                  className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/50 flex items-center gap-2"
+                  className="form-back-link flex items-center gap-2"
                 >
                   ← Back to Dashboard
                 </button>
                 <div className="wira-card p-6 border-wira-teal/10">
                    <h3 className="text-xl font-display font-bold wira-card-title mb-6">New Help Request</h3>
-                   <HelpRequestForm initialLocation={mockLocation} onSuccess={handleFormSuccess} />
+                   <HelpRequestForm
+                     initialLocation={formLocationOrFallback}
+                     onSuccess={handleFormSuccess}
+                     onChangeLocation={() => {
+                       setPickLocationFor('help');
+                       onNavigateToMap();
+                     }}
+                   />
                 </div>
              </div>
            ) : selectedRequest ? (
              <div className="space-y-6 animate-slide-up">
-                <button 
+                <button
+                  type="button"
                   onClick={() => setSelectedRequest(null)}
-                  className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/50 flex items-center gap-2"
+                  className="form-back-link flex items-center gap-2"
                 >
                   ← Back to My Requests
                 </button>
@@ -199,6 +256,25 @@ export default function HelpDashboard({
                   </div>
                   <button onClick={() => setShowForm(true)} className="wira-btn-emergency">
                     Request Help NOW
+                  </button>
+               </div>
+
+               <div className="wira-card p-6 border-wira-teal/20 bg-wira-teal/5 space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-wira-teal/10 flex items-center justify-center">
+                    <MapPin className="text-wira-teal w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-display font-bold wira-card-title">Report hazard pin</h3>
+                    <p className="text-xs font-body wira-card-body">
+                      Report a hazard (flood, damage, etc.) at your location. Admins will review and add it to the operations map.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowHazardPinForm(true)}
+                    className="w-full py-3 rounded-xl border border-wira-teal text-wira-teal text-sm font-bold uppercase tracking-wider hover:bg-wira-teal hover:text-white transition-all"
+                  >
+                    Report hazard
                   </button>
                </div>
 

@@ -55,6 +55,12 @@ enum PinStatus {
   RESOLVED
 }
 
+enum PinReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Family {
   id          String         @id @default(cuid())
   name        String
@@ -127,15 +133,17 @@ model VolunteerApplication {
 }
 
 model VolunteerProfile {
-  id            String          @id @default(cuid())
-  userId        String          @unique
-  status        VolunteerStatus @default(PENDING)
-  approvedById  String?
-  approvedAt    DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy    User?           @relation("VolunteerProfileApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  id             String          @id @default(cuid())
+  userId         String          @unique
+  status         VolunteerStatus @default(PENDING)
+  baseLatitude   Float?
+  baseLongitude  Float?
+  approvedById   String?
+  approvedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy     User?           @relation("VolunteerProfileApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([status])
 }
@@ -184,6 +192,10 @@ model EvacuationArea {
   longitude        Float
   address          String?
   region           String?
+  type             String?                     // e.g. Campus, Church, Shelter, Hospital
+  capacity         String?                     // e.g. ">500", "100-250"
+  population       String?                     // e.g. pupil count from raw
+  source           String?                     // e.g. "Department of Education, Philippines"
   isActive         Boolean                     @default(true)
   warningLinks     WarningEventEvacuationArea[]
   routeSuggestions EvacuationRouteSuggestion[]
@@ -303,19 +315,26 @@ model HelpRequestEvent {
 }
 
 model MapPinStatus {
-  id          String      @id @default(cuid())
-  title       String
-  hazardType  HazardType
-  status      PinStatus   @default(OPEN)
-  priority    Int         @default(1)
-  latitude    Float
-  longitude   Float
-  region      String?
-  note        String?
-  reporterId  String?
-  reportedAt  DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  reporter    User?       @relation("MapPinReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  id            String          @id @default(cuid())
+  title         String
+  hazardType    HazardType
+  status        PinStatus       @default(OPEN)
+  priority      Int             @default(1)
+  latitude      Float
+  longitude     Float
+  region        String?
+  note          String?
+  photoUrl      String?
+  photoKey      String?
+  reporterId    String?
+  reportedAt    DateTime        @default(now())
+  reviewedById  String?
+  reviewedAt    DateTime?
+  reviewNote    String?
+  reviewStatus  PinReviewStatus?
+  updatedAt     DateTime        @updatedAt
+  reporter      User?           @relation("MapPinReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reviewedBy    User?           @relation("MapPinReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status, hazardType, priority])
   @@index([region])

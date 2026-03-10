@@ -3,6 +3,7 @@
 # compiled output
 dist
 dist-seed
+dist-seed
 tmp
 out-tsc
 
@@ -17,6 +18,7 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
+.env
 .env
 
 # IDE - VSCode
@@ -186,3 +188,148 @@ apps/coverage/
 apps/reports/
 
 .cursorignore
+
+openspec
+.github
+.agent
+
+# React Native
+
+# OSX
+#
+.DS_Store
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
+
+# node.js
+#
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
+
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Bundle artifact
+*.jsbundle
+
+# Ruby / CocoaPods
+**/Pods/
+**/vendor/bundle/
+
+# Temporary files created by Metro to check the health of the file watcher
+.metro-health-check*
+
+# testing
+/coverage
+vite.config.*.timestamp*
+
+generated/
+
+# AI guides
+CLAUDE.md
+SKILLS.md
+wira-borneo-prd.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# uv
+uv.lock
+
+# Nx App Test Outputs
+apps/coverage/
+apps/reports/
+
+geojson/
+# Track evacuation GeoJSON used by API seed (do not bundle under src)
+apps/api/geojson/
+apps/api/geojson/evacuation/
+apps/api/geojson/evacuation/*.geojson
+
+.geojson
+
+packages/api-client/openapi/openapi.json

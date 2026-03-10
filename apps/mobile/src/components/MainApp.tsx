@@ -6,6 +6,7 @@ import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';
 import LayoutWrapper from '../components/LayoutWrapper';
 import MapForecast from '../components/screens/MapForecast';
+import type { EvacuationSite } from '../components/MapComponent';
 import Warnings from '../components/screens/Warnings';
 import Family from '../components/screens/Family';
 import LLMAssistant from '../components/screens/LLMAssistant';
@@ -20,7 +21,13 @@ export default function MainApp() {
   // Map and Routing State
   const [focusedHelpRequestId, setFocusedHelpRequestId] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<{ latitude: number, longitude: number } | null>(null);
+  const [mapFocusLabel, setMapFocusLabel] = useState<string | null>(null); // e.g. 'Help Pin' or 'Evacuation site'
+  const [mapFocusEvac, setMapFocusEvac] = useState<EvacuationSite | null>(null); // evac site when destination is an evac
   const [showAllPins, setShowAllPins] = useState(true); // Default to true as per request "Multiple help pins can also be enabled"
+
+  // Form location (help request / hazard pin): default from geolocation in HelpDashboard, user can reselect on map
+  const [formLocation, setFormLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [pickLocationFor, setPickLocationFor] = useState<'hazard' | 'help' | null>(null);
 
   if (isLoading) {
     return (
@@ -33,32 +40,54 @@ export default function MainApp() {
     );
   }
 
-  if (!session?.user) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-wira-ivory px-6 wira-batik-bg overflow-hidden">
-        {authView === 'login' ? (
-          <Login onToggleRegister={() => setAuthView('register')} />
-        ) : (
-          <Register onToggleLogin={() => setAuthView('login')} />
-        )}
-      </div>
-    );
-  }
-
   const renderScreen = () => {
+    if (!session?.user) {
+       return (
+        <div className="flex flex-1 flex-col items-center justify-center bg-wira-ivory px-6 wira-batik-bg overflow-hidden py-10">
+          {authView === 'login' ? (
+            <Login onToggleRegister={() => setAuthView('register')} />
+          ) : (
+            <Register onToggleLogin={() => setAuthView('login')} />
+          )}
+        </div>
+      );
+    }
+
     switch (currentScreen) {
       case '/': return (
         <MapForecast 
           focusedHelpRequestId={focusedHelpRequestId}
           mapFocus={mapFocus}
+          mapFocusLabel={mapFocusLabel}
+          mapFocusEvac={mapFocusEvac}
+          setMapFocus={setMapFocus}
+          setMapFocusLabel={setMapFocusLabel}
+          setMapFocusEvac={setMapFocusEvac}
           showAllPins={showAllPins}
           onCancelRouting={() => {
             setFocusedHelpRequestId(null);
             setMapFocus(null);
+            setMapFocusLabel(null);
+            setMapFocusEvac(null);
+          }}
+          pickLocationFor={pickLocationFor}
+          onLocationPicked={(latitude, longitude) => {
+            setFormLocation({ latitude, longitude });
+            setPickLocationFor(null);
+            setCurrentScreen('/help');
           }}
         />
       );
-      case '/warnings': return <Warnings />;
+      case '/warnings': return (
+        <Warnings
+          onViewSafeRoute={(evac) => {
+            setMapFocus({ latitude: evac.latitude, longitude: evac.longitude });
+            setMapFocusLabel('Evacuation site');
+            setMapFocusEvac(evac);
+            setCurrentScreen('/');
+          }}
+        />
+      );
       case '/family': return <Family />;
       case '/assistant': return <LLMAssistant />;
       case '/help': return (
@@ -66,10 +95,16 @@ export default function MainApp() {
           onNavigateToRequest={(id, loc) => {
             setFocusedHelpRequestId(id);
             setMapFocus(loc);
+            setMapFocusLabel('Help Pin');
             setCurrentScreen('/');
           }}
           showAllPins={showAllPins}
           onToggleShowAllPins={setShowAllPins}
+          formLocation={formLocation}
+          setFormLocation={setFormLocation}
+          pickLocationFor={pickLocationFor}
+          setPickLocationFor={setPickLocationFor}
+          onNavigateToMap={() => setCurrentScreen('/')}
         />
       );
       case '/profile': return <Profile />;
@@ -77,10 +112,23 @@ export default function MainApp() {
         <MapForecast 
           focusedHelpRequestId={focusedHelpRequestId}
           mapFocus={mapFocus}
+          mapFocusLabel={mapFocusLabel}
+          mapFocusEvac={mapFocusEvac}
+          setMapFocus={setMapFocus}
+          setMapFocusLabel={setMapFocusLabel}
+          setMapFocusEvac={setMapFocusEvac}
           showAllPins={showAllPins}
           onCancelRouting={() => {
             setFocusedHelpRequestId(null);
             setMapFocus(null);
+            setMapFocusLabel(null);
+            setMapFocusEvac(null);
+          }}
+          pickLocationFor={pickLocationFor}
+          onLocationPicked={(latitude, longitude) => {
+            setFormLocation({ latitude, longitude });
+            setPickLocationFor(null);
+            setCurrentScreen('/help');
           }}
         />
       );
@@ -88,7 +136,11 @@ export default function MainApp() {
   };
 
   return (
-    <LayoutWrapper currentPath={currentScreen} onNavigate={setCurrentScreen}>
+    <LayoutWrapper 
+      currentPath={currentScreen} 
+      onNavigate={setCurrentScreen}
+      showNav={!!session?.user}
+    >
       {renderScreen()}
     </LayoutWrapper>
   );

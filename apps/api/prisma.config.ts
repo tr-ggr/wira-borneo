@@ -9,7 +9,8 @@ export default defineConfig({
     seed: 'node scripts/run-prisma-seed.mjs',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    // Use direct connection for migrations/seed (required for Supabase pooler). Fallback to DATABASE_URL for local dev.
+    url: process.env.DIRECT_URL || env('DATABASE_URL'),
     shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
 });

@@ -21,6 +21,7 @@ model User {
   volunteerDecisionLogs      VolunteerDecisionLog[]       @relation("VolunteerDecisionActor")
   helpRequestEvents          HelpRequestEvent[]           @relation("HelpRequestEventActor")
   mapPinsReported            MapPinStatus[]               @relation("MapPinReporter")
+  mapPinsReviewed            MapPinStatus[]               @relation("MapPinReviewer")
   locationSnapshot           UserLocationSnapshot?
   evacuationRouteSuggestions EvacuationRouteSuggestion[]
 

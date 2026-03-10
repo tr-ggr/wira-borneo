@@ -23,13 +23,13 @@ export default function MobileEnforcer({ children }: { children: React.ReactNode
           <div className="absolute inset-0 bg-wira-gold/20 blur-3xl rounded-full"></div>
           <Layout className="text-wira-gold w-24 h-24 relative animate-pulse-slow" />
         </div>
-
+        
         <div className="max-w-xs space-y-4">
           <h1 className="text-3xl font-display font-bold text-wira-ivory">WIRA</h1>
           <div className="space-y-2">
             <h2 className="text-2xl font-display font-bold text-wira-gold">Switch to Mobile</h2>
             <p className="text-xs font-body text-wira-ivory-dark/70 leading-relaxed">
-              WIRA is designed as a specialized mobile experience for disaster response.
+              WIRA is designed as a specialized mobile experience for disaster response. 
               Please view this app on a mobile device or resize your browser to a mobile width.
             </p>
             <div className="pt-2">
