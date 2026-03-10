@@ -20,6 +20,14 @@ import { fromLonLat } from 'ol/proj';
 import OSM from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
 import { Circle as CircleStyle, Fill, Stroke, Style, Text } from 'ol/style';
+import {
+  DoubleClickZoom,
+  MouseWheelZoom,
+  PinchZoom,
+  KeyboardZoom,
+  DragZoom,
+} from 'ol/interaction';
+import { Zoom } from 'ol/control';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import 'ol/ol.css';
 import {
@@ -220,7 +228,7 @@ export function OperationsMapPage() {
   const popupRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<Overlay | null>(null);
 
-  const [hoveredBuilding, setHoveredBuilding] = useState<any>(null);
+  const [hoveredBuilding, setHoveredBuilding] = useState<Record<string, any> | null>(null);
 
   const [hazardFilter, setHazardFilter] = useState<Record<string, boolean>>({
     TYPHOON: true,
@@ -534,7 +542,7 @@ export function OperationsMapPage() {
     mapViewRef.current = view;
 
     const overlay = new Overlay({
-      element: popupRef.current!,
+      element: popupRef.current as HTMLDivElement,
       autoPan: false,
     });
     overlayRef.current = overlay;
@@ -803,7 +811,7 @@ export function OperationsMapPage() {
 
     const data = (buildingProfilesQuery as any).data;
     source.clear();
-    const features = new GeoJSON().readFeatures(data, {
+    const features = new GeoJSON().readFeatures(data as any, {
       featureProjection: 'EPSG:3857',
     });
 
@@ -821,21 +829,52 @@ export function OperationsMapPage() {
     if (!view) return;
 
     if (viewBuildingProfiles) {
-      view.setProperties({
-        minZoom: 3,
-        maxZoom: 18,
+      view.setMinZoom(18);
+      view.setMaxZoom(18);
+      // Force zoom to 18
+      view.setZoom(18);
+
+      // Disable all zoom-related interactions
+      mapRef.current?.getInteractions().forEach((interaction) => {
+        if (
+          interaction instanceof MouseWheelZoom ||
+          interaction instanceof DoubleClickZoom ||
+          interaction instanceof PinchZoom ||
+          interaction instanceof KeyboardZoom ||
+          interaction instanceof DragZoom
+        ) {
+          interaction.setActive(false);
+        }
+      });
+
+      // Disable zoom-related controls
+      mapRef.current?.getControls().forEach((control) => {
+        if (control instanceof Zoom) {
+          control.setTarget(null as any);
+        }
       });
     } else {
-      // Restore zoom constraints and ensure zoom is not locked
-      view.setProperties({
-        minZoom: 3,
-        maxZoom: 14,
+      // Restore default constraints and interactions
+      view.setMinZoom(3);
+      view.setMaxZoom(22);
+
+      mapRef.current?.getInteractions().forEach((interaction) => {
+        if (
+          interaction instanceof MouseWheelZoom ||
+          interaction instanceof DoubleClickZoom ||
+          interaction instanceof PinchZoom ||
+          interaction instanceof KeyboardZoom ||
+          interaction instanceof DragZoom
+        ) {
+          interaction.setActive(true);
+        }
       });
-      // If currently zoomed in beyond 14, zoom back to 14
-      const currentZoom = view.getZoom();
-      if (currentZoom !== undefined && currentZoom > 14) {
-        view.setZoom(14);
-      }
+
+      mapRef.current?.getControls().forEach((control) => {
+        if (control instanceof Zoom) {
+          control.setTarget(undefined as any);
+        }
+      });
     }
   }, [viewBuildingProfiles]);
 
