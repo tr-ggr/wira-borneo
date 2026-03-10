@@ -21,6 +21,16 @@ export const HousingType = {
 export type HousingType = (typeof HousingType)[keyof typeof HousingType]
 
 
+export const AgeGroup = {
+  UNDER_12: 'UNDER_12',
+  AGE_12_17: 'AGE_12_17',
+  AGE_18_59: 'AGE_18_59',
+  AGE_60_PLUS: 'AGE_60_PLUS'
+} as const
+
+export type AgeGroup = (typeof AgeGroup)[keyof typeof AgeGroup]
+
+
 export const HazardType = {
   FLOOD: 'FLOOD',
   TYPHOON: 'TYPHOON',

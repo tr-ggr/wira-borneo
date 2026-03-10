@@ -2,6 +2,7 @@ import * as bcrypt from 'bcrypt';
 import type { IncomingHttpHeaders } from 'node:http';
 import { getAuthRuntimeConfig } from '../../config/auth.config';
 import { PrismaService } from '../../core/database/database.service';
+import { AgeGroup } from '@prisma/client';
 import {
   type AuthSession,
   type AuthenticatedUser,
@@ -9,6 +10,7 @@ import {
   type SignInPayload,
   type SignUpResult,
   type SignUpPayload,
+  type UpdateProfilePayload,
 } from './auth.types';
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 
@@ -102,6 +104,32 @@ export class AuthService {
         throw data;
       }
 
+      // If signup succeeds, we update the created user with our custom fields
+      if (data.user && (payload.pregnantStatus !== undefined || payload.ageGroup !== undefined || payload.isPWD !== undefined)) {
+        const updatedUser = await this.prisma.user.update({
+          where: { id: data.user.id },
+          data: {
+            ...(payload.pregnantStatus !== undefined && { pregnantStatus: payload.pregnantStatus }),
+            ...(payload.ageGroup !== undefined && { ageGroup: payload.ageGroup }),
+            ...(payload.isPWD !== undefined && { isPWD: payload.isPWD }),
+          },
+        });
+        
+        return {
+          response,
+          data: {
+            token: data.token,
+            user: this.toAuthenticatedUser(updatedUser),
+          },
+        };
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw data;
+      }
+
       return {
         response,
         data: {
@@ -177,6 +205,10 @@ export class AuthService {
         return null;
       }
 
+      const dbUser = await this.prisma.user.findUnique({
+        where: { id: result.user.id },
+      });
+
       return {
         session: {
           id: result.session.id,
@@ -186,13 +218,31 @@ export class AuthService {
           ipAddress: result.session.ipAddress,
           userAgent: result.session.userAgent,
         },
-        user: this.toAuthenticatedUser(result.user),
+        user: this.toAuthenticatedUser(dbUser || result.user as any),
       };
     } catch (error) {
       this.handleApiError(error, {
         defaultUnauthorizedMessage: 'Session is invalid or expired.',
       });
     }
+  }
+
+  async updateProfile(payload: UpdateProfilePayload, headers: IncomingHttpHeaders): Promise<AuthenticatedUser> {
+    const session = await this.getSession(headers);
+    if (!session) {
+      throw new UnauthorizedException('Not authenticated');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        ...(payload.pregnantStatus !== undefined && { pregnantStatus: payload.pregnantStatus }),
+        ...(payload.ageGroup !== undefined && { ageGroup: payload.ageGroup }),
+        ...(payload.isPWD !== undefined && { isPWD: payload.isPWD }),
+      },
+    });
+
+    return this.toAuthenticatedUser(updatedUser);
   }
 
   private toAuthenticatedUser(user: {
@@ -202,6 +252,9 @@ export class AuthService {
     emailVerified: boolean;
     image?: string | null;
     role?: string | null;
+    pregnantStatus?: boolean | null;
+    ageGroup?: AgeGroup | null;
+    isPWD?: boolean | null;
   }): AuthenticatedUser {
     return {
       id: user.id,
@@ -210,6 +263,9 @@ export class AuthService {
       emailVerified: user.emailVerified,
       image: user.image,
       role: user.role,
+      pregnantStatus: user.pregnantStatus ?? null,
+      ageGroup: user.ageGroup ?? null,
+      isPWD: user.isPWD ?? null,
     };
   }
 

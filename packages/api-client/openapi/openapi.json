@@ -98,6 +98,37 @@
         ]
       }
     },
+    "/api/auth/profile": {
+      "patch": {
+        "operationId": "AuthController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfilePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticatedUser"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/risk/forecast": {
       "get": {
         "operationId": "RiskIntelligenceController_getForecast",
@@ -1407,6 +1438,165 @@
           "pins"
         ]
       }
+    },
+    "/api/tracker/shipments": {
+      "get": {
+        "operationId": "TrackerController_getShipments",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrackerShipmentDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all shipments",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/shipments/{id}": {
+      "get": {
+        "operationId": "TrackerController_getShipmentById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackerShipmentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get shipment by ID",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/stats": {
+      "get": {
+        "operationId": "TrackerController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackerStatsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get tracker statistics",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/relief-zones": {
+      "get": {
+        "operationId": "TrackerController_getReliefZones",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrackerReliefZoneDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get relief zones",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/validators": {
+      "get": {
+        "operationId": "TrackerController_getValidators",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrackerValidatorDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get validators",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/donation-distribution": {
+      "get": {
+        "operationId": "TrackerController_getDonationDistribution",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Map of category names to percentages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get donation distribution",
+        "tags": [
+          "tracker"
+        ]
+      }
     }
   },
   "info": {
@@ -1458,6 +1648,24 @@
             "nullable": true
           },
           "role": {
+            "type": "object",
+            "nullable": true
+          },
+          "pregnantStatus": {
+            "type": "object",
+            "nullable": true
+          },
+          "ageGroup": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "UNDER_12",
+              "AGE_12_17",
+              "AGE_18_59",
+              "AGE_60_PLUS"
+            ]
+          },
+          "isPWD": {
             "type": "object",
             "nullable": true
           }
@@ -1528,6 +1736,29 @@
           "session",
           "user"
         ]
+      },
+      "UpdateProfilePayload": {
+        "type": "object",
+        "properties": {
+          "pregnantStatus": {
+            "type": "object",
+            "nullable": true
+          },
+          "ageGroup": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "UNDER_12",
+              "AGE_12_17",
+              "AGE_18_59",
+              "AGE_60_PLUS"
+            ]
+          },
+          "isPWD": {
+            "type": "object",
+            "nullable": true
+          }
+        }
       },
       "CreateFamilyDto": {
         "type": "object",
@@ -1719,6 +1950,154 @@
           "hazardType",
           "latitude",
           "longitude"
+        ]
+      },
+      "TrackerShipmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shipmentId": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "class": {
+            "type": "string"
+          },
+          "blockchainHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DISPATCHED",
+              "IN_TRANSIT",
+              "DELIVERED"
+            ]
+          },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "PENDING",
+              "FAILED"
+            ]
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "shipmentId",
+          "origin",
+          "destination",
+          "class",
+          "status",
+          "verificationStatus",
+          "timestamp"
+        ]
+      },
+      "TrackerStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalAidDisbursed": {
+            "type": "number"
+          },
+          "verifiedPayouts": {
+            "type": "number"
+          },
+          "networkTrustIndex": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "totalAidDisbursed",
+          "verifiedPayouts",
+          "networkTrustIndex"
+        ]
+      },
+      "TrackerReliefZoneDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "familyCount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "zoneType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "lat",
+          "lng",
+          "familyCount",
+          "status",
+          "zoneType"
+        ]
+      },
+      "TrackerValidatorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "latencyMs": {
+            "type": "number"
+          },
+          "uptimePercentage": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "OFFLINE",
+              "DEGRADED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nodeId",
+          "location",
+          "latencyMs",
+          "uptimePercentage",
+          "status"
         ]
       }
     }

@@ -47,6 +47,9 @@ export type UserMinAggregateOutputType = {
   banReason: string | null
   banExpires: Date | null
   age: number | null
+  ageGroup: $Enums.AgeGroup | null
+  pregnantStatus: boolean | null
+  isPWD: boolean | null
   housingType: $Enums.HousingType | null
 }
 
@@ -63,6 +66,9 @@ export type UserMaxAggregateOutputType = {
   banReason: string | null
   banExpires: Date | null
   age: number | null
+  ageGroup: $Enums.AgeGroup | null
+  pregnantStatus: boolean | null
+  isPWD: boolean | null
   housingType: $Enums.HousingType | null
 }
 
@@ -79,6 +85,9 @@ export type UserCountAggregateOutputType = {
   banReason: number
   banExpires: number
   age: number
+  ageGroup: number
+  pregnantStatus: number
+  isPWD: number
   housingType: number
   personalInfo: number
   vulnerabilities: number
@@ -110,6 +119,9 @@ export type UserMinAggregateInputType = {
   banReason?: true
   banExpires?: true
   age?: true
+  ageGroup?: true
+  pregnantStatus?: true
+  isPWD?: true
   housingType?: true
 }
 
@@ -126,6 +138,9 @@ export type UserMaxAggregateInputType = {
   banReason?: true
   banExpires?: true
   age?: true
+  ageGroup?: true
+  pregnantStatus?: true
+  isPWD?: true
   housingType?: true
 }
 
@@ -142,6 +157,9 @@ export type UserCountAggregateInputType = {
   banReason?: true
   banExpires?: true
   age?: true
+  ageGroup?: true
+  pregnantStatus?: true
+  isPWD?: true
   housingType?: true
   personalInfo?: true
   vulnerabilities?: true
@@ -250,6 +268,9 @@ export type UserGroupByOutputType = {
   banReason: string | null
   banExpires: Date | null
   age: number | null
+  ageGroup: $Enums.AgeGroup | null
+  pregnantStatus: boolean | null
+  isPWD: boolean | null
   housingType: $Enums.HousingType | null
   personalInfo: runtime.JsonValue | null
   vulnerabilities: runtime.JsonValue | null
@@ -294,6 +315,9 @@ export type UserWhereInput = {
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   age?: Prisma.IntNullableFilter<"User"> | number | null
+  ageGroup?: Prisma.EnumAgeGroupNullableFilter<"User"> | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  isPWD?: Prisma.BoolNullableFilter<"User"> | boolean | null
   housingType?: Prisma.EnumHousingTypeNullableFilter<"User"> | $Enums.HousingType | null
   personalInfo?: Prisma.JsonNullableFilter<"User">
   vulnerabilities?: Prisma.JsonNullableFilter<"User">
@@ -333,6 +357,9 @@ export type UserOrderByWithRelationInput = {
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   age?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageGroup?: Prisma.SortOrderInput | Prisma.SortOrder
+  pregnantStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  isPWD?: Prisma.SortOrderInput | Prisma.SortOrder
   housingType?: Prisma.SortOrderInput | Prisma.SortOrder
   personalInfo?: Prisma.SortOrderInput | Prisma.SortOrder
   vulnerabilities?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -375,6 +402,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   age?: Prisma.IntNullableFilter<"User"> | number | null
+  ageGroup?: Prisma.EnumAgeGroupNullableFilter<"User"> | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  isPWD?: Prisma.BoolNullableFilter<"User"> | boolean | null
   housingType?: Prisma.EnumHousingTypeNullableFilter<"User"> | $Enums.HousingType | null
   personalInfo?: Prisma.JsonNullableFilter<"User">
   vulnerabilities?: Prisma.JsonNullableFilter<"User">
@@ -414,6 +444,9 @@ export type UserOrderByWithAggregationInput = {
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   age?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageGroup?: Prisma.SortOrderInput | Prisma.SortOrder
+  pregnantStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  isPWD?: Prisma.SortOrderInput | Prisma.SortOrder
   housingType?: Prisma.SortOrderInput | Prisma.SortOrder
   personalInfo?: Prisma.SortOrderInput | Prisma.SortOrder
   vulnerabilities?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -443,6 +476,9 @@ export type UserScalarWhereWithAggregatesInput = {
   banReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   age?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  ageGroup?: Prisma.EnumAgeGroupNullableWithAggregatesFilter<"User"> | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
+  isPWD?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
   housingType?: Prisma.EnumHousingTypeNullableWithAggregatesFilter<"User"> | $Enums.HousingType | null
   personalInfo?: Prisma.JsonNullableWithAggregatesFilter<"User">
   vulnerabilities?: Prisma.JsonNullableWithAggregatesFilter<"User">
@@ -464,6 +500,9 @@ export type UserCreateInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -503,6 +542,9 @@ export type UserUncheckedCreateInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -542,6 +584,9 @@ export type UserUpdateInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -581,6 +626,9 @@ export type UserUncheckedUpdateInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -620,6 +668,9 @@ export type UserCreateManyInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -641,6 +692,9 @@ export type UserUpdateManyMutationInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -662,6 +716,9 @@ export type UserUncheckedUpdateManyInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -683,6 +740,9 @@ export type UserCountOrderByAggregateInput = {
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   age?: Prisma.SortOrder
+  ageGroup?: Prisma.SortOrder
+  pregnantStatus?: Prisma.SortOrder
+  isPWD?: Prisma.SortOrder
   housingType?: Prisma.SortOrder
   personalInfo?: Prisma.SortOrder
   vulnerabilities?: Prisma.SortOrder
@@ -708,6 +768,9 @@ export type UserMaxOrderByAggregateInput = {
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   age?: Prisma.SortOrder
+  ageGroup?: Prisma.SortOrder
+  pregnantStatus?: Prisma.SortOrder
+  isPWD?: Prisma.SortOrder
   housingType?: Prisma.SortOrder
 }
 
@@ -724,6 +787,9 @@ export type UserMinOrderByAggregateInput = {
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   age?: Prisma.SortOrder
+  ageGroup?: Prisma.SortOrder
+  pregnantStatus?: Prisma.SortOrder
+  isPWD?: Prisma.SortOrder
   housingType?: Prisma.SortOrder
 }
 
@@ -771,6 +837,10 @@ export type NullableIntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type NullableEnumAgeGroupFieldUpdateOperationsInput = {
+  set?: $Enums.AgeGroup | null
 }
 
 export type NullableEnumHousingTypeFieldUpdateOperationsInput = {
@@ -1056,6 +1126,9 @@ export type UserCreateWithoutSessionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1094,6 +1167,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1148,6 +1224,9 @@ export type UserUpdateWithoutSessionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1186,6 +1265,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1224,6 +1306,9 @@ export type UserCreateWithoutAccountsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1262,6 +1347,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1316,6 +1404,9 @@ export type UserUpdateWithoutAccountsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1354,6 +1445,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1392,6 +1486,9 @@ export type UserCreateWithoutFamiliesCreatedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1430,6 +1527,9 @@ export type UserUncheckedCreateWithoutFamiliesCreatedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1484,6 +1584,9 @@ export type UserUpdateWithoutFamiliesCreatedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1522,6 +1625,9 @@ export type UserUncheckedUpdateWithoutFamiliesCreatedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1560,6 +1666,9 @@ export type UserCreateWithoutFamilyMembershipsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1598,6 +1707,9 @@ export type UserUncheckedCreateWithoutFamilyMembershipsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1652,6 +1764,9 @@ export type UserUpdateWithoutFamilyMembershipsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1690,6 +1805,9 @@ export type UserUncheckedUpdateWithoutFamilyMembershipsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1728,6 +1846,9 @@ export type UserCreateWithoutLocationSnapshotInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1766,6 +1887,9 @@ export type UserUncheckedCreateWithoutLocationSnapshotInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1820,6 +1944,9 @@ export type UserUpdateWithoutLocationSnapshotInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1858,6 +1985,9 @@ export type UserUncheckedUpdateWithoutLocationSnapshotInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1896,6 +2026,9 @@ export type UserCreateWithoutVolunteerApplicationsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1934,6 +2067,9 @@ export type UserUncheckedCreateWithoutVolunteerApplicationsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -1977,6 +2113,9 @@ export type UserCreateWithoutVolunteerReviewsGivenInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2015,6 +2154,9 @@ export type UserUncheckedCreateWithoutVolunteerReviewsGivenInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2069,6 +2211,9 @@ export type UserUpdateWithoutVolunteerApplicationsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2107,6 +2252,9 @@ export type UserUncheckedUpdateWithoutVolunteerApplicationsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2156,6 +2304,9 @@ export type UserUpdateWithoutVolunteerReviewsGivenInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2194,6 +2345,9 @@ export type UserUncheckedUpdateWithoutVolunteerReviewsGivenInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2232,6 +2386,9 @@ export type UserCreateWithoutVolunteerProfileInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2270,6 +2427,9 @@ export type UserUncheckedCreateWithoutVolunteerProfileInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2313,6 +2473,9 @@ export type UserCreateWithoutVolunteerApprovalsGivenInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2351,6 +2514,9 @@ export type UserUncheckedCreateWithoutVolunteerApprovalsGivenInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2405,6 +2571,9 @@ export type UserUpdateWithoutVolunteerProfileInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2443,6 +2612,9 @@ export type UserUncheckedUpdateWithoutVolunteerProfileInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2492,6 +2664,9 @@ export type UserUpdateWithoutVolunteerApprovalsGivenInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2530,6 +2705,9 @@ export type UserUncheckedUpdateWithoutVolunteerApprovalsGivenInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2568,6 +2746,9 @@ export type UserCreateWithoutWarningsCreatedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2606,6 +2787,9 @@ export type UserUncheckedCreateWithoutWarningsCreatedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2660,6 +2844,9 @@ export type UserUpdateWithoutWarningsCreatedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2698,6 +2885,9 @@ export type UserUncheckedUpdateWithoutWarningsCreatedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2736,6 +2926,9 @@ export type UserCreateWithoutEvacuationRouteSuggestionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2774,6 +2967,9 @@ export type UserUncheckedCreateWithoutEvacuationRouteSuggestionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2828,6 +3024,9 @@ export type UserUpdateWithoutEvacuationRouteSuggestionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2866,6 +3065,9 @@ export type UserUncheckedUpdateWithoutEvacuationRouteSuggestionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2904,6 +3106,9 @@ export type UserCreateWithoutHelpRequestsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2942,6 +3147,9 @@ export type UserUncheckedCreateWithoutHelpRequestsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -2996,6 +3204,9 @@ export type UserUpdateWithoutHelpRequestsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3034,6 +3245,9 @@ export type UserUncheckedUpdateWithoutHelpRequestsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3072,6 +3286,9 @@ export type UserCreateWithoutHelpAssignmentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3110,6 +3327,9 @@ export type UserUncheckedCreateWithoutHelpAssignmentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3164,6 +3384,9 @@ export type UserUpdateWithoutHelpAssignmentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3202,6 +3425,9 @@ export type UserUncheckedUpdateWithoutHelpAssignmentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3240,6 +3466,9 @@ export type UserCreateWithoutWarningEventLogsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3278,6 +3507,9 @@ export type UserUncheckedCreateWithoutWarningEventLogsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3332,6 +3564,9 @@ export type UserUpdateWithoutWarningEventLogsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3370,6 +3605,9 @@ export type UserUncheckedUpdateWithoutWarningEventLogsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3408,6 +3646,9 @@ export type UserCreateWithoutVolunteerDecisionLogsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3446,6 +3687,9 @@ export type UserUncheckedCreateWithoutVolunteerDecisionLogsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3500,6 +3744,9 @@ export type UserUpdateWithoutVolunteerDecisionLogsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3538,6 +3785,9 @@ export type UserUncheckedUpdateWithoutVolunteerDecisionLogsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3576,6 +3826,9 @@ export type UserCreateWithoutHelpRequestEventsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3614,6 +3867,9 @@ export type UserUncheckedCreateWithoutHelpRequestEventsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3668,6 +3924,9 @@ export type UserUpdateWithoutHelpRequestEventsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3706,6 +3965,9 @@ export type UserUncheckedUpdateWithoutHelpRequestEventsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3744,6 +4006,9 @@ export type UserCreateWithoutMapPinsReportedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3782,6 +4047,9 @@ export type UserUncheckedCreateWithoutMapPinsReportedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3825,6 +4093,9 @@ export type UserCreateWithoutMapPinsReviewedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3863,6 +4134,9 @@ export type UserUncheckedCreateWithoutMapPinsReviewedInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   age?: number | null
+  ageGroup?: $Enums.AgeGroup | null
+  pregnantStatus?: boolean | null
+  isPWD?: boolean | null
   housingType?: $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3917,6 +4191,9 @@ export type UserUpdateWithoutMapPinsReportedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -3955,6 +4232,9 @@ export type UserUncheckedUpdateWithoutMapPinsReportedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -4004,6 +4284,9 @@ export type UserUpdateWithoutMapPinsReviewedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -4042,6 +4325,9 @@ export type UserUncheckedUpdateWithoutMapPinsReviewedInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageGroup?: Prisma.NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+  pregnantStatus?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  isPWD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   housingType?: Prisma.NullableEnumHousingTypeFieldUpdateOperationsInput | $Enums.HousingType | null
   personalInfo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   vulnerabilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -4246,6 +4532,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   banReason?: boolean
   banExpires?: boolean
   age?: boolean
+  ageGroup?: boolean
+  pregnantStatus?: boolean
+  isPWD?: boolean
   housingType?: boolean
   personalInfo?: boolean
   vulnerabilities?: boolean
@@ -4286,6 +4575,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   banReason?: boolean
   banExpires?: boolean
   age?: boolean
+  ageGroup?: boolean
+  pregnantStatus?: boolean
+  isPWD?: boolean
   housingType?: boolean
   personalInfo?: boolean
   vulnerabilities?: boolean
@@ -4307,6 +4599,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   banReason?: boolean
   banExpires?: boolean
   age?: boolean
+  ageGroup?: boolean
+  pregnantStatus?: boolean
+  isPWD?: boolean
   housingType?: boolean
   personalInfo?: boolean
   vulnerabilities?: boolean
@@ -4328,6 +4623,9 @@ export type UserSelectScalar = {
   banReason?: boolean
   banExpires?: boolean
   age?: boolean
+  ageGroup?: boolean
+  pregnantStatus?: boolean
+  isPWD?: boolean
   housingType?: boolean
   personalInfo?: boolean
   vulnerabilities?: boolean
@@ -4336,7 +4634,7 @@ export type UserSelectScalar = {
   assets?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires" | "age" | "housingType" | "personalInfo" | "vulnerabilities" | "householdComposition" | "emergencySkills" | "assets", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires" | "age" | "ageGroup" | "pregnantStatus" | "isPWD" | "housingType" | "personalInfo" | "vulnerabilities" | "householdComposition" | "emergencySkills" | "assets", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
@@ -4396,6 +4694,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     banReason: string | null
     banExpires: Date | null
     age: number | null
+    ageGroup: $Enums.AgeGroup | null
+    pregnantStatus: boolean | null
+    isPWD: boolean | null
     housingType: $Enums.HousingType | null
     personalInfo: runtime.JsonValue | null
     vulnerabilities: runtime.JsonValue | null
@@ -4855,6 +5156,9 @@ export interface UserFieldRefs {
   readonly banReason: Prisma.FieldRef<"User", 'String'>
   readonly banExpires: Prisma.FieldRef<"User", 'DateTime'>
   readonly age: Prisma.FieldRef<"User", 'Int'>
+  readonly ageGroup: Prisma.FieldRef<"User", 'AgeGroup'>
+  readonly pregnantStatus: Prisma.FieldRef<"User", 'Boolean'>
+  readonly isPWD: Prisma.FieldRef<"User", 'Boolean'>
   readonly housingType: Prisma.FieldRef<"User", 'HousingType'>
   readonly personalInfo: Prisma.FieldRef<"User", 'Json'>
   readonly vulnerabilities: Prisma.FieldRef<"User", 'Json'>

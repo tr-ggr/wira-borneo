@@ -41,8 +41,54 @@ class AssistantInquiryDto {
   hazardType?: string;
 }
 
-<<<<<<<<< Temporary merge branch 1
-=========
+export class AssistantStructuredDataDto {
+  @ApiProperty({
+    example: 'Move to higher ground immediately.',
+    description: 'Brief summary of advice',
+  })
+  summary!: string;
+
+  @ApiProperty({
+    type: [String],
+    example: ['Pack a go bag', 'Listen to radio'],
+    description: 'Actionable steps',
+  })
+  steps!: string[];
+
+  @ApiProperty({
+    example: 'Stay clear of power lines.',
+    description: 'Safety reminder',
+  })
+  safetyReminder!: string;
+}
+
+class AssistantInquiryResponseDto {
+  @ApiProperty({
+    example: 'Move to higher ground immediately.',
+    description: 'AI-generated answer to the inquiry',
+  })
+  answer!: string;
+
+  @ApiProperty({
+    example: 'This is general guidance only. Always follow local authorities.',
+    description: 'Disclaimer regarding AI-generated content',
+  })
+  disclaimer!: string;
+
+  @ApiProperty({
+    example: 'sea-lion',
+    description: 'The LLM provider that generated the response',
+  })
+  provider!: string;
+
+  @ApiProperty({
+    type: AssistantStructuredDataDto,
+    required: false,
+    description: 'Structured formulation of the advice',
+  })
+  structuredData?: AssistantStructuredDataDto;
+}
+
 // Simple in-memory per-user rate limiter (max requests per window)
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 10;

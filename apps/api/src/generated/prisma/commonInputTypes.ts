@@ -87,6 +87,13 @@ export type IntNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedIntNullableFilter<$PrismaModel> | number | null
 }
 
+export type EnumAgeGroupNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.AgeGroup | Prisma.EnumAgeGroupFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAgeGroupNullableFilter<$PrismaModel> | $Enums.AgeGroup | null
+}
+
 export type EnumHousingTypeNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.HousingType | Prisma.EnumHousingTypeFieldRefInput<$PrismaModel> | null
   in?: $Enums.HousingType[] | Prisma.ListEnumHousingTypeFieldRefInput<$PrismaModel> | null
@@ -217,6 +224,16 @@ export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _max?: Prisma.NestedIntNullableFilter<$PrismaModel>
+}
+
+export type EnumAgeGroupNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AgeGroup | Prisma.EnumAgeGroupFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAgeGroupNullableWithAggregatesFilter<$PrismaModel> | $Enums.AgeGroup | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAgeGroupNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAgeGroupNullableFilter<$PrismaModel>
 }
 
 export type EnumHousingTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -663,6 +680,13 @@ export type NestedIntNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedIntNullableFilter<$PrismaModel> | number | null
 }
 
+export type NestedEnumAgeGroupNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.AgeGroup | Prisma.EnumAgeGroupFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAgeGroupNullableFilter<$PrismaModel> | $Enums.AgeGroup | null
+}
+
 export type NestedEnumHousingTypeNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.HousingType | Prisma.EnumHousingTypeFieldRefInput<$PrismaModel> | null
   in?: $Enums.HousingType[] | Prisma.ListEnumHousingTypeFieldRefInput<$PrismaModel> | null
@@ -784,6 +808,16 @@ export type NestedFloatNullableFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   not?: Prisma.NestedFloatNullableFilter<$PrismaModel> | number | null
+}
+
+export type NestedEnumAgeGroupNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AgeGroup | Prisma.EnumAgeGroupFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AgeGroup[] | Prisma.ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAgeGroupNullableWithAggregatesFilter<$PrismaModel> | $Enums.AgeGroup | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAgeGroupNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAgeGroupNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumHousingTypeNullableWithAggregatesFilter<$PrismaModel = never> = {

@@ -2389,6 +2389,9 @@ export const UserScalarFieldEnum = {
   banReason: 'banReason',
   banExpires: 'banExpires',
   age: 'age',
+  ageGroup: 'ageGroup',
+  pregnantStatus: 'pregnantStatus',
+  isPWD: 'isPWD',
   housingType: 'housingType',
   personalInfo: 'personalInfo',
   vulnerabilities: 'vulnerabilities',
@@ -2855,6 +2858,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AgeGroup'
+ */
+export type EnumAgeGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgeGroup'>
+    
+
+
+/**
+ * Reference to a field of type 'AgeGroup[]'
+ */
+export type ListEnumAgeGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgeGroup[]'>
     
 
 

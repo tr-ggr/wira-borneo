@@ -32,6 +32,9 @@ model User {
 
   // Demographic & Vulnerability data
   age                  Int?
+  ageGroup             AgeGroup?
+  pregnantStatus       Boolean?
+  isPWD                Boolean?
   housingType          HousingType?
   personalInfo         Json?
   vulnerabilities      Json?
@@ -47,6 +50,13 @@ enum HousingType {
   TERRACE
   APARTMENT
   OTHER
+}
+
+enum AgeGroup {
+  UNDER_12
+  AGE_12_17
+  AGE_18_59
+  AGE_60_PLUS
 }
 
 model Session {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, MessageSquare, ShieldCheck, Sparkle, MapPin, AlertCircle } from 'lucide-react';
+import { Send, ShieldCheck, Sparkle, MapPin, AlertCircle } from 'lucide-react';
 import { useAssistantControllerInquire } from '@wira-borneo/api-client';
 
 export default function LLMAssistant() {
