@@ -140,6 +140,49 @@ async function main() {
 
   // 1. Clear existing data (optional, but good for clean seeds)
   // Note: Order matters for deletion due to foreign keys
+  console.log('Clearing existing seed data...');
+  await prisma.helpRequestEvent.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.helpAssignment.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.helpRequest.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.volunteerDecisionLog.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.volunteerApplication.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.volunteerProfile.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.warningEventLog.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.warningEventEvacuationArea.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.evacuationRouteSuggestion.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.warningTargetArea.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.warningEvent.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.familyMember.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.family.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.userLocationSnapshot.deleteMany({ where: { id: { startsWith: 'seed-' } } });
+  await prisma.mapPinStatus.deleteMany({
+    where: { id: { startsWith: 'seed-' } },
+  });
+  await prisma.evacuationArea.deleteMany({
+    where: { id: { startsWith: 'seed-' } },
+  });
+  await prisma.riskRegionSnapshot.deleteMany({
+    where: { id: { startsWith: 'seed-' } },
+  });
+  await prisma.account.deleteMany({
+    where: { userId: { startsWith: 'seed-user-' } },
+  });
+  await prisma.user.deleteMany({ where: { id: { startsWith: 'seed-user-' } } });
+
+  // Clear tracker data
+  await prisma.trackerShipment.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+  await prisma.trackerStats.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+  await prisma.trackerReliefZone.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+  await prisma.trackerValidator.deleteMany({
+    where: { id: { startsWith: 'seed-tracker-' } },
+  });
+
   await prisma.mapPinStatus.deleteMany({ where: { id: { startsWith: 'seed-' } } });
   await prisma.evacuationArea.deleteMany({ where: { id: { startsWith: 'seed-' } } });
   await prisma.riskRegionSnapshot.deleteMany({ where: { id: { startsWith: 'seed-' } } });
@@ -152,6 +195,7 @@ async function main() {
 
   // 2. Seed Users
   console.log('Seeding users...');
+
   
   // Admin User
   await prisma.user.upsert({
@@ -203,7 +247,117 @@ async function main() {
     });
   }
 
-  // 3. Seed Disaster Response Data (porting from .sql)
+  // Specific test user for demographics
+  console.log('Seeding demographic test user...');
+  await prisma.user.upsert({
+    where: { id: '1aM6xRLAxxV1D6DfrfLuYaf6ovInp7ui' },
+    update: {
+      age: 65,
+      housingType: 'LONGHOUSE',
+      personalInfo: {
+        languages: ['Malay', 'Iban'],
+      },
+      vulnerabilities: {
+        disabilities: ['Wheelchair user', 'Partially sighted'],
+        assistive_devices: ['Wheelchair', 'Hearing aid'],
+      },
+      householdComposition: {
+        infants: 2,
+        elderly: 2,
+        pwd: 1,
+        pregnant: 1,
+      },
+      emergencySkills: ['First Aid (Red Cross certified)', 'Swimming'],
+      assets: ['Portable Generator', 'Small Motorized Boat'],
+    },
+    create: {
+      id: '1aM6xRLAxxV1D6DfrfLuYaf6ovInp7ui',
+      name: 'Demographic Test User',
+      email: 'demo-test@wira-borneo.com',
+      role: 'user',
+      emailVerified: true,
+      age: 65,
+      housingType: 'LONGHOUSE',
+      personalInfo: {
+        languages: ['Malay', 'Iban'],
+      },
+      vulnerabilities: {
+        disabilities: ['Wheelchair user', 'Partially sighted'],
+        assistive_devices: ['Wheelchair', 'Hearing aid'],
+      },
+      householdComposition: {
+        infants: 2,
+        elderly: 2,
+        pwd: 1,
+        pregnant: 1,
+      },
+      emergencySkills: ['First Aid (Red Cross certified)', 'Swimming'],
+      assets: ['Portable Generator', 'Small Motorized Boat'],
+      accounts: {
+        create: {
+          id: 'acc-demo-test',
+          accountId: 'demo-test',
+          providerId: 'credential',
+          password: hashedPassword,
+        },
+      },
+    },
+  });
+
+  // 3. Seed Families
+  console.log('Seeding families...');
+  await prisma.family.upsert({
+    where: { id: 'seed-family-1' },
+    update: {},
+    create: {
+      id: 'seed-family-1',
+      name: 'The One Family',
+      code: 'F1-SEED',
+      createdById: 'seed-user-1',
+      members: {
+        createMany: {
+          data: [
+            { id: 'seed-fmem-1', userId: 'seed-user-1', role: 'HEAD' },
+            { id: 'seed-fmem-2', userId: 'seed-user-2', role: 'MEMBER' },
+          ],
+        },
+      },
+    },
+  });
+
+  await prisma.family.upsert({
+    where: { id: 'seed-family-2' },
+    update: {},
+    create: {
+      id: 'seed-family-2',
+      name: 'The Three Family',
+      code: 'F3-SEED',
+      createdById: 'seed-user-3',
+      members: {
+        createMany: {
+          data: [
+            { id: 'seed-fmem-3', userId: 'seed-user-3', role: 'HEAD' },
+          ],
+        },
+      },
+    },
+  });
+
+  // 4. Seed Volunteer Profiles
+  console.log('Seeding volunteers...');
+  await prisma.volunteerProfile.upsert({
+    where: { userId: 'seed-user-2' },
+    update: {},
+    create: {
+      id: 'seed-vol-2',
+      userId: 'seed-user-2',
+      status: 'APPROVED',
+      approvedById: 'seed-user-admin',
+      approvedAt: new Date(),
+    },
+  });
+
+  // 5. Seed Disaster Response Data
   console.log('Seeding disaster response data...');
 
   await prisma.riskRegionSnapshot.upsert({
@@ -266,6 +420,63 @@ async function main() {
     },
   });
 
+  // 6. Seed Warning Events
+  console.log('Seeding warning events...');
+  await prisma.warningEvent.upsert({
+    where: { id: 'seed-warning-1' },
+    update: {},
+    create: {
+      id: 'seed-warning-1',
+      title: 'Critical Flood Warning',
+      message: 'Severe flooding expected in Central River area. Please evacuate immediately.',
+      hazardType: 'FLOOD',
+      severity: 'CRITICAL',
+      status: 'SENT',
+      startsAt: new Date(),
+      createdById: 'seed-user-admin',
+      targetAreas: {
+        create: {
+          id: 'seed-target-1',
+          areaName: 'Central River Zone',
+          latitude: 3.1400,
+          longitude: 113.0400,
+          radiusKm: 10,
+        },
+      },
+      evacuationAreas: {
+        create: {
+          id: 'seed-we-evac-1',
+          evacuationAreaId: 'seed-evac-1',
+        },
+      },
+    },
+  });
+
+  // 7. Seed Help Requests
+  console.log('Seeding help requests...');
+  await prisma.helpRequest.upsert({
+    where: { id: 'seed-help-1' },
+    update: {},
+    create: {
+      id: 'seed-help-1',
+      requesterId: 'seed-user-1',
+      familyId: 'seed-family-1',
+      hazardType: 'FLOOD',
+      urgency: 'HIGH',
+      status: 'CLAIMED',
+      description: 'Flood water entering ground floor, need assistance moving elderly.',
+      latitude: 3.1450,
+      longitude: 113.0450,
+      assignments: {
+        create: {
+          id: 'seed-assign-1',
+          volunteerId: 'seed-user-2',
+          status: 'CLAIMED',
+        },
+      },
+    },
+  });
+
   const evacFromGeojson = loadEvacuationGeoJson();
   if (evacFromGeojson.length > 0) {
     console.log(`Seeding ${evacFromGeojson.length} evacuation areas from GeoJSON...`);
@@ -300,6 +511,8 @@ async function main() {
     }
   }
 
+  // 8. Seed Map Pins
+  console.log('Seeding map pins...');
   await prisma.mapPinStatus.upsert({
     where: { id: 'seed-pin-1' },
     update: {},
@@ -313,6 +526,256 @@ async function main() {
       longitude: 113.0600,
       region: 'Kuching',
       note: 'Initial seeded operational pin',
+    },
+  });
+
+  // 4. Seed Tracker Data
+  console.log('Seeding tracker data...');
+
+  // Tracker Stats
+  await prisma.trackerStats.upsert({
+    where: { id: 'seed-tracker-stats-1' },
+    update: {},
+    create: {
+      id: 'seed-tracker-stats-1',
+      totalAidDisbursed: 4281902,
+      verifiedPayouts: 12840,
+      networkTrustIndex: 99.98,
+    },
+  });
+
+  // Tracker Relief Zones
+  const reliefZones = [
+    {
+      id: 'seed-tracker-zone-1',
+      name: 'Manila Relief Hub',
+      lat: 14.5995,
+      lng: 120.9842,
+      familyCount: 842,
+      status: 'ACTIVE' as const,
+      zoneType: 'evacuation',
+    },
+    {
+      id: 'seed-tracker-zone-2',
+      name: 'Bangkok Supply Center',
+      lat: 13.7563,
+      lng: 100.5018,
+      familyCount: 620,
+      status: 'ACTIVE' as const,
+      zoneType: 'supply',
+    },
+    {
+      id: 'seed-tracker-zone-3',
+      name: 'Jakarta Medical Station',
+      lat: -6.2088,
+      lng: 106.8456,
+      familyCount: 1150,
+      status: 'ACTIVE' as const,
+      zoneType: 'medical',
+    },
+    {
+      id: 'seed-tracker-zone-4',
+      name: 'Singapore Distribution Point',
+      lat: 1.3521,
+      lng: 103.8198,
+      familyCount: 0,
+      status: 'INACTIVE' as const,
+      zoneType: 'supply',
+    },
+  ];
+
+  for (const zone of reliefZones) {
+    await prisma.trackerReliefZone.upsert({
+      where: { id: zone.id },
+      update: {},
+      create: zone,
+    });
+  }
+
+  // Tracker Validators
+  const validators = [
+    {
+      id: 'seed-tracker-val-1',
+      nodeId: 'PH-Manila-01',
+      location: 'Manila, Philippines',
+      latencyMs: 42,
+      uptimePercentage: 98.2,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-2',
+      nodeId: 'TH-Bangkok-14',
+      location: 'Bangkok, Thailand',
+      latencyMs: 38,
+      uptimePercentage: 99.1,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-3',
+      nodeId: 'MY-KL-09',
+      location: 'Kuala Lumpur, Malaysia',
+      latencyMs: 156,
+      uptimePercentage: 94.5,
+      status: 'DEGRADED' as const,
+    },
+    {
+      id: 'seed-tracker-val-4',
+      nodeId: 'SG-Central-03',
+      location: 'Singapore',
+      latencyMs: 28,
+      uptimePercentage: 99.8,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-5',
+      nodeId: 'ID-Jakarta-07',
+      location: 'Jakarta, Indonesia',
+      latencyMs: 65,
+      uptimePercentage: 97.3,
+      status: 'ONLINE' as const,
+    },
+    {
+      id: 'seed-tracker-val-6',
+      nodeId: 'VN-Hanoi-12',
+      location: 'Hanoi, Vietnam',
+      latencyMs: 88,
+      uptimePercentage: 96.1,
+      status: 'ONLINE' as const,
+    },
+  ];
+
+  for (const validator of validators) {
+    await prisma.trackerValidator.upsert({
+      where: { id: validator.id },
+      update: {},
+      create: validator,
+    });
+  }
+
+  // Tracker Shipments
+  const shipments = [
+    {
+      id: 'seed-tracker-ship-1',
+      shipmentId: 'AR-8821',
+      origin: 'JKT',
+      destination: 'MNL',
+      class: 'Medical Supplies',
+      status: 'DISPATCHED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x71c7f4e9a2f8d3b1c5e6a9f2d4b8c3e1a7f9d2b6',
+      timestamp: new Date('2025-03-10T14:20:05Z'),
+    },
+    {
+      id: 'seed-tracker-ship-2',
+      shipmentId: 'AR-8790',
+      origin: 'BKK',
+      destination: 'HAN',
+      class: 'Food Rations',
+      status: 'DISPATCHED' as const,
+      verificationStatus: 'PENDING' as const,
+      blockchainHash: '0x44d8e2f1b9c7a5d3e8f2b6c1a9d4e7f3b8c2a6d1',
+      timestamp: new Date('2025-03-10T15:05:41Z'),
+    },
+    {
+      id: 'seed-tracker-ship-3',
+      shipmentId: 'AR-8812',
+      origin: 'SIN',
+      destination: 'KUL',
+      class: 'Shelter Kits',
+      status: 'IN_TRANSIT' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x22a9f3b7d1e5c8a4f2b9d6e3c1a7f8b4d2e9c5a1',
+      timestamp: new Date('2025-03-10T16:30:12Z'),
+    },
+    {
+      id: 'seed-tracker-ship-4',
+      shipmentId: 'AR-8805',
+      origin: 'PNH',
+      destination: 'VTE',
+      class: 'Water Filters',
+      status: 'DISPATCHED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x99e4d7a2f8c1b6e3a9f5d2c8b4e1a7f3d9c6b2a5',
+      timestamp: new Date('2025-03-10T17:12:00Z'),
+    },
+    {
+      id: 'seed-tracker-ship-5',
+      shipmentId: 'AR-8833',
+      origin: 'MNL',
+      destination: 'BKK',
+      class: 'Emergency Kits',
+      status: 'DELIVERED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x55f2a8d3c9e1b7f4a6d2c8e5b1f9a3d7c4e8b6a2',
+      timestamp: new Date('2025-03-09T10:45:22Z'),
+    },
+    {
+      id: 'seed-tracker-ship-6',
+      shipmentId: 'AR-8799',
+      origin: 'HAN',
+      destination: 'MNL',
+      class: 'Medical Equipment',
+      status: 'DELIVERED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x77d9e4a1f6c2b8d5e3a9f7c4b2d8e6a1f3c9b5d7',
+      timestamp: new Date('2025-03-08T08:20:15Z'),
+    },
+    {
+      id: 'seed-tracker-ship-7',
+      shipmentId: 'AR-8856',
+      origin: 'KUL',
+      destination: 'SIN',
+      class: 'Hygiene Supplies',
+      status: 'IN_TRANSIT' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x33c6f8a4d2e9b5c1a7f3d8e6b4a2f9c5d1e7a8b3',
+      timestamp: new Date('2025-03-10T12:30:45Z'),
+    },
+    {
+      id: 'seed-tracker-ship-8',
+      shipmentId: 'AR-8841',
+      origin: 'JKT',
+      destination: 'BKK',
+      class: 'Construction Materials',
+      status: 'IN_TRANSIT' as const,
+      verificationStatus: 'PENDING' as const,
+      blockchainHash: null,
+      timestamp: new Date('2025-03-10T18:15:30Z'),
+    },
+    {
+      id: 'seed-tracker-ship-9',
+      shipmentId: 'AR-8872',
+      origin: 'SIN',
+      destination: 'HAN',
+      class: 'Solar Panels',
+      status: 'DELIVERED' as const,
+      verificationStatus: 'VERIFIED' as const,
+      blockchainHash: '0x88e1a7f4c3b9d6e2a5f8c1d4b7e9a3f6c2d8b5a4',
+      timestamp: new Date('2025-03-07T14:55:10Z'),
+    },
+  ];
+
+  for (const shipment of shipments) {
+    await prisma.trackerShipment.upsert({
+      where: { id: shipment.id },
+      update: {},
+      create: shipment,
+    });
+  }
+
+  await prisma.mapPinStatus.upsert({
+    where: { id: 'seed-pin-2' },
+    update: {},
+    create: {
+      id: 'seed-pin-2',
+      title: 'Road collapse at KM 12',
+      hazardType: 'EARTHQUAKE',
+      status: 'OPEN',
+      priority: 4,
+      latitude: 3.1800,
+      longitude: 113.1000,
+      region: 'Kuching',
+      note: 'Foundations weakened by aftershock.',
     },
   });
 

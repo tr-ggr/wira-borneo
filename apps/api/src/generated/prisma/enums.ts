@@ -9,6 +9,28 @@
 * 🟢 You can import this file directly.
 */
 
+export const HousingType = {
+  LONGHOUSE: 'LONGHOUSE',
+  DETACHED: 'DETACHED',
+  SEMI_DETACHED: 'SEMI_DETACHED',
+  TERRACE: 'TERRACE',
+  APARTMENT: 'APARTMENT',
+  OTHER: 'OTHER'
+} as const
+
+export type HousingType = (typeof HousingType)[keyof typeof HousingType]
+
+
+export const AgeGroup = {
+  UNDER_12: 'UNDER_12',
+  AGE_12_17: 'AGE_12_17',
+  AGE_18_59: 'AGE_18_59',
+  AGE_60_PLUS: 'AGE_60_PLUS'
+} as const
+
+export type AgeGroup = (typeof AgeGroup)[keyof typeof AgeGroup]
+
+
 export const HazardType = {
   FLOOD: 'FLOOD',
   TYPHOON: 'TYPHOON',
@@ -97,3 +119,41 @@ export const PinReviewStatus = {
 } as const
 
 export type PinReviewStatus = (typeof PinReviewStatus)[keyof typeof PinReviewStatus]
+<<<<<<< HEAD
+=======
+
+
+export const ShipmentStatus = {
+  DISPATCHED: 'DISPATCHED',
+  IN_TRANSIT: 'IN_TRANSIT',
+  DELIVERED: 'DELIVERED'
+} as const
+
+export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus]
+
+
+export const VerificationStatus = {
+  VERIFIED: 'VERIFIED',
+  PENDING: 'PENDING',
+  FAILED: 'FAILED'
+} as const
+
+export type VerificationStatus = (typeof VerificationStatus)[keyof typeof VerificationStatus]
+
+
+export const ZoneStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE'
+} as const
+
+export type ZoneStatus = (typeof ZoneStatus)[keyof typeof ZoneStatus]
+
+
+export const ValidatorStatus = {
+  ONLINE: 'ONLINE',
+  OFFLINE: 'OFFLINE',
+  DEGRADED: 'DEGRADED'
+} as const
+
+export type ValidatorStatus = (typeof ValidatorStatus)[keyof typeof ValidatorStatus]
+>>>>>>> origin/dev

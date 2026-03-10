@@ -1,6 +1,7 @@
 """Abstract base for LLM providers."""
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class LLMProvider(ABC):
@@ -13,7 +14,13 @@ class LLMProvider(ABC):
         ...
 
     @abstractmethod
-    def generate(self, prompt: str) -> str:
+    def generate(
+        self, 
+        prompt: str, 
+        system_instruction: Optional[str] = None, 
+        demographics: Optional[dict] = None,
+        user_id: Optional[str] = None,
+    ) -> str:
         """Send *prompt* and return the model's text response.
 
         Raises on network / provider errors so the router can fall back.

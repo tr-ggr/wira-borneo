@@ -136,7 +136,11 @@ export default function MainApp() {
   };
 
   return (
-    <LayoutWrapper currentPath={currentScreen} onNavigate={setCurrentScreen}>
+    <LayoutWrapper 
+      currentPath={currentScreen} 
+      onNavigate={setCurrentScreen}
+      showNav={!!session?.user}
+    >
       {renderScreen()}
     </LayoutWrapper>
   );

@@ -5,6 +5,7 @@ import { User, Settings, LogOut, Bell, Shield, Heart, ChevronRight, Home, MapPin
 import {
   useAuthControllerGetSession,
   useAuthControllerSignOut,
+  useAuthControllerUpdateProfile,
   getAuthControllerGetSessionQueryKey,
   useVolunteersControllerGetStatus,
   useVolunteersControllerSetHome,
@@ -19,6 +20,18 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [settingHome, setSettingHome] = useState(false);
+
+  const updateProfile = useAuthControllerUpdateProfile({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getAuthControllerGetSessionQueryKey() });
+      }
+    }
+  });
+
+  const handleDemographicChange = (field: string, value: any) => {
+    updateProfile.mutate({ data: { [field]: value } });
+  };
 
   const signOut = useAuthControllerSignOut({
     mutation: {
@@ -86,6 +99,53 @@ export default function Profile() {
           <p className="text-xs font-body text-wira-earth/60 font-medium uppercase tracking-widest">{session?.user?.email}</p>
         </div>
       </header>
+
+      <div className="wira-card p-4 space-y-4">
+        <h2 className="text-sm font-body font-bold wira-card-title flex items-center gap-2">
+          <User size={18} className="text-wira-teal" />
+          Demographics & Needs
+        </h2>
+
+        <div className="space-y-4">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-body font-bold text-wira-earth/80">Age Group</span>
+            <select
+              className="bg-gray-50 border-none rounded-xl text-sm p-3 outline-none focus:ring-2 focus:ring-wira-teal/20"
+              value={(session?.user as any)?.ageGroup || ''}
+              onChange={(e) => handleDemographicChange('ageGroup', e.target.value || null)}
+              disabled={updateProfile.isPending}
+            >
+              <option value="">Not specified</option>
+              <option value="UNDER_12">Under 12</option>
+              <option value="AGE_12_17">12 - 17</option>
+              <option value="AGE_18_59">18 - 59</option>
+              <option value="AGE_60_PLUS">60+</option>
+            </select>
+          </label>
+
+          <label className="flex items-center justify-between p-3 rounded-xl bg-gray-50 active:scale-[0.98] transition-all">
+            <span className="text-sm font-body font-medium text-wira-earth">Pregnant</span>
+            <input
+              type="checkbox"
+              className="w-5 h-5 rounded text-wira-teal focus:ring-wira-teal border-gray-300"
+              checked={(session?.user as any)?.pregnantStatus || false}
+              onChange={(e) => handleDemographicChange('pregnantStatus', e.target.checked)}
+              disabled={updateProfile.isPending}
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-3 rounded-xl bg-gray-50 active:scale-[0.98] transition-all">
+            <span className="text-sm font-body font-medium text-wira-earth">Person with Disability (PWD)</span>
+            <input
+              type="checkbox"
+              className="w-5 h-5 rounded text-wira-teal focus:ring-wira-teal border-gray-300"
+              checked={(session?.user as any)?.isPWD || false}
+              onChange={(e) => handleDemographicChange('isPWD', e.target.checked)}
+              disabled={updateProfile.isPending}
+            />
+          </label>
+        </div>
+      </div>
 
       {profile && (
         <div className="wira-card p-4 space-y-3">

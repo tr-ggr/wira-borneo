@@ -3,6 +3,7 @@
 # compiled output
 dist
 dist-seed
+dist-seed
 tmp
 out-tsc
 
@@ -17,6 +18,7 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
+.env
 .env
 
 # IDE - VSCode
@@ -185,8 +187,17 @@ uv.lock
 apps/coverage/
 apps/reports/
 
+.cursorignore
+openspec
+.github
+.agent
+
 geojson/
 # Track evacuation GeoJSON used by API seed (do not bundle under src)
 !apps/api/geojson/
 !apps/api/geojson/evacuation/
 !apps/api/geojson/evacuation/*.geojson
+
+.geojson
+
+packages/api-client/openapi/openapi.json

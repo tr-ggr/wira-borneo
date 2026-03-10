@@ -1,20 +1,23 @@
 """Tests for the SEA-LION provider's rate-limit tracking."""
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from llm_server.providers.sea_lion import SeaLionProvider
 
 
 class TestSeaLionRateLimit:
     def _make_provider(self, rpm_limit: int = 3) -> SeaLionProvider:
-        """Build a provider with a mocked HF client."""
-        with patch("llm_server.providers.sea_lion.InferenceClient"):
+        """Build a provider with a mocked OpenAI client."""
+        with patch("llm_server.providers.sea_lion.OpenAI"):
             provider = SeaLionProvider(
-                api_token="fake",
-                model_id="test-model",
+                api_key="fake",
+                base_url="https://api.sea-lion.ai/v1",
+                model="test-model",
                 rpm_limit=rpm_limit,
                 timeout=5,
+                api_base_url="http://localhost:3333",
+                internal_secret="secret",
             )
         return provider
 

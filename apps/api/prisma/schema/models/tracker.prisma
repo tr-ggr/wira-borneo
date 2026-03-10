@@ -1,0 +1,75 @@
+// Tracker-specific models for humanitarian aid tracking
+
+model TrackerShipment {
+  id                 String             @id @default(cuid())
+  shipmentId         String             @unique
+  origin             String
+  destination        String
+  class              String
+  blockchainHash     String?
+  status             ShipmentStatus     @default(DISPATCHED)
+  verificationStatus VerificationStatus @default(PENDING)
+  timestamp          DateTime           @default(now())
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@map("tracker_shipments")
+}
+
+model TrackerStats {
+  id                String   @id @default(cuid())
+  totalAidDisbursed Float    @default(0)
+  verifiedPayouts   Int      @default(0)
+  networkTrustIndex Float    @default(99.98)
+  lastUpdated       DateTime @updatedAt
+
+  @@map("tracker_stats")
+}
+
+model TrackerReliefZone {
+  id          String     @id @default(cuid())
+  name        String
+  lat         Float
+  lng         Float
+  familyCount Int        @default(0)
+  status      ZoneStatus @default(ACTIVE)
+  zoneType    String // 'evacuation' or 'supply'
+  createdAt   DateTime   @default(now())
+
+  @@map("tracker_relief_zones")
+}
+
+model TrackerValidator {
+  id               String          @id @default(cuid())
+  nodeId           String          @unique
+  location         String
+  latencyMs        Int             @default(0)
+  uptimePercentage Float           @default(99.0)
+  status           ValidatorStatus @default(ONLINE)
+  createdAt        DateTime        @default(now())
+
+  @@map("tracker_validators")
+}
+
+enum ShipmentStatus {
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+}
+
+enum VerificationStatus {
+  VERIFIED
+  PENDING
+  FAILED
+}
+
+enum ZoneStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ValidatorStatus {
+  ONLINE
+  OFFLINE
+  DEGRADED
+}

@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
+import { AgeGroup } from '../../generated/prisma/enums';
 
 export class AuthenticatedUser {
   @ApiProperty()
@@ -18,6 +20,32 @@ export class AuthenticatedUser {
 
   @ApiProperty({ required: false, nullable: true })
   role?: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  pregnantStatus?: boolean | null;
+
+  @ApiProperty({ required: false, nullable: true, enum: AgeGroup })
+  ageGroup?: AgeGroup | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  isPWD?: boolean | null;
+}
+
+export class UpdateProfilePayload {
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  pregnantStatus?: boolean | null;
+
+  @ApiProperty({ required: false, nullable: true, enum: AgeGroup })
+  @IsOptional()
+  @IsEnum(AgeGroup)
+  ageGroup?: AgeGroup | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isPWD?: boolean | null;
 }
 
 export class AuthSession {
@@ -44,6 +72,21 @@ export class SignUpPayload {
 
   @ApiProperty()
   password!: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  pregnantStatus?: boolean | null;
+
+  @ApiProperty({ required: false, nullable: true, enum: AgeGroup })
+  @IsOptional()
+  @IsEnum(AgeGroup)
+  ageGroup?: AgeGroup | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isPWD?: boolean | null;
 }
 
 export class SignInPayload {

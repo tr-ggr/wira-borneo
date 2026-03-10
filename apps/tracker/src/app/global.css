@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .batik-overlay {
+    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAMUQ5oP8JLaEz7Xyq5B5OaGUEdi_gcq2TTaH8M4HWlGAZ8ZDVFVpJFkMue8Tkiktx6zoWl4yMvT0mpEwMPzojAbFCVa_5OA7Y1eYjmdTlXGWF8PfqiotV_tsPtTUoupoJi7NUcuY3bk_yt-wi0cKbAF345Tpk_v6_-M_AcKh5Q4xQEsHb7TiZ-uicTpSbLzvf67nNLW1zmmoXF4-Me5YRZxwlfUppdvXj97UqnSt2Q-4jMYEXxOlDg-RtfGJQgJW0oHlC_UempqU');
+    opacity: 0.03;
+  }
+
+  .gradient-border {
+    border-image: linear-gradient(to right, #193ce6, #e61919) 1;
+  }
+
+  .subtle-glow {
+    box-shadow: 0 0 15px -5px rgba(25, 60, 230, 0.2);
+  }
+
+  .asean-gradient {
+    background: linear-gradient(135deg, #193ce6 0%, #e61919 100%);
+  }
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   font-family:

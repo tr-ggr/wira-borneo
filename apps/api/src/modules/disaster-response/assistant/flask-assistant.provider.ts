@@ -8,8 +8,6 @@ import {
 import { SimpleAssistantProvider } from './simple-assistant.provider';
 import { getLlmRuntimeConfig, type LlmRuntimeConfig } from '../../../config';
 
-const MAX_RESPONSE_CHARS = 2000;
-
 @Injectable()
 export class FlaskAssistantProvider
     implements DisasterAssistantProvider, OnModuleInit {
@@ -36,6 +34,7 @@ export class FlaskAssistantProvider
                     context: {
                         hazardType: input.context?.hazardType,
                         location: input.context?.location,
+                        userId: input.context?.userId,
                     },
                 },
                 { timeout: this.config.llmTimeoutMs },
@@ -47,18 +46,36 @@ export class FlaskAssistantProvider
                 `LLM response received in ${elapsed}ms (provider: ${provider})`,
             );
 
-            const rawAnswer: string = response.data?.answer ?? '';
-            const answer =
-                rawAnswer.length > MAX_RESPONSE_CHARS
-                    ? rawAnswer.slice(0, MAX_RESPONSE_CHARS) + '…'
-                    : rawAnswer;
+            const responseData = response.data;
+            let rawAnswer = '';
+            let structuredData: AssistantAnswerResult['structuredData'];
+
+            if (responseData?.data) {
+                const { summary, steps, safety_reminder } = responseData.data;
+                const parts = [];
+                if (summary) parts.push(summary);
+                if (Array.isArray(steps) && steps.length > 0) {
+                    parts.push(steps.map((step: string, i: number) => `${i + 1}. ${step}`).join('\n'));
+                }
+                if (safety_reminder) parts.push(safety_reminder);
+                rawAnswer = parts.join('\n\n');
+
+                structuredData = {
+                    summary: summary || '',
+                    steps: Array.isArray(steps) ? steps : [],
+                    safetyReminder: safety_reminder || '',
+                };
+            } else {
+                rawAnswer = responseData?.answer ?? '';
+            }
 
             return {
-                answer,
+                answer: rawAnswer,
                 disclaimer:
-                    response.data?.disclaimer ??
+                    responseData?.disclaimer ??
                     'This assistant provides general guidance only.',
                 provider,
+                ...(structuredData && { structuredData }),
             };
         } catch (error) {
             const elapsed = Date.now() - start;

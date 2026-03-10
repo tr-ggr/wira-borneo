@@ -50,8 +50,8 @@ export class EvacuationService {
   async getNearest(
     latitude: number,
     longitude: number,
-    limit: number = 10,
-    vehicleType: string = 'driving',
+    limit = 10,
+    vehicleType = 'driving',
   ): Promise<NearestEvacResult[]> {
     const areas = await this.prisma.evacuationArea.findMany({
       where: { isActive: true },

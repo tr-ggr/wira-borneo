@@ -9,6 +9,9 @@ export default function Register({ onToggleLogin }: { onToggleLogin: () => void 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [ageGroup, setAgeGroup] = useState('');
+  const [pregnantStatus, setPregnantStatus] = useState(false);
+  const [isPWD, setIsPWD] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -27,7 +30,16 @@ export default function Register({ onToggleLogin }: { onToggleLogin: () => void 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    signUp.mutate({ data: { name, email, password } });
+    signUp.mutate({ 
+      data: { 
+        name, 
+        email, 
+        password,
+        ...(ageGroup ? { ageGroup: ageGroup as any } : {}),
+        pregnantStatus,
+        isPWD,
+      } as any
+    });
   };
 
   return (
@@ -72,6 +84,41 @@ export default function Register({ onToggleLogin }: { onToggleLogin: () => void 
             placeholder="••••••••"
             required
           />
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <label className="text-xs font-body font-semibold uppercase tracking-wider text-wira-teal text-left block">Demographics</label>
+          <select 
+            className="w-full bg-white border border-wira-ivory-dark rounded-xl px-4 py-3 font-body focus:ring-2 focus:ring-wira-gold outline-none text-sm"
+            value={ageGroup}
+            onChange={(e) => setAgeGroup(e.target.value)}
+          >
+            <option value="">Age Group (Optional)</option>
+            <option value="UNDER_12">Under 12</option>
+            <option value="AGE_12_17">12 - 17</option>
+            <option value="AGE_18_59">18 - 59</option>
+            <option value="AGE_60_PLUS">60+</option>
+          </select>
+
+          <label className="flex items-center justify-between p-3 rounded-xl border border-wira-ivory-dark bg-white">
+            <span className="text-sm font-body text-wira-earth">Pregnant</span>
+            <input 
+              type="checkbox" 
+              className="w-5 h-5 rounded text-wira-teal focus:ring-wira-teal border-gray-300"
+              checked={pregnantStatus}
+              onChange={(e) => setPregnantStatus(e.target.checked)}
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-3 rounded-xl border border-wira-ivory-dark bg-white">
+            <span className="text-sm font-body text-wira-earth">Person with Disability (PWD)</span>
+            <input 
+              type="checkbox" 
+              className="w-5 h-5 rounded text-wira-teal focus:ring-wira-teal border-gray-300"
+              checked={isPWD}
+              onChange={(e) => setIsPWD(e.target.checked)}
+            />
+          </label>
         </div>
 
         {error && (

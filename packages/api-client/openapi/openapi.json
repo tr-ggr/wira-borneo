@@ -98,6 +98,37 @@
         ]
       }
     },
+    "/api/auth/profile": {
+      "patch": {
+        "operationId": "AuthController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfilePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticatedUser"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/risk/forecast": {
       "get": {
         "operationId": "RiskIntelligenceController_getForecast",
@@ -173,44 +204,12 @@
         ]
       }
     },
-    "/api/risk/building-profiles": {
+    "/api/risk/full-detail/{iso3}": {
       "get": {
-        "operationId": "RiskIntelligenceController_getBuildingProfiles",
+        "operationId": "RiskIntelligenceController_getFullDetail",
         "parameters": [
           {
-            "name": "latitude",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "longitude",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get building profiles (GeoJSON) for a location",
-        "tags": [
-          "risk-intelligence"
-        ]
-      }
-    },
-    "/api/risk/tiles/{z}/{x}/{y}.mvt": {
-      "get": {
-        "operationId": "RiskIntelligenceController_getTiles",
-        "parameters": [
-          {
-            "name": "z",
+            "name": "iso3",
             "required": true,
             "in": "path",
             "schema": {
@@ -218,17 +217,10 @@
             }
           },
           {
-            "name": "x",
+            "name": "bbox",
             "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "y",
-            "required": true,
-            "in": "path",
+            "in": "query",
+            "description": "minLng,minLat,maxLng,maxLat",
             "schema": {
               "type": "string"
             }
@@ -236,10 +228,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Returns GeoJSON FeatureCollection"
           }
         },
-        "summary": "Get building profile vector tiles (MVT)",
+        "summary": "Get full detail building profiles for a country and bbox",
         "tags": [
           "risk-intelligence"
         ]
@@ -786,7 +778,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantInquiryResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -797,6 +796,38 @@
         "summary": "Ask disaster preparedness assistant",
         "tags": [
           "assistant"
+        ]
+      }
+    },
+    "/api/assistant/internal/demographics/{userId}": {
+      "get": {
+        "operationId": "AssistantInternalController_getDemographics",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-llm-internal-secret",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Internal: fetch user demographics for tool calling",
+        "tags": [
+          "assistant-internal"
         ]
       }
     },
@@ -1046,6 +1077,74 @@
           }
         ],
         "summary": "Manually create and dispatch warning event",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/admin/warnings/{id}": {
+      "patch": {
+        "operationId": "AdminOperationsController_updateWarning",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWarningDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an existing warning event",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/admin/warnings/{id}/cancel": {
+      "post": {
+        "operationId": "AdminOperationsController_cancelWarning",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel an active warning event",
         "tags": [
           "admin-operations"
         ]
@@ -1407,6 +1506,165 @@
           "pins"
         ]
       }
+    },
+    "/api/tracker/shipments": {
+      "get": {
+        "operationId": "TrackerController_getShipments",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrackerShipmentDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all shipments",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/shipments/{id}": {
+      "get": {
+        "operationId": "TrackerController_getShipmentById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackerShipmentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get shipment by ID",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/stats": {
+      "get": {
+        "operationId": "TrackerController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackerStatsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get tracker statistics",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/relief-zones": {
+      "get": {
+        "operationId": "TrackerController_getReliefZones",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrackerReliefZoneDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get relief zones",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/validators": {
+      "get": {
+        "operationId": "TrackerController_getValidators",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrackerValidatorDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get validators",
+        "tags": [
+          "tracker"
+        ]
+      }
+    },
+    "/api/tracker/donation-distribution": {
+      "get": {
+        "operationId": "TrackerController_getDonationDistribution",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Map of category names to percentages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get donation distribution",
+        "tags": [
+          "tracker"
+        ]
+      }
     }
   },
   "info": {
@@ -1430,6 +1688,24 @@
           },
           "password": {
             "type": "string"
+          },
+          "pregnantStatus": {
+            "type": "object",
+            "nullable": true
+          },
+          "ageGroup": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "UNDER_12",
+              "AGE_12_17",
+              "AGE_18_59",
+              "AGE_60_PLUS"
+            ]
+          },
+          "isPWD": {
+            "type": "object",
+            "nullable": true
           }
         },
         "required": [
@@ -1458,6 +1734,24 @@
             "nullable": true
           },
           "role": {
+            "type": "object",
+            "nullable": true
+          },
+          "pregnantStatus": {
+            "type": "object",
+            "nullable": true
+          },
+          "ageGroup": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "UNDER_12",
+              "AGE_12_17",
+              "AGE_18_59",
+              "AGE_60_PLUS"
+            ]
+          },
+          "isPWD": {
             "type": "object",
             "nullable": true
           }
@@ -1529,6 +1823,29 @@
           "user"
         ]
       },
+      "UpdateProfilePayload": {
+        "type": "object",
+        "properties": {
+          "pregnantStatus": {
+            "type": "object",
+            "nullable": true
+          },
+          "ageGroup": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "UNDER_12",
+              "AGE_12_17",
+              "AGE_18_59",
+              "AGE_60_PLUS"
+            ]
+          },
+          "isPWD": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
       "CreateFamilyDto": {
         "type": "object",
         "properties": {}
@@ -1555,7 +1872,90 @@
       },
       "AssistantInquiryDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "question": {
+            "type": "string",
+            "example": "What should I do during a flood?",
+            "description": "User question (max 500 chars)"
+          },
+          "location": {
+            "type": "string",
+            "example": "Kuching",
+            "description": "Current location of the user"
+          },
+          "hazardType": {
+            "type": "string",
+            "example": "FLOOD",
+            "description": "Type of hazard relevant to the inquiry"
+          }
+        },
+        "required": [
+          "question"
+        ]
+      },
+      "AssistantStructuredDataDto": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "example": "Move to higher ground immediately.",
+            "description": "Brief summary of advice"
+          },
+          "steps": {
+            "example": [
+              "Pack a go bag",
+              "Listen to radio"
+            ],
+            "description": "Actionable steps",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "safetyReminder": {
+            "type": "string",
+            "example": "Stay clear of power lines.",
+            "description": "Safety reminder"
+          }
+        },
+        "required": [
+          "summary",
+          "steps",
+          "safetyReminder"
+        ]
+      },
+      "AssistantInquiryResponseDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "example": "Move to higher ground immediately.",
+            "description": "AI-generated answer to the inquiry"
+          },
+          "disclaimer": {
+            "type": "string",
+            "example": "This is general guidance only. Always follow local authorities.",
+            "description": "Disclaimer regarding AI-generated content"
+          },
+          "provider": {
+            "type": "string",
+            "example": "sea-lion",
+            "description": "The LLM provider that generated the response"
+          },
+          "structuredData": {
+            "description": "Structured formulation of the advice",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssistantStructuredDataDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "answer",
+          "disclaimer",
+          "provider"
+        ]
       },
       "ReviewVolunteerDto": {
         "type": "object",
@@ -1570,6 +1970,10 @@
         "properties": {}
       },
       "CreateWarningDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateWarningDto": {
         "type": "object",
         "properties": {}
       },
@@ -1636,6 +2040,154 @@
           "hazardType",
           "latitude",
           "longitude"
+        ]
+      },
+      "TrackerShipmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shipmentId": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "class": {
+            "type": "string"
+          },
+          "blockchainHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DISPATCHED",
+              "IN_TRANSIT",
+              "DELIVERED"
+            ]
+          },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "PENDING",
+              "FAILED"
+            ]
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "shipmentId",
+          "origin",
+          "destination",
+          "class",
+          "status",
+          "verificationStatus",
+          "timestamp"
+        ]
+      },
+      "TrackerStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalAidDisbursed": {
+            "type": "number"
+          },
+          "verifiedPayouts": {
+            "type": "number"
+          },
+          "networkTrustIndex": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "totalAidDisbursed",
+          "verifiedPayouts",
+          "networkTrustIndex"
+        ]
+      },
+      "TrackerReliefZoneDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "familyCount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "zoneType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "lat",
+          "lng",
+          "familyCount",
+          "status",
+          "zoneType"
+        ]
+      },
+      "TrackerValidatorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "latencyMs": {
+            "type": "number"
+          },
+          "uptimePercentage": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "OFFLINE",
+              "DEGRADED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nodeId",
+          "location",
+          "latencyMs",
+          "uptimePercentage",
+          "status"
         ]
       }
     }

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Headers,
+  Patch,
   Post,
   Res,
 } from '@nestjs/common';
@@ -11,11 +12,13 @@ import type { Response as ExpressResponse } from 'express';
 import type { IncomingHttpHeaders } from 'node:http';
 import { AuthService } from './auth.service';
 import {
+  AuthenticatedUser,
   AuthSession,
   SignInPayload,
   SignInResult,
   SignUpPayload,
   SignUpResult,
+  UpdateProfilePayload,
 } from './auth.types';
 
 @ApiTags('Auth')
@@ -64,6 +67,16 @@ export class AuthController {
   @ApiResponse({ type: AuthSession })
   async getSession(@Headers() headers: IncomingHttpHeaders) {
     return this.authService.getSession(headers);
+  }
+
+  @Patch('profile')
+  @ApiBody({ type: UpdateProfilePayload })
+  @ApiResponse({ type: AuthenticatedUser })
+  async updateProfile(
+    @Body() payload: UpdateProfilePayload,
+    @Headers() headers: IncomingHttpHeaders,
+  ) {
+    return this.authService.updateProfile(payload, headers);
   }
 
   private bridgeCookies(fetchResponse: Response, expressResponse: ExpressResponse) {

@@ -12,7 +12,8 @@ describe('FlaskAssistantProvider', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         process.env.LLM_SERVER_URL = 'http://localhost:5000';
-        process.env.LLM_TIMEOUT_MS = '5001';
+        process.env.LLM_INTERNAL_SECRET = 'test-secret';
+        process.env.LLM_TIMEOUT_MS = '5000';
 
         fallback = new SimpleAssistantProvider();
         provider = new FlaskAssistantProvider(fallback);
@@ -21,6 +22,7 @@ describe('FlaskAssistantProvider', () => {
 
     afterEach(() => {
         delete process.env.LLM_SERVER_URL;
+        delete process.env.LLM_INTERNAL_SECRET;
         delete process.env.LLM_TIMEOUT_MS;
     });
 

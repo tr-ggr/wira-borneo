@@ -167,99 +167,41 @@ export class RiskIntelligenceService implements OnModuleInit {
     });
   }
 
-  async getBuildingProfileGeoJson(latitude: number, longitude: number) {
-    const countryCode = await this.getCountryCode(latitude, longitude);
-    if (!countryCode) {
-      throw new NotFoundException('Could not determine country for the given coordinates');
-    }
+  async getFullDetail(iso3: string, bbox: string) {
+    const [minLng, minLat, maxLng, maxLat] = bbox.split(',').map(Number);
 
-    const countryMap: Record<string, string> = {
-      bn: 'brn',
-      id: 'idn',
-      my: 'mys',
-      ph: 'phl',
-      sg: 'sgp',
-    };
-
-    const iso3Code = countryMap[countryCode.toLowerCase()];
-    if (!iso3Code) {
-      throw new NotFoundException(
-        `Building profiles are not available for country code: ${countryCode}`,
-      );
-    }
-
-    const filename = `vulnerability_${iso3Code}.geojson`;
-    const filePath = join(
-      process.cwd(),
-      'apps/api/geojson/building_profiles',
-      filename,
+    const result = await this.prisma.$queryRawUnsafe<
+      { id: string; iso3: string; properties: any; geojson: string }[]
+    >(
+      `
+      SELECT 
+        id, 
+        iso3, 
+        properties, 
+        ST_AsGeoJSON(geom) AS geojson
+      FROM building_profiles
+      WHERE iso3 = $1
+      AND ST_Intersects(geom, ST_MakeEnvelope($2, $3, $4, $5, 4326))
+      LIMIT 5000
+    `,
+      iso3,
+      minLng,
+      minLat,
+      maxLng,
+      maxLat,
     );
 
-    try {
-      await access(filePath, constants.R_OK);
-      const file = createReadStream(filePath);
-      return new StreamableFile(file);
-    } catch (error) {
-      this.logger.error(`Building profile read failed for ${filePath}:`, error);
-      throw new NotFoundException(` ${iso3Code.toUpperCase()} not found`);
-    }
-  }
-
-  async getMvtTile(z: number, x: number, y: number): Promise<Buffer> {
-    const query = `
-      WITH 
-      bounds AS (
-        SELECT ST_TileEnvelope($1, $2, $3) AS geom
-      ),
-      mvtgeom AS (
-        SELECT 
-          ST_AsMVTGeom(
-            ST_Transform(bp.geom, 3857),
-            bounds.geom,
-            4096, 
-            64, 
-            true
-          ) AS geom,
-          bp.properties
-        FROM building_profiles bp, bounds
-        WHERE ST_Intersects(ST_Transform(bp.geom, 3857), bounds.geom)
-      )
-      SELECT ST_AsMVT(mvtgeom.*, 'building-profiles') AS mvt FROM mvtgeom;
-    `;
-
-    const result = await this.prisma.$queryRawUnsafe<{ mvt: Buffer }[]>(query, z, x, y);
-
-    if (!result || result.length === 0 || !result[0].mvt) {
-      return Buffer.alloc(0);
-    }
-
-    return result[0].mvt;
-  }
-
-  private async getCountryCode(
-    latitude: number,
-    longitude: number,
-  ): Promise<string | null> {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=3`,
-        {
-          headers: {
-            'User-Agent': 'WiraBorneoRiskIntelligence/1.0',
-          },
+    return {
+      type: 'FeatureCollection',
+      features: result.map((row) => ({
+        type: 'Feature',
+        geometry: JSON.parse(row.geojson),
+        properties: {
+          id: row.id,
+          iso3: row.iso3,
+          data: row.properties,
         },
-      );
-
-      if (!response.ok) {
-        this.logger.error(`Nominatim API returned ${response.status} ${await response.text()}`);
-        return null;
-      }
-
-      const data = (await response.json()) as { address?: { country_code?: string } };
-      return data.address?.country_code || null;
-    } catch (error) {
-      this.logger.error('Failed to get country code:', error);
-      return null;
-    }
+      })),
+    };
   }
 }

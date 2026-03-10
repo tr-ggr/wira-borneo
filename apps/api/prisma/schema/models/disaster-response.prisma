@@ -62,26 +62,26 @@ enum PinReviewStatus {
 }
 
 model Family {
-  id          String         @id @default(cuid())
-  name        String
-  code        String         @unique
-  createdById String
-  createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  members     FamilyMember[]
-  helpRequests HelpRequest[]
+  id               String                      @id @default(cuid())
+  name             String
+  code             String                      @unique
+  createdById      String
+  createdBy        User                        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  members          FamilyMember[]
+  helpRequests     HelpRequest[]
   routeSuggestions EvacuationRouteSuggestion[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
 }
 
 model FamilyMember {
-  id        String   @id @default(cuid())
-  familyId  String
-  userId    String
-  role      String   @default("MEMBER")
-  joinedAt  DateTime @default(now())
-  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       String   @id @default(cuid())
+  familyId String
+  userId   String
+  role     String   @default("MEMBER")
+  joinedAt DateTime @default(now())
+  family   Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([familyId, userId])
   @@index([userId])
@@ -98,75 +98,75 @@ model UserLocationSnapshot {
 }
 
 model RiskRegionSnapshot {
-  id              String        @id @default(cuid())
-  hazardType      HazardType
-  severity        SeverityLevel
-  name            String
-  latitude        Float?
-  longitude       Float?
-  radiusKm        Float?
-  polygonGeoJson  String?
-  startsAt        DateTime
-  endsAt          DateTime?
-  source          String?
-  createdAt       DateTime      @default(now())
+  id             String        @id @default(cuid())
+  hazardType     HazardType
+  severity       SeverityLevel
+  name           String
+  latitude       Float?
+  longitude      Float?
+  radiusKm       Float?
+  polygonGeoJson String?
+  startsAt       DateTime
+  endsAt         DateTime?
+  source         String?
+  createdAt      DateTime      @default(now())
 
   @@index([hazardType, severity])
   @@index([startsAt, endsAt])
 }
 
 model VolunteerApplication {
-  id            String          @id @default(cuid())
-  userId        String
-  status        VolunteerStatus @default(PENDING)
-  notes         String?
-  reviewedById  String?
-  reviewedAt    DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  user          User            @relation("VolunteerApplicationApplicant", fields: [userId], references: [id], onDelete: Cascade)
-  reviewedBy    User?           @relation("VolunteerApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-  decisionLogs  VolunteerDecisionLog[]
+  id           String                 @id @default(cuid())
+  userId       String
+  status       VolunteerStatus        @default(PENDING)
+  notes        String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  user         User                   @relation("VolunteerApplicationApplicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy   User?                  @relation("VolunteerApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  decisionLogs VolunteerDecisionLog[]
 
   @@index([userId, status])
   @@index([reviewedById])
 }
 
 model VolunteerProfile {
-  id             String          @id @default(cuid())
-  userId         String          @unique
-  status         VolunteerStatus @default(PENDING)
-  baseLatitude   Float?
-  baseLongitude  Float?
-  approvedById   String?
-  approvedAt     DateTime?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy     User?           @relation("VolunteerProfileApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  id            String          @id @default(cuid())
+  userId        String          @unique
+  status        VolunteerStatus @default(PENDING)
+  baseLatitude  Float?
+  baseLongitude Float?
+  approvedById  String?
+  approvedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy    User?           @relation("VolunteerProfileApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([status])
 }
 
 model WarningEvent {
-  id                 String                      @id @default(cuid())
-  title              String
-  message            String
-  hazardType         HazardType
-  severity           SeverityLevel
-  status             WarningStatus               @default(DRAFT)
-  startsAt           DateTime
-  endsAt             DateTime?
-  suggestedPrompt    String?
-  isManualDispatch   Boolean                     @default(true)
-  createdById        String
-  createdBy          User                        @relation("WarningCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
-  targetAreas        WarningTargetArea[]
-  evacuationAreas    WarningEventEvacuationArea[]
-  routeSuggestions   EvacuationRouteSuggestion[]
-  logs               WarningEventLog[]
-  createdAt          DateTime                    @default(now())
-  updatedAt          DateTime                    @updatedAt
+  id               String                       @id @default(cuid())
+  title            String
+  message          String
+  hazardType       HazardType
+  severity         SeverityLevel
+  status           WarningStatus                @default(DRAFT)
+  startsAt         DateTime
+  endsAt           DateTime?
+  suggestedPrompt  String?
+  isManualDispatch Boolean                      @default(true)
+  createdById      String
+  createdBy        User                         @relation("WarningCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  targetAreas      WarningTargetArea[]
+  evacuationAreas  WarningEventEvacuationArea[]
+  routeSuggestions EvacuationRouteSuggestion[]
+  logs             WarningEventLog[]
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
 
   @@index([status, hazardType, severity])
   @@index([startsAt, endsAt])
@@ -186,30 +186,30 @@ model WarningTargetArea {
 }
 
 model EvacuationArea {
-  id               String                      @id @default(cuid())
+  id               String                       @id @default(cuid())
   name             String
   latitude         Float
   longitude        Float
   address          String?
   region           String?
-  type             String?                     // e.g. Campus, Church, Shelter, Hospital
-  capacity         String?                     // e.g. ">500", "100-250"
-  population       String?                     // e.g. pupil count from raw
-  source           String?                     // e.g. "Department of Education, Philippines"
-  isActive         Boolean                     @default(true)
+  type             String? // e.g. Campus, Church, Shelter, Hospital
+  capacity         String? // e.g. ">500", "100-250"
+  population       String? // e.g. pupil count from raw
+  source           String? // e.g. "Department of Education, Philippines"
+  isActive         Boolean                      @default(true)
   warningLinks     WarningEventEvacuationArea[]
   routeSuggestions EvacuationRouteSuggestion[]
-  createdAt        DateTime                    @default(now())
-  updatedAt        DateTime                    @updatedAt
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
 
   @@index([region, isActive])
 }
 
 model WarningEventEvacuationArea {
-  id               String        @id @default(cuid())
+  id               String         @id @default(cuid())
   warningEventId   String
   evacuationAreaId String
-  warningEvent     WarningEvent  @relation(fields: [warningEventId], references: [id], onDelete: Cascade)
+  warningEvent     WarningEvent   @relation(fields: [warningEventId], references: [id], onDelete: Cascade)
   evacuationArea   EvacuationArea @relation(fields: [evacuationAreaId], references: [id], onDelete: Cascade)
 
   @@unique([warningEventId, evacuationAreaId])
@@ -217,7 +217,7 @@ model WarningEventEvacuationArea {
 }
 
 model EvacuationRouteSuggestion {
-  id               String       @id @default(cuid())
+  id               String         @id @default(cuid())
   warningEventId   String
   userId           String
   familyId         String?
@@ -228,10 +228,10 @@ model EvacuationRouteSuggestion {
   distanceMeters   Int
   polylineGeoJson  String?
   provider         String
-  createdAt        DateTime     @default(now())
-  warningEvent     WarningEvent @relation(fields: [warningEventId], references: [id], onDelete: Cascade)
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  family           Family?      @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  createdAt        DateTime       @default(now())
+  warningEvent     WarningEvent   @relation(fields: [warningEventId], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family           Family?        @relation(fields: [familyId], references: [id], onDelete: SetNull)
   evacuationArea   EvacuationArea @relation(fields: [evacuationAreaId], references: [id], onDelete: Cascade)
 
   @@index([warningEventId, userId])
@@ -239,21 +239,21 @@ model EvacuationRouteSuggestion {
 }
 
 model HelpRequest {
-  id                  String             @id @default(cuid())
-  requesterId         String
-  familyId            String?
-  hazardType          HazardType
-  urgency             HelpUrgency
-  status              HelpRequestStatus  @default(OPEN)
-  description         String
-  latitude            Float
-  longitude           Float
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  requester           User               @relation(fields: [requesterId], references: [id], onDelete: Cascade)
-  family              Family?            @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  assignments         HelpAssignment[]
-  events              HelpRequestEvent[]
+  id          String             @id @default(cuid())
+  requesterId String
+  familyId    String?
+  hazardType  HazardType
+  urgency     HelpUrgency
+  status      HelpRequestStatus  @default(OPEN)
+  description String
+  latitude    Float
+  longitude   Float
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  requester   User               @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  family      Family?            @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  assignments HelpAssignment[]
+  events      HelpRequestEvent[]
 
   @@index([requesterId, status])
   @@index([familyId])
@@ -277,6 +277,7 @@ model WarningEventLog {
   id             String        @id @default(cuid())
   warningEventId String
   actorId        String?
+  action         String
   status         WarningStatus
   note           String?
   createdAt      DateTime      @default(now())
@@ -287,54 +288,54 @@ model WarningEventLog {
 }
 
 model VolunteerDecisionLog {
-  id                    String            @id @default(cuid())
+  id                     String               @id @default(cuid())
   volunteerApplicationId String
-  actorId               String?
-  previousStatus        VolunteerStatus?
-  nextStatus            VolunteerStatus
-  reason                String?
-  createdAt             DateTime          @default(now())
-  volunteerApplication  VolunteerApplication @relation(fields: [volunteerApplicationId], references: [id], onDelete: Cascade)
-  actor                 User?             @relation("VolunteerDecisionActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorId                String?
+  previousStatus         VolunteerStatus?
+  nextStatus             VolunteerStatus
+  reason                 String?
+  createdAt              DateTime             @default(now())
+  volunteerApplication   VolunteerApplication @relation(fields: [volunteerApplicationId], references: [id], onDelete: Cascade)
+  actor                  User?                @relation("VolunteerDecisionActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([volunteerApplicationId, createdAt])
 }
 
 model HelpRequestEvent {
-  id             String            @id @default(cuid())
+  id             String             @id @default(cuid())
   helpRequestId  String
   actorId        String?
   previousStatus HelpRequestStatus?
   nextStatus     HelpRequestStatus
   note           String?
-  createdAt      DateTime          @default(now())
-  helpRequest    HelpRequest       @relation(fields: [helpRequestId], references: [id], onDelete: Cascade)
-  actor          User?             @relation("HelpRequestEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt      DateTime           @default(now())
+  helpRequest    HelpRequest        @relation(fields: [helpRequestId], references: [id], onDelete: Cascade)
+  actor          User?              @relation("HelpRequestEventActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([helpRequestId, createdAt])
 }
 
 model MapPinStatus {
-  id            String          @id @default(cuid())
-  title         String
-  hazardType    HazardType
-  status        PinStatus       @default(OPEN)
-  priority      Int             @default(1)
-  latitude      Float
-  longitude     Float
-  region        String?
-  note          String?
-  photoUrl      String?
-  photoKey      String?
-  reporterId    String?
-  reportedAt    DateTime        @default(now())
-  reviewedById  String?
-  reviewedAt    DateTime?
-  reviewNote    String?
-  reviewStatus  PinReviewStatus?
-  updatedAt     DateTime        @updatedAt
-  reporter      User?           @relation("MapPinReporter", fields: [reporterId], references: [id], onDelete: SetNull)
-  reviewedBy    User?           @relation("MapPinReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  id           String           @id @default(cuid())
+  title        String
+  hazardType   HazardType
+  status       PinStatus        @default(OPEN)
+  priority     Int              @default(1)
+  latitude     Float
+  longitude    Float
+  region       String?
+  note         String?
+  photoUrl     String?
+  photoKey     String?
+  reporterId   String?
+  reportedAt   DateTime         @default(now())
+  reviewedById String?
+  reviewedAt   DateTime?
+  reviewNote   String?
+  reviewStatus PinReviewStatus?
+  updatedAt    DateTime         @updatedAt
+  reporter     User?            @relation("MapPinReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reviewedBy   User?            @relation("MapPinReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status, hazardType, priority])
   @@index([region])

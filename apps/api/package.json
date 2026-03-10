@@ -10,14 +10,15 @@
     "prisma:migrate:status": "prisma migrate status --config prisma.config.ts",
     "prisma:migrate-dev": "prisma migrate dev --config prisma.config.ts",
     "prisma:reset": "prisma migrate reset --config prisma.config.ts --force",
-    "prisma:seed": "prisma db seed --config prisma.config.ts"
+    "prisma:seed": "prisma db seed --config prisma.config.ts",
+    "ingest" : "npx tsx --env-file=.env scripts/ingest-building-profiles.ts"
   },
   "nx": {
     "targets": {
       "build": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "webpack-cli build",
+          "command": "webpack-cli build", 
           "args": [
             "--node-env=production"
           ],
@@ -188,5 +189,8 @@
     "@nestjs/testing": "^11.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/jsonstream": "^0.8.33"
+  },
+  "prisma": {
+    "seed": "node scripts/run-prisma-seed.mjs"
   }
 }

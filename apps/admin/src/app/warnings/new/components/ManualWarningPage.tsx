@@ -11,6 +11,7 @@ import {
   warningFlowReducer,
   warningSummary,
 } from './warning-flow.utils';
+import WarningMapSupport from './WarningMapSupport';
 
 type HazardType = 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
 type SeverityLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
@@ -26,6 +27,7 @@ const defaultTarget = {
   latitude: '',
   longitude: '',
   radiusKm: '5',
+  polygonGeoJson: '',
 };
 
 function toAreas(raw: unknown): EvacuationArea[] {
@@ -70,6 +72,7 @@ export function ManualWarningPage() {
           latitude: target.latitude ? Number(target.latitude) : undefined,
           longitude: target.longitude ? Number(target.longitude) : undefined,
           radiusKm: target.radiusKm ? Number(target.radiusKm) : undefined,
+          polygonGeoJson: target.polygonGeoJson || undefined,
         },
       ],
       evacuationAreaIds: selectedEvacuationAreas,
@@ -86,6 +89,7 @@ export function ManualWarningPage() {
       target.latitude,
       target.longitude,
       target.radiusKm,
+      target.polygonGeoJson,
       selectedEvacuationAreas,
     ],
   );
@@ -248,30 +252,26 @@ export function ManualWarningPage() {
               </label>
             </div>
 
-            <h3 className="small-title">Recommended Evacuation Areas</h3>
-            <div className="selection-list">
-              {(areasQuery.data ?? []).map((area) => {
-                const checked = selectedEvacuationAreas.includes(area.id);
-                return (
-                  <label key={area.id} className="checkbox-row">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(event) => {
-                        setSelectedEvacuationAreas((current) => {
-                          if (event.target.checked) {
-                            return [...current, area.id];
-                          }
-                          return current.filter((value) => value !== area.id);
-                        });
-                      }}
-                    />
-                    <span>{area.name}</span>
-                    <span className="muted">{area.region ?? 'Unknown region'}</span>
-                  </label>
-                );
-              })}
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="field-label">Draw Target Area on Map</label>
+              <WarningMapSupport 
+                onTargetChange={(data) => {
+                  setTarget(prev => ({
+                    ...prev,
+                    latitude: data.latitude?.toString() ?? prev.latitude,
+                    longitude: data.longitude?.toString() ?? prev.longitude,
+                    radiusKm: data.radiusKm?.toString() ?? prev.radiusKm,
+                    polygonGeoJson: data.polygonGeoJson ?? '',
+                  }));
+                }}
+              />
+              {target.polygonGeoJson && (
+                <p className="small success-text" style={{ marginTop: '0.5rem' }}>
+                  ✓ Custom shape captured.
+                </p>
+              )}
             </div>
+
           </article>
 
           <article className="card">

@@ -9,8 +9,10 @@ import {
   type SignInPayload,
   type SignUpResult,
   type SignUpPayload,
+  type UpdateProfilePayload,
 } from './auth.types';
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { AgeGroup } from '../../generated/prisma/enums';
 
 interface BetterAuthApi {
   signUpEmail: (input: { body: SignUpPayload; headers: Headers; asResponse?: boolean }) => Promise<any>;
@@ -69,7 +71,7 @@ export class AuthService {
             adminUserIds: ['seed-user-admin'], // Initial admin ID from seed
           }),
         ],
-      }) as BetterAuthRuntime;
+      }) as unknown as BetterAuthRuntime;
     })();
 
     return this.authPromise;
@@ -97,6 +99,34 @@ export class AuthService {
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw data;
+      }
+
+      // If signup succeeds, we update the created user with our custom fields
+      if (data.user && (payload.pregnantStatus !== undefined || payload.ageGroup !== undefined || payload.isPWD !== undefined)) {
+        const updatedUser = await this.prisma.user.update({
+          where: { id: data.user.id },
+          data: {
+            ...(payload.pregnantStatus !== undefined && { pregnantStatus: payload.pregnantStatus }),
+            ...(payload.ageGroup !== undefined && { ageGroup: payload.ageGroup }),
+            ...(payload.isPWD !== undefined && { isPWD: payload.isPWD }),
+          },
+        });
+        
+        return {
+          response,
+          data: {
+            token: data.token,
+            user: this.toAuthenticatedUser(updatedUser),
+          },
+        };
+      }
+
+      if (!data.user) {
+        throw new BadRequestException('User creation failed.');
+      }
 
       return {
         response,
@@ -128,6 +158,14 @@ export class AuthService {
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw data;
+      }
+
+      if (!data.user) {
+        throw new UnauthorizedException('Invalid email or password.');
+      }
 
       return {
         response,
@@ -169,6 +207,10 @@ export class AuthService {
         return null;
       }
 
+      const dbUser = await this.prisma.user.findUnique({
+        where: { id: result.user.id },
+      });
+
       return {
         session: {
           id: result.session.id,
@@ -178,13 +220,31 @@ export class AuthService {
           ipAddress: result.session.ipAddress,
           userAgent: result.session.userAgent,
         },
-        user: this.toAuthenticatedUser(result.user),
+        user: this.toAuthenticatedUser(dbUser || result.user as any),
       };
     } catch (error) {
       this.handleApiError(error, {
         defaultUnauthorizedMessage: 'Session is invalid or expired.',
       });
     }
+  }
+
+  async updateProfile(payload: UpdateProfilePayload, headers: IncomingHttpHeaders): Promise<AuthenticatedUser> {
+    const session = await this.getSession(headers);
+    if (!session) {
+      throw new UnauthorizedException('Not authenticated');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        ...(payload.pregnantStatus !== undefined && { pregnantStatus: payload.pregnantStatus }),
+        ...(payload.ageGroup !== undefined && { ageGroup: payload.ageGroup }),
+        ...(payload.isPWD !== undefined && { isPWD: payload.isPWD }),
+      },
+    });
+
+    return this.toAuthenticatedUser(updatedUser);
   }
 
   private toAuthenticatedUser(user: {
@@ -194,6 +254,9 @@ export class AuthService {
     emailVerified: boolean;
     image?: string | null;
     role?: string | null;
+    pregnantStatus?: boolean | null;
+    ageGroup?: AgeGroup | null;
+    isPWD?: boolean | null;
   }): AuthenticatedUser {
     return {
       id: user.id,
@@ -202,6 +265,9 @@ export class AuthService {
       emailVerified: user.emailVerified,
       image: user.image,
       role: user.role,
+      pregnantStatus: user.pregnantStatus ?? null,
+      ageGroup: user.ageGroup ?? null,
+      isPWD: user.isPWD ?? null,
     };
   }
 
@@ -216,15 +282,25 @@ export class AuthService {
       message?: string;
       status?: number;
       code?: string;
+      error?: string | { message?: string; status?: number };
     };
 
-    const message = apiError?.message ?? 'Authentication failed.';
+    let message = apiError?.message || 'Authentication failed.';
+    
+    // Better Auth sometimes puts the message inside an 'error' object or field
+    if (typeof apiError.error === 'string') {
+      message = apiError.error;
+    } else if (apiError.error?.message) {
+      message = apiError.error.message;
+    }
+
     const normalized = message.toLowerCase();
 
     if (
       normalized.includes('already exists') ||
       normalized.includes('duplicate') ||
-      normalized.includes('unique constraint')
+      normalized.includes('unique constraint') ||
+      apiError.code === 'USER_ALREADY_EXISTS'
     ) {
       throw new ConflictException({
         errorCode: 'USER_ALREADY_EXISTS',
@@ -232,7 +308,7 @@ export class AuthService {
       });
     }
 
-    if (apiError?.status === 401 || apiError?.status === 403) {
+    if (apiError?.status === 401 || apiError?.status === 403 || apiError.code === 'UNAUTHORIZED') {
       throw new UnauthorizedException(
         options?.defaultUnauthorizedMessage ?? message,
       );
