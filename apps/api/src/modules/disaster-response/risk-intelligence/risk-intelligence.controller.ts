@@ -9,6 +9,7 @@ import {
 import { Response } from 'express';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -56,42 +57,14 @@ export class RiskIntelligenceController {
   async getVulnerableRegions() {
     return this.riskService.getVulnerableRegions();
   }
-  @Get('building-profiles')
-  @ApiOperation({ summary: 'Get building profiles (GeoJSON) for a location' })
-  @ApiQuery({ name: 'latitude', type: Number })
-  @ApiQuery({ name: 'longitude', type: Number })
-  async getBuildingProfiles(
-    @Query('latitude') latitude: string,
-    @Query('longitude') longitude: string,
+  @Get('full-detail/:iso3')
+  @ApiOperation({ summary: 'Get full detail building profiles for a country and bbox' })
+  @ApiQuery({ name: 'bbox', type: String, description: 'minLng,minLat,maxLng,maxLat' })
+  @ApiOkResponse({ description: 'Returns GeoJSON FeatureCollection' })
+  async getFullDetail(
+    @Param('iso3') iso3: string,
+    @Query('bbox') bbox: string,
   ) {
-    const coords = parseLatitudeLongitude({ latitude, longitude });
-
-    return this.riskService.getBuildingProfileGeoJson(
-      coords.latitude,
-      coords.longitude,
-    );
-  }
-
-  @Get('tiles/:z/:x/:y.mvt')
-  @ApiOperation({ summary: 'Get building profile vector tiles (MVT)' })
-  async getTiles(
-    @Param('z') z: string,
-    @Param('x') x: string,
-    @Param('y') y: string,
-    @Res() res: Response,
-  ) {
-    const tile = await this.riskService.getMvtTile(
-      Number(z),
-      Number(x),
-      Number(y),
-    );
-
-    res.set({
-      'Content-Type': 'application/vnd.mapbox-vector-tile',
-      'Content-Encoding': 'gzip', // PostGIS MVT is usually gzipped if configured, but here we just serve raw buffer
-      'Cache-Control': 'public, max-age=3600',
-    });
-
-    res.send(tile);
+    return this.riskService.getFullDetail(iso3, bbox);
   }
 }

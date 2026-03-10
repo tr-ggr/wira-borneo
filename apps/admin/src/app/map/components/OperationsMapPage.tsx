@@ -4,21 +4,20 @@ import {
   useAdminOperationsControllerMapOverview,
   useAdminOperationsControllerWeatherForecast,
   useAdminOperationsControllerWeatherGeocoding,
-  // useRiskIntelligenceControllerGetBuildingProfiles, // Deprecated for MVT
+  useRiskIntelligenceControllerGetFullDetail,
 } from '@wira-borneo/api-client';
 import Feature from 'ol/Feature';
-import MVT from 'ol/format/MVT';
+import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { boundingExtent, createEmpty, extend as extendExtent, isEmpty } from 'ol/extent';
 import { Point, Polygon } from 'ol/geom';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
-import VectorTileLayer from 'ol/layer/VectorTile';
+import { transformExtent } from 'ol/proj';
 import { fromLonLat } from 'ol/proj';
 import OSM from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
-import VectorTileSource from 'ol/source/VectorTile';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import 'ol/ol.css';
@@ -194,7 +193,7 @@ export function OperationsMapPage() {
   const pinSourceRef = useRef(new VectorSource());
   const userSourceRef = useRef(new VectorSource());
   const helpSourceRef = useRef(new VectorSource());
-  const buildingSourceRef = useRef<VectorTileSource | null>(null);
+  const clusteringSourceRef = useRef(new VectorSource());
   const aseanExtentRef = useRef(toAseanExtentProjection());
   const firstFitDoneRef = useRef(false);
   const filteredPinsRef = useRef<PinStatus[]>([]);
@@ -232,6 +231,8 @@ export function OperationsMapPage() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
   const [viewBuildingProfiles, setViewBuildingProfiles] = useState(false);
+  const [buildingProfilingBBox, setBuildingProfilingBBox] = useState<string>('92.0,-11.6,141.5,28.8');
+  const [buildingProfilingCountry, setBuildingProfilingCountry] = useState('idn');
 
   const overviewQuery = useAdminOperationsControllerMapOverview({
     query: {
@@ -270,7 +271,15 @@ export function OperationsMapPage() {
     },
   );
 
-  // useRiskIntelligenceControllerGetBuildingProfiles is deprecated for MVT
+  const buildingProfilesQuery = useRiskIntelligenceControllerGetFullDetail(
+    buildingProfilingCountry,
+    { bbox: buildingProfilingBBox },
+    {
+      query: {
+        enabled: viewBuildingProfiles,
+      },
+    },
+  );
 
   const risks = overviewQuery.data?.vulnerableRegions ?? [];
   const pins = overviewQuery.data?.pinStatuses ?? [];
@@ -431,24 +440,37 @@ export function OperationsMapPage() {
     const userLayer = new VectorLayer({ source: userSourceRef.current });
     const helpLayer = new VectorLayer({ source: helpSourceRef.current });
 
-    const buildingLayer = new VectorTileLayer({
-      source: new VectorTileSource({
-        format: new MVT(),
-        url: '/api/risk/tiles/{z}/{x}/{y}.mvt',
-        maxZoom: 14,
-      }),
+    const clusteringLayer = new VectorLayer({
+      source: clusteringSourceRef.current,
       style: new Style({
-        stroke: new Stroke({
-          color: 'rgba(255, 165, 0, 0.6)',
-          width: 1,
+        image: new CircleStyle({
+          radius: 10,
+          fill: new Fill({ color: 'rgba(255, 165, 0, 0.7)' }),
+          stroke: new Stroke({ color: '#fff', width: 2 }),
         }),
-        fill: new Fill({
-          color: 'rgba(255, 165, 0, 0.1)',
-        }),
+        text: new Style({
+          text: '', // Set dynamically
+        }).getText(),
       }),
       visible: viewBuildingProfiles,
     });
-    buildingSourceRef.current = buildingLayer.getSource();
+
+    clusteringLayer.setStyle((feature) => {
+      const count = feature.get('count') || 1;
+      return new Style({
+        image: new CircleStyle({
+          radius: Math.min(20, 10 + count / 100),
+          fill: new Fill({ color: 'rgba(255, 165, 0, 0.7)' }),
+          stroke: new Stroke({ color: '#fff', width: 2 }),
+        }),
+        text: new (Style as any)({
+          text: count.toString(),
+          fill: new Fill({ color: '#fff' }),
+          font: 'bold 12px sans-serif',
+        }).getText(),
+      });
+    });
+
 
     const view = new View({
       center: fromLonLat(ASEAN_CENTER_LON_LAT),
@@ -462,7 +484,7 @@ export function OperationsMapPage() {
       target: targetElement,
       layers: [
         new TileLayer({ source: new OSM() }),
-        buildingLayer,
+        clusteringLayer,
         hazardLayer,
         pinLayer,
         userLayer,
@@ -537,6 +559,13 @@ export function OperationsMapPage() {
         }
         return;
       }
+    });
+
+    map.on('moveend', () => {
+      const view = map.getView();
+      const extent = view.calculateExtent(map.getSize());
+      const transformedExtent = transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+      setBuildingProfilingBBox(transformedExtent.join(','));
     });
 
     return () => {
@@ -694,11 +723,42 @@ export function OperationsMapPage() {
   }, [filteredHelpRequests]);
  
   useEffect(() => {
+    const source = clusteringSourceRef.current;
+    if (!viewBuildingProfiles || !buildingProfilesQuery.data) {
+      source.clear();
+      return;
+    }
+
+    const data = buildingProfilesQuery.data;
+    source.clear();
+    const features = new GeoJSON().readFeatures(data, {
+      featureProjection: 'EPSG:3857',
+    });
+    source.addFeatures(features);
+  }, [viewBuildingProfiles, buildingProfilesQuery.data]);
+
+  useEffect(() => {
+    const view = mapViewRef.current;
+    if (!view) return;
+
+    // Restore zoom constraints and ensure zoom is not locked
+    view.setProperties({
+      minZoom: 3,
+      maxZoom: 14,
+    });
+  }, [viewBuildingProfiles]);
+
+  useEffect(() => {
     const layers = mapRef.current?.getLayers();
     if (layers) {
-      const buildingLayer = layers.getArray().find((l) => l instanceof VectorTileLayer);
-      if (buildingLayer) {
-        buildingLayer.setVisible(viewBuildingProfiles);
+      const clusteringLayer = layers.getArray().find((l) => {
+        if (l instanceof VectorLayer) {
+          return l.getVisible() !== undefined && (l.getSource() === clusteringSourceRef.current);
+        }
+        return false;
+      });
+      if (clusteringLayer) {
+        clusteringLayer.setVisible(viewBuildingProfiles);
       }
     }
   }, [viewBuildingProfiles]);
@@ -734,6 +794,28 @@ export function OperationsMapPage() {
             />
             <span>View Building Profiles (Overlay)</span>
           </label>
+ 
+          {viewBuildingProfiles && (
+            <div className="card-content-stack" style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+              <p className="small muted">Data fetched dynamically based on map area.</p>
+              <label className="field-label">
+                Country
+                <select
+                  className="field"
+                  value={buildingProfilingCountry}
+                  onChange={(e) => setBuildingProfilingCountry(e.target.value)}
+                >
+                  <option value="brn">Brunei</option>
+                  <option value="idn">Indonesia</option>
+                  <option value="mys">Malaysia</option>
+                  <option value="phl">Philippines</option>
+                  <option value="sgp">Singapore</option>
+                </select>
+              </label>
+              <p className="small muted">Showing full detail profiles</p>
+            </div>
+          )}
+
           <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
  
           <h2 className="card-title">Hazard Layers</h2>
