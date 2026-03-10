@@ -4,17 +4,21 @@ import {
   useAdminOperationsControllerMapOverview,
   useAdminOperationsControllerWeatherForecast,
   useAdminOperationsControllerWeatherGeocoding,
+  // useRiskIntelligenceControllerGetBuildingProfiles, // Deprecated for MVT
 } from '@wira-borneo/api-client';
 import Feature from 'ol/Feature';
+import MVT from 'ol/format/MVT';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { boundingExtent, createEmpty, extend as extendExtent, isEmpty } from 'ol/extent';
 import { Point, Polygon } from 'ol/geom';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
+import VectorTileLayer from 'ol/layer/VectorTile';
 import { fromLonLat } from 'ol/proj';
 import OSM from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
+import VectorTileSource from 'ol/source/VectorTile';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import 'ol/ol.css';
@@ -190,6 +194,7 @@ export function OperationsMapPage() {
   const pinSourceRef = useRef(new VectorSource());
   const userSourceRef = useRef(new VectorSource());
   const helpSourceRef = useRef(new VectorSource());
+  const buildingSourceRef = useRef<VectorTileSource | null>(null);
   const aseanExtentRef = useRef(toAseanExtentProjection());
   const firstFitDoneRef = useRef(false);
   const filteredPinsRef = useRef<PinStatus[]>([]);
@@ -212,7 +217,7 @@ export function OperationsMapPage() {
     RECENT: true,
     STALE: true,
   });
-  const [urgencyFilter, setUrgencyFilter] = useState<Record<string, boolean>>({
+  const [urgencyFilter] = useState<Record<string, boolean>>({
     LOW: true,
     MEDIUM: true,
     HIGH: true,
@@ -226,6 +231,7 @@ export function OperationsMapPage() {
   const [geocodeQuery, setGeocodeQuery] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [viewBuildingProfiles, setViewBuildingProfiles] = useState(false);
 
   const overviewQuery = useAdminOperationsControllerMapOverview({
     query: {
@@ -263,6 +269,8 @@ export function OperationsMapPage() {
       },
     },
   );
+
+  // useRiskIntelligenceControllerGetBuildingProfiles is deprecated for MVT
 
   const risks = overviewQuery.data?.vulnerableRegions ?? [];
   const pins = overviewQuery.data?.pinStatuses ?? [];
@@ -423,11 +431,32 @@ export function OperationsMapPage() {
     const userLayer = new VectorLayer({ source: userSourceRef.current });
     const helpLayer = new VectorLayer({ source: helpSourceRef.current });
 
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3333';
+
+    const buildingLayer = new VectorTileLayer({
+      source: new VectorTileSource({
+        format: new MVT(),
+        url: `${apiBaseUrl}/api/risk/tiles/{z}/{x}/{y}.mvt`,
+        maxZoom: 14,
+      }),
+      style: new Style({
+        stroke: new Stroke({
+          color: 'rgba(255, 165, 0, 0.6)',
+          width: 1,
+        }),
+        fill: new Fill({
+          color: 'rgba(255, 165, 0, 0.1)',
+        }),
+      }),
+      visible: viewBuildingProfiles,
+    });
+    buildingSourceRef.current = buildingLayer.getSource();
+
     const view = new View({
       center: fromLonLat(ASEAN_CENTER_LON_LAT),
       zoom: 4.8,
       minZoom: 3,
-      maxZoom: 13,
+      maxZoom: 14,
     });
 
     mapViewRef.current = view;
@@ -435,6 +464,7 @@ export function OperationsMapPage() {
       target: targetElement,
       layers: [
         new TileLayer({ source: new OSM() }),
+        buildingLayer,
         hazardLayer,
         pinLayer,
         userLayer,
@@ -455,13 +485,17 @@ export function OperationsMapPage() {
       setIsMapReady(true);
     });
 
-    mapRef.current.on('singleclick', (event) => {
-      const clickedFeature = mapRef.current
-        ?.getFeaturesAtPixel(event.pixel)
-        .find((feature) => {
-          const featureType = String(feature.get('featureType'));
-          return featureType === 'pin' || featureType === 'user' || featureType === 'help';
-        });
+    const map = mapRef.current;
+    if (!map) return;
+
+    map.on('singleclick', (event) => {
+      const clickedFeatures = map.getFeaturesAtPixel(event.pixel);
+      if (!clickedFeatures || clickedFeatures.length === 0) return;
+
+      const clickedFeature = clickedFeatures.find((feature) => {
+        const featureType = String(feature.get('featureType'));
+        return featureType === 'pin' || featureType === 'user' || featureType === 'help';
+      });
 
       if (!clickedFeature) {
         return;
@@ -660,6 +694,16 @@ export function OperationsMapPage() {
       source.addFeature(feature);
     });
   }, [filteredHelpRequests]);
+ 
+  useEffect(() => {
+    const layers = mapRef.current?.getLayers();
+    if (layers) {
+      const buildingLayer = layers.getArray().find((l) => l instanceof VectorTileLayer);
+      if (buildingLayer) {
+        buildingLayer.setVisible(viewBuildingProfiles);
+      }
+    }
+  }, [viewBuildingProfiles]);
 
   return (
     <section className="page-shell">
@@ -683,6 +727,17 @@ export function OperationsMapPage() {
 
       <div className="map-layout map-layout-large">
         <aside className={`card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
+          <h2 className="card-title">Risk & Intelligence</h2>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={viewBuildingProfiles}
+              onChange={(event) => setViewBuildingProfiles(event.target.checked)}
+            />
+            <span>View Building Profiles (Overlay)</span>
+          </label>
+          <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
+ 
           <h2 className="card-title">Hazard Layers</h2>
           {Object.keys(hazardFilter).map((key) => (
             <label className="checkbox-row" key={key}>

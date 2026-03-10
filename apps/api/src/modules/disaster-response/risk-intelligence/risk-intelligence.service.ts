@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, Logger, StreamableFile } from '@nestjs/common';
 import { join } from 'path';
-import { readFile, access } from 'fs/promises';
-import { constants } from 'fs';
+import { access } from 'fs/promises';
+import { constants, createReadStream } from 'fs';
 import { OpenMeteoService } from '../../../providers/open-meteo/open-meteo.service';
 import { PrismaService } from '../../../core/database/database.service';
 import { withinRadiusKm } from '../shared/geo.util';
@@ -196,11 +196,44 @@ export class RiskIntelligenceService implements OnModuleInit {
     );
 
     try {
-      const content = await readFile(filePath, 'utf-8');
-      return JSON.parse(content);
-    } catch {
-      throw new NotFoundException(`Building profile for ${iso3Code.toUpperCase()} not found`);
+      await access(filePath, constants.R_OK);
+      const file = createReadStream(filePath);
+      return new StreamableFile(file);
+    } catch (error) {
+      this.logger.error(`Building profile read failed for ${filePath}:`, error);
+      throw new NotFoundException(` ${iso3Code.toUpperCase()} not found`);
     }
+  }
+
+  async getMvtTile(z: number, x: number, y: number): Promise<Buffer> {
+    const query = `
+      WITH 
+      bounds AS (
+        SELECT ST_TileEnvelope($1, $2, $3) AS geom
+      ),
+      mvtgeom AS (
+        SELECT 
+          ST_AsMVTGeom(
+            ST_Transform(bp.geom, 3857),
+            bounds.geom,
+            4096, 
+            64, 
+            true
+          ) AS geom,
+          bp.properties
+        FROM building_profiles bp, bounds
+        WHERE ST_Intersects(ST_Transform(bp.geom, 3857), bounds.geom)
+      )
+      SELECT ST_AsMVT(mvtgeom.*, 'building-profiles') AS mvt FROM mvtgeom;
+    `;
+
+    const result = await this.prisma.$queryRawUnsafe<{ mvt: Buffer }[]>(query, z, x, y);
+
+    if (!result || result.length === 0 || !result[0].mvt) {
+      return Buffer.alloc(0);
+    }
+
+    return result[0].mvt;
   }
 
   private async getCountryCode(
@@ -218,12 +251,14 @@ export class RiskIntelligenceService implements OnModuleInit {
       );
 
       if (!response.ok) {
+        this.logger.error(`Nominatim API returned ${response.status} ${await response.text()}`);
         return null;
       }
 
       const data = (await response.json()) as { address?: { country_code?: string } };
       return data.address?.country_code || null;
-    } catch {
+    } catch (error) {
+      this.logger.error('Failed to get country code:', error);
       return null;
     }
   }
