@@ -2,7 +2,6 @@ import * as bcrypt from 'bcrypt';
 import type { IncomingHttpHeaders } from 'node:http';
 import { getAuthRuntimeConfig } from '../../config/auth.config';
 import { PrismaService } from '../../core/database/database.service';
-import { AgeGroup } from '@prisma/client';
 import {
   type AuthSession,
   type AuthenticatedUser,
@@ -13,6 +12,7 @@ import {
   type UpdateProfilePayload,
 } from './auth.types';
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { AgeGroup } from '../../generated/prisma/enums';
 
 interface BetterAuthApi {
   signUpEmail: (input: { body: SignUpPayload; headers: Headers; asResponse?: boolean }) => Promise<any>;
@@ -71,7 +71,7 @@ export class AuthService {
             adminUserIds: ['seed-user-admin'], // Initial admin ID from seed
           }),
         ],
-      }) as BetterAuthRuntime;
+      }) as unknown as BetterAuthRuntime;
     })();
 
     return this.authPromise;
@@ -124,17 +124,15 @@ export class AuthService {
         };
       }
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw data;
+      if (!data.user) {
+        throw new BadRequestException('User creation failed.');
       }
 
       return {
         response,
         data: {
           token: data.token,
-          user: data.user ? this.toAuthenticatedUser(data.user) : null,
+          user: this.toAuthenticatedUser(data.user),
         },
       };
     } catch (error) {
@@ -165,11 +163,15 @@ export class AuthService {
         throw data;
       }
 
+      if (!data.user) {
+        throw new UnauthorizedException('Invalid email or password.');
+      }
+
       return {
         response,
         data: {
           token: data.token,
-          user: data.user ? this.toAuthenticatedUser(data.user) : null,
+          user: this.toAuthenticatedUser(data.user),
         },
       };
     } catch (error) {
