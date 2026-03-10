@@ -1,27 +1,27 @@
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  familiesCreated            Family[]                   
+  id                         String                      @id @default(cuid())
+  name                       String
+  email                      String                      @unique
+  emailVerified              Boolean                     @default(false)
+  image                      String?
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  sessions                   Session[]
+  accounts                   Account[]
+  familiesCreated            Family[]
   familyMemberships          FamilyMember[]
   volunteerProfile           VolunteerProfile?
-  volunteerApplications      VolunteerApplication[]       @relation("VolunteerApplicationApplicant")
-  volunteerReviewsGiven      VolunteerApplication[]       @relation("VolunteerApplicationReviewer")
-  volunteerApprovalsGiven    VolunteerProfile[]           @relation("VolunteerProfileApprover")
+  volunteerApplications      VolunteerApplication[]      @relation("VolunteerApplicationApplicant")
+  volunteerReviewsGiven      VolunteerApplication[]      @relation("VolunteerApplicationReviewer")
+  volunteerApprovalsGiven    VolunteerProfile[]          @relation("VolunteerProfileApprover")
   helpRequests               HelpRequest[]
   helpAssignments            HelpAssignment[]
-  warningsCreated            WarningEvent[]               @relation("WarningCreatedBy")
-  warningEventLogs           WarningEventLog[]            @relation("WarningEventActor")
-  volunteerDecisionLogs      VolunteerDecisionLog[]       @relation("VolunteerDecisionActor")
-  helpRequestEvents          HelpRequestEvent[]           @relation("HelpRequestEventActor")
-  mapPinsReported            MapPinStatus[]               @relation("MapPinReporter")
-  mapPinsReviewed            MapPinStatus[]               @relation("MapPinReviewer")
+  warningsCreated            WarningEvent[]              @relation("WarningCreatedBy")
+  warningEventLogs           WarningEventLog[]           @relation("WarningEventActor")
+  volunteerDecisionLogs      VolunteerDecisionLog[]      @relation("VolunteerDecisionActor")
+  helpRequestEvents          HelpRequestEvent[]          @relation("HelpRequestEventActor")
+  mapPinsReported            MapPinStatus[]              @relation("MapPinReporter")
+  mapPinsReviewed            MapPinStatus[]              @relation("MapPinReviewer")
   locationSnapshot           UserLocationSnapshot?
   evacuationRouteSuggestions EvacuationRouteSuggestion[]
 

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, ChevronRight, Map } from 'lucide-react';
-import { useAuthControllerGetSession, useWarningsControllerMe, useEvacuationControllerNearest } from '@wira-borneo/api-client';
+import { AlertCircle, ChevronRight, Map as MapIcon } from 'lucide-react';
+import { useAuthControllerGetSession, useWarningsControllerMe, useWarningsControllerFamily, useEvacuationControllerNearest } from '@wira-borneo/api-client';
 import type { EvacuationSite } from '../MapComponent';
 
 const FALLBACK_COORDS = { latitude: 1.5533, longitude: 110.3592 };
@@ -31,9 +31,7 @@ export default function Warnings({ onViewSafeRoute }: { onViewSafeRoute?: (evac:
     );
   }, []);
 
-  const { data: warningsRaw } = useWarningsControllerMe({ query: { enabled: !!session?.user } });
-  const warningsList = Array.isArray(warningsRaw) ? warningsRaw : [];
-  type WarningRow = {
+  interface WarningData {
     id: string;
     title: string;
     message: string;
@@ -41,8 +39,28 @@ export default function Warnings({ onViewSafeRoute }: { onViewSafeRoute?: (evac:
     severity: string;
     startsAt: string;
     targetAreas?: { areaName: string }[];
-  };
-  const warnings = warningsList.map((w: WarningRow) => ({
+    isFamily?: boolean;
+  }
+
+  const { data: myWarningsRaw, isLoading: loadingMe, error: errorMe } = useWarningsControllerMe({ query: { enabled: !!session?.user } });
+  const { data: familyWarningsRaw, isLoading: loadingFamily, error: errorFamily } = useWarningsControllerFamily({ query: { enabled: !!session?.user } });
+
+  const warningsList = (Array.isArray(myWarningsRaw) ? myWarningsRaw : []) as WarningData[];
+  const familyList = (Array.isArray(familyWarningsRaw) ? familyWarningsRaw : []) as WarningData[];
+
+  const allWarningsMap = new Map<string, WarningData>();
+  warningsList.forEach((w) => allWarningsMap.set(w.id, { ...w, isFamily: false }));
+  familyList.forEach((w) => {
+    if (!allWarningsMap.has(w.id)) {
+      allWarningsMap.set(w.id, { ...w, isFamily: true });
+    }
+  });
+
+  const sortedWarnings = Array.from(allWarningsMap.values()).sort(
+    (a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime()
+  );
+
+  const warnings = sortedWarnings.map((w) => ({
     id: w.id,
     type: w.hazardType ?? 'Alert',
     title: w.title ?? 'Warning',
@@ -50,7 +68,11 @@ export default function Warnings({ onViewSafeRoute }: { onViewSafeRoute?: (evac:
     time: formatTime(w.startsAt ?? new Date()),
     location: w.targetAreas?.[0]?.areaName ?? 'Area',
     classes: severityToClasses(w.severity ?? ''),
+    isFamily: w.isFamily,
   }));
+
+  const isLoading = (loadingMe || loadingFamily) && !!session?.user;
+  const isError = (errorMe || errorFamily) && !!session?.user;
 
   const coords = userLocation ?? FALLBACK_COORDS;
   const hasWarnings = warnings.length > 0;
@@ -99,35 +121,69 @@ export default function Warnings({ onViewSafeRoute }: { onViewSafeRoute?: (evac:
       </header>
 
       <div className="space-y-4">
-        {warnings.map((warning) => (
-          <div key={warning.id} className="wira-card relative overflow-hidden group active:scale-[0.98] transition-all">
-            <div className={`absolute top-0 left-0 w-1.5 h-full ${warning.classes.bg}`}></div>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="w-10 h-10 border-4 border-wira-teal border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm font-body text-wira-earth/60">Fetching latest alerts...</p>
+          </div>
+        ) : isError ? (
+          <div className="wira-card p-8 text-center space-y-3">
+            <div className="mx-auto w-12 h-12 rounded-full bg-status-critical/10 flex items-center justify-center text-status-critical">
+              <AlertCircle size={24} />
+            </div>
+            <h2 className="text-lg font-display font-bold wira-card-title">Connection Error</h2>
+            <p className="text-xs font-body wira-card-body leading-relaxed">
+              We couldn't retrieve the latest warnings. Please check your internet connection or try again later.
+            </p>
+          </div>
+        ) : warnings.length === 0 ? (
+          <div className="wira-card p-8 text-center space-y-3">
+            <div className="mx-auto w-12 h-12 rounded-full bg-status-safe/10 flex items-center justify-center text-status-safe">
+              <AlertCircle size={24} />
+            </div>
+            <h2 className="text-lg font-display font-bold wira-card-title">Everything is Clear</h2>
+            <p className="text-xs font-body wira-card-body leading-relaxed">
+              No active warnings or hazards reported in your area at this time. Stay safe!
+            </p>
+          </div>
+        ) : (
+          warnings.map((warning) => (
+            <div key={warning.id} className="wira-card relative overflow-hidden group active:scale-[0.98] transition-all">
+              <div className={`absolute top-0 left-0 w-1.5 h-full ${warning.classes.bg}`}></div>
 
-            <div className="flex gap-4">
-              <div className={`shrink-0 h-10 w-10 rounded-xl ${warning.classes.bgMuted} flex items-center justify-center`}>
-                <AlertCircle className={`${warning.classes.text} w-5 h-5`} />
-              </div>
-
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-bold font-mono ${warning.classes.text} uppercase tracking-tighter`}>
-                    {warning.type}
-                  </span>
-                  <span className="text-[10px] font-body text-wira-earth/50 italic">{warning.time}</span>
+              <div className="flex gap-4">
+                <div className={`shrink-0 h-10 w-10 rounded-xl ${warning.classes.bgMuted} flex items-center justify-center`}>
+                  <AlertCircle className={`${warning.classes.text} w-5 h-5`} />
                 </div>
-                <h2 className="text-base font-display font-bold wira-card-title">{warning.title}</h2>
-                <p className="text-xs font-body wira-card-body line-clamp-2">{warning.description}</p>
-                <div className="pt-3 flex items-center justify-between border-t border-wira-ivory-dark/50 mt-2">
-                  <div className="flex items-center gap-1.5 text-wira-teal">
-                    <Map size={12} />
-                    <span className="text-[10px] font-body font-semibold uppercase">{warning.location}</span>
+
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-bold font-mono ${warning.classes.text} uppercase tracking-tighter`}>
+                        {warning.type}
+                      </span>
+                      {warning.isFamily && (
+                        <span className="bg-wira-gold/10 text-wira-gold text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-widest border border-wira-gold/20">
+                          Family
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-body text-wira-earth/50 italic">{warning.time}</span>
                   </div>
-                  <ChevronRight size={14} className="text-wira-gold" />
+                  <h2 className="text-base font-display font-bold wira-card-title">{warning.title}</h2>
+                  <p className="text-xs font-body wira-card-body line-clamp-2">{warning.description}</p>
+                  <div className="pt-3 flex items-center justify-between border-t border-wira-ivory-dark/50 mt-2">
+                    <div className="flex items-center gap-1.5 text-wira-teal">
+                      <MapIcon size={12} />
+                      <span className="text-[10px] font-body font-semibold uppercase">{warning.location}</span>
+                    </div>
+                    <ChevronRight size={14} className="text-wira-gold" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="wira-card bg-wira-teal text-white border-none p-6 space-y-4">

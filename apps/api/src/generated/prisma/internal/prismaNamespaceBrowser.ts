@@ -371,6 +371,7 @@ export const WarningEventLogScalarFieldEnum = {
   id: 'id',
   warningEventId: 'warningEventId',
   actorId: 'actorId',
+  action: 'action',
   status: 'status',
   note: 'note',
   createdAt: 'createdAt'

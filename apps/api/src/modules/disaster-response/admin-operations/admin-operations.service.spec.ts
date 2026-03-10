@@ -24,6 +24,14 @@ describe('AdminOperationsService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
     },
+    warningEvent: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+    warningEventLog: {
+      create: jest.fn(),
+    },
     $transaction: jest.fn((cb) => cb(mockPrisma)),
   };
 
@@ -91,6 +99,68 @@ describe('AdminOperationsService', () => {
         data: expect.objectContaining({
           nextStatus: 'SUSPENDED',
           reason: 'suspension reason',
+        }),
+      });
+    });
+  });
+  describe('createWarning', () => {
+    it('should create warning and log with CREATE action', async () => {
+      mockPrisma.warningEvent.create.mockResolvedValue({ id: 'warning-1' });
+
+      await service.createWarning({
+        title: 'Title',
+        message: 'Message',
+        hazardType: 'FLOOD',
+        severity: 'HIGH',
+        startsAt: new Date(),
+        creatorId: 'admin-1',
+        targets: [{ areaName: 'Zone A' }],
+        evacuationAreaIds: [],
+      });
+
+      expect(mockPrisma.warningEventLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'CREATE',
+          status: 'SENT',
+        }),
+      });
+    });
+  });
+
+  describe('updateWarning', () => {
+    it('should update warning and log with UPDATE action', async () => {
+      mockPrisma.warningEvent.findUnique.mockResolvedValue({ id: 'warning-1', status: 'SENT' });
+      mockPrisma.warningEvent.update.mockResolvedValue({ id: 'warning-1', status: 'SENT' });
+
+      await service.updateWarning({
+        warningId: 'warning-1',
+        title: 'Updated Title',
+        actorId: 'admin-1',
+      });
+
+      expect(mockPrisma.warningEventLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'UPDATE',
+        }),
+      });
+    });
+  });
+
+  describe('cancelWarning', () => {
+    it('should cancel warning and log with CANCEL action', async () => {
+      mockPrisma.warningEvent.findUnique.mockResolvedValue({ id: 'warning-1', status: 'SENT' });
+      mockPrisma.warningEvent.update.mockResolvedValue({ id: 'warning-1', status: 'CANCELLED' });
+
+      await service.cancelWarning('warning-1', 'admin-1');
+
+      expect(mockPrisma.warningEvent.update).toHaveBeenCalledWith({
+        where: { id: 'warning-1' },
+        data: { status: 'CANCELLED' },
+      });
+      expect(mockPrisma.warningEventLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'CANCEL',
+          status: 'CANCELLED',
         }),
       });
     });

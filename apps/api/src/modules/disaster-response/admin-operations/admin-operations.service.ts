@@ -296,12 +296,93 @@ export class AdminOperationsService {
         data: {
           warningEventId: warning.id,
           actorId: input.creatorId,
+          action: 'CREATE',
           status: 'SENT',
           note: 'Warning sent manually by admin.',
         },
       });
 
       return warning;
+    });
+  }
+
+  async updateWarning(input: {
+    warningId: string;
+    title?: string;
+    message?: string;
+    hazardType?: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
+    severity?: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+    startsAt?: Date;
+    endsAt?: Date;
+    actorId: string;
+  }) {
+    return this.prisma.$transaction(async (tx) => {
+      const warning = await tx.warningEvent.findUnique({
+        where: { id: input.warningId },
+      });
+
+      if (!warning) {
+        throw new NotFoundException('Warning not found');
+      }
+
+      const updated = await tx.warningEvent.update({
+        where: { id: input.warningId },
+        data: {
+          ...(input.title && { title: input.title }),
+          ...(input.message && { message: input.message }),
+          ...(input.hazardType && { hazardType: input.hazardType }),
+          ...(input.severity && { severity: input.severity }),
+          ...(input.startsAt && { startsAt: input.startsAt }),
+          ...(input.endsAt !== undefined && { endsAt: input.endsAt }),
+        },
+      });
+
+      await tx.warningEventLog.create({
+        data: {
+          warningEventId: warning.id,
+          actorId: input.actorId,
+          action: 'UPDATE',
+          status: updated.status,
+          note: 'Warning updated manually by admin.',
+        },
+      });
+
+      return updated;
+    });
+  }
+
+  async cancelWarning(warningId: string, actorId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const warning = await tx.warningEvent.findUnique({
+        where: { id: warningId },
+      });
+
+      if (!warning) {
+        throw new NotFoundException('Warning not found');
+      }
+
+      if (warning.status === 'CANCELLED') {
+        throw new BadRequestException('Warning is already cancelled');
+      }
+
+      const updated = await tx.warningEvent.update({
+        where: { id: warningId },
+        data: {
+          status: 'CANCELLED',
+        },
+      });
+
+      await tx.warningEventLog.create({
+        data: {
+          warningEventId: warning.id,
+          actorId,
+          action: 'CANCEL',
+          status: 'CANCELLED',
+          note: 'Warning cancelled manually by admin.',
+        },
+      });
+
+      return updated;
     });
   }
 

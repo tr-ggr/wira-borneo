@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -65,6 +66,15 @@ class CreateWarningDto {
   suggestedPrompt?: string;
   targets!: WarningTargetDto[];
   evacuationAreaIds!: string[];
+}
+
+class UpdateWarningDto {
+  title?: string;
+  message?: string;
+  hazardType?: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
+  severity?: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+  startsAt?: string;
+  endsAt?: string;
 }
 
 class WarningPromptSuggestionDto {
@@ -363,6 +373,40 @@ function assertCreateWarningDto(input: CreateWarningDto): void {
   }
 }
 
+function assertUpdateWarningDto(input: UpdateWarningDto): void {
+  if (!input || typeof input !== 'object') {
+    throw new BadRequestException('Request body is required.');
+  }
+
+  if (input.title !== undefined && typeof input.title !== 'string') {
+    throw new BadRequestException('title must be a string.');
+  }
+
+  if (input.message !== undefined && typeof input.message !== 'string') {
+    throw new BadRequestException('message must be a string.');
+  }
+
+  if (
+    input.hazardType !== undefined &&
+    !HAZARD_TYPES.includes(input.hazardType as (typeof HAZARD_TYPES)[number])
+  ) {
+    throw new BadRequestException(
+      `hazardType must be one of: ${HAZARD_TYPES.join(', ')}.`,
+    );
+  }
+
+  if (
+    input.severity !== undefined &&
+    !SEVERITY_LEVELS.includes(
+      input.severity as (typeof SEVERITY_LEVELS)[number],
+    )
+  ) {
+    throw new BadRequestException(
+      `severity must be one of: ${SEVERITY_LEVELS.join(', ')}.`,
+    );
+  }
+}
+
 function assertWarningPromptSuggestionDto(
   input: WarningPromptSuggestionDto,
 ): void {
@@ -582,6 +626,39 @@ export class AdminOperationsController {
       targets: body.targets,
       evacuationAreaIds: body.evacuationAreaIds,
     });
+  }
+
+  @Patch('warnings/:id')
+  @ApiOperation({ summary: 'Update an existing warning event' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiBody({ type: UpdateWarningDto })
+  async updateWarning(
+    @Param('id') warningId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: UpdateWarningDto,
+  ) {
+    assertUpdateWarningDto(body);
+
+    return this.adminService.updateWarning({
+      warningId,
+      title: body.title,
+      message: body.message,
+      hazardType: body.hazardType,
+      severity: body.severity,
+      startsAt: body.startsAt ? new Date(body.startsAt) : undefined,
+      endsAt: body.endsAt ? new Date(body.endsAt) : undefined,
+      actorId: session.user.id,
+    });
+  }
+
+  @Post('warnings/:id/cancel')
+  @ApiOperation({ summary: 'Cancel an active warning event' })
+  @ApiParam({ name: 'id', type: String })
+  async cancelWarning(
+    @Param('id') warningId: string,
+    @AuthSessionParam() session: AuthSession,
+  ) {
+    return this.adminService.cancelWarning(warningId, session.user.id);
   }
 
   @Get('vulnerable-regions')

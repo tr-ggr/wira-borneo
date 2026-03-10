@@ -169,7 +169,7 @@ export interface OpenMeteoGeocodingResponse {
 export class OpenMeteoProviderError extends Error {
   readonly operation: string;
   readonly status?: number;
-  readonly cause?: unknown;
+  override readonly cause?: unknown;
 
   constructor(
     message: string,

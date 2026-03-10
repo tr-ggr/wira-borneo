@@ -1082,6 +1082,74 @@
         ]
       }
     },
+    "/api/admin/warnings/{id}": {
+      "patch": {
+        "operationId": "AdminOperationsController_updateWarning",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWarningDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an existing warning event",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/admin/warnings/{id}/cancel": {
+      "post": {
+        "operationId": "AdminOperationsController_cancelWarning",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel an active warning event",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
     "/api/admin/vulnerable-regions": {
       "get": {
         "operationId": "AdminOperationsController_vulnerableRegions",
@@ -1620,6 +1688,24 @@
           },
           "password": {
             "type": "string"
+          },
+          "pregnantStatus": {
+            "type": "object",
+            "nullable": true
+          },
+          "ageGroup": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "UNDER_12",
+              "AGE_12_17",
+              "AGE_18_59",
+              "AGE_60_PLUS"
+            ]
+          },
+          "isPWD": {
+            "type": "object",
+            "nullable": true
           }
         },
         "required": [
@@ -1884,6 +1970,10 @@
         "properties": {}
       },
       "CreateWarningDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateWarningDto": {
         "type": "object",
         "properties": {}
       },
