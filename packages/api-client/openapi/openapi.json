@@ -173,6 +173,39 @@
         ]
       }
     },
+    "/api/risk/full-detail/{iso3}": {
+      "get": {
+        "operationId": "RiskIntelligenceController_getFullDetail",
+        "parameters": [
+          {
+            "name": "iso3",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bbox",
+            "required": true,
+            "in": "query",
+            "description": "minLng,minLat,maxLng,maxLat",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns GeoJSON FeatureCollection"
+          }
+        },
+        "summary": "Get full detail building profiles for a country and bbox",
+        "tags": [
+          "risk-intelligence"
+        ]
+      }
+    },
     "/api/families": {
       "post": {
         "operationId": "FamiliesController_createFamily",
@@ -318,6 +351,36 @@
           }
         ],
         "summary": "Get volunteer profile/application status",
+        "tags": [
+          "volunteers"
+        ]
+      }
+    },
+    "/api/volunteers/me/home": {
+      "patch": {
+        "operationId": "VolunteersController_setHome",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolunteerHomeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set volunteer home location",
         "tags": [
           "volunteers"
         ]
@@ -528,12 +591,60 @@
             "description": ""
           }
         },
-        "security": [
+        "summary": "List active evacuation areas (public)",
+        "tags": [
+          "evacuation"
+        ]
+      }
+    },
+    "/api/evacuation/nearest": {
+      "get": {
+        "operationId": "EvacuationController_nearest",
+        "parameters": [
           {
-            "bearer": []
+            "name": "latitude",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "longitude",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "vehicleType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "driving",
+                "walking",
+                "cycling"
+              ],
+              "type": "string"
+            }
           }
         ],
-        "summary": "List active evacuation areas",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Nearest evacuation sites by distance, top 5 re-sorted by OSRM duration",
         "tags": [
           "evacuation"
         ]
@@ -556,6 +667,67 @@
         "summary": "Get warning-context route suggestions to shelters",
         "tags": [
           "evacuation"
+        ]
+      }
+    },
+    "/api/routing/route": {
+      "get": {
+        "operationId": "RoutingController_getRoute",
+        "parameters": [
+          {
+            "name": "fromLon",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "fromLat",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "toLon",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "toLat",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "vehicleType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "driving",
+                "walking",
+                "cycling"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get road route between two points (OSRM)",
+        "tags": [
+          "routing"
         ]
       }
     },
@@ -593,6 +765,38 @@
         "summary": "Ask disaster preparedness assistant",
         "tags": [
           "assistant"
+        ]
+      }
+    },
+    "/api/assistant/internal/demographics/{userId}": {
+      "get": {
+        "operationId": "AssistantInternalController_getDemographics",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-llm-internal-secret",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Internal: fetch user demographics for tool calling",
+        "tags": [
+          "assistant-internal"
         ]
       }
     },
@@ -887,6 +1091,45 @@
         ]
       }
     },
+    "/api/admin/pins/{id}/review": {
+      "post": {
+        "operationId": "AdminOperationsController_reviewPin",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewPinDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve or reject a hazard pin (admin only)",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
     "/api/admin/warnings/prompt-suggestion": {
       "post": {
         "operationId": "AdminOperationsController_getPromptSuggestion",
@@ -1134,6 +1377,36 @@
           "admin-operations"
         ]
       }
+    },
+    "/api/pins": {
+      "post": {
+        "operationId": "PinsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePinDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit a hazard pin with location and optional photo",
+        "tags": [
+          "pins"
+        ]
+      }
     }
   },
   "info": {
@@ -1185,34 +1458,6 @@
             "nullable": true
           },
           "role": {
-            "type": "object",
-            "nullable": true
-          },
-          "age": {
-            "type": "object",
-            "nullable": true
-          },
-          "housingType": {
-            "type": "object",
-            "nullable": true
-          },
-          "personalInfo": {
-            "type": "object",
-            "nullable": true
-          },
-          "vulnerabilities": {
-            "type": "object",
-            "nullable": true
-          },
-          "householdComposition": {
-            "type": "object",
-            "nullable": true
-          },
-          "emergencySkills": {
-            "type": "object",
-            "nullable": true
-          },
-          "assets": {
             "type": "object",
             "nullable": true
           }
@@ -1293,6 +1538,10 @@
         "properties": {}
       },
       "VolunteerApplicationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VolunteerHomeDto": {
         "type": "object",
         "properties": {}
       },
@@ -1407,6 +1656,24 @@
         "type": "object",
         "properties": {}
       },
+      "ReviewPinDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "APPROVE",
+              "REJECT"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
       "WarningPromptSuggestionDto": {
         "type": "object",
         "properties": {}
@@ -1414,6 +1681,45 @@
       "Object": {
         "type": "object",
         "properties": {}
+      },
+      "CreatePinDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Short title for the hazard pin"
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "note": {
+            "type": "string"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "photoKey": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "hazardType",
+          "latitude",
+          "longitude"
+        ]
       }
     }
   }
