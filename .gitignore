@@ -333,3 +333,5 @@ apps/api/geojson/evacuation/*.geojson
 .geojson
 
 packages/api-client/openapi/openapi.json
+
+llm_warning_configuration.md
