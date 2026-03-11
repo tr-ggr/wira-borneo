@@ -3,7 +3,6 @@
 import {
   useAdminOperationsControllerCreateWarning,
   useAdminOperationsControllerGetPromptSuggestion,
-  useEvacuationControllerAreas,
 } from '@wira-borneo/api-client';
 import { useMemo, useState } from 'react';
 import {
@@ -12,15 +11,10 @@ import {
   warningSummary,
 } from './warning-flow.utils';
 import WarningMapSupport from './WarningMapSupport';
+import WarningMapSupport from './WarningMapSupport';
 
 type HazardType = 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
 type SeverityLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
-
-interface EvacuationArea {
-  id: string;
-  name: string;
-  region?: string | null;
-}
 
 const defaultTarget = {
   areaName: '',
@@ -46,11 +40,7 @@ export function ManualWarningPage() {
   const [startsAt, setStartsAt] = useState(new Date().toISOString().slice(0, 16));
   const [endsAt, setEndsAt] = useState('');
   const [target, setTarget] = useState(defaultTarget);
-  const [selectedEvacuationAreas, setSelectedEvacuationAreas] = useState<string[]>([]);
 
-  const areasQuery = useEvacuationControllerAreas({
-    query: { select: (response: unknown) => toAreas(response) },
-  });
   const promptMutation = useAdminOperationsControllerGetPromptSuggestion();
   const createWarningMutation = useAdminOperationsControllerCreateWarning();
 
@@ -63,8 +53,8 @@ export function ManualWarningPage() {
       startsAt: new Date(startsAt).toISOString(),
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
       suggestedPrompt: (() => {
-        const d = promptMutation.data as unknown as { data?: { prompt?: string } } | undefined;
-        return d?.data ? String(d.data.prompt ?? '') : undefined;
+        const d = promptMutation.data as unknown as { prompt?: string } | undefined;
+        return d?.prompt ? String(d.prompt) : undefined;
       })(),
       targets: [
         {
@@ -75,7 +65,7 @@ export function ManualWarningPage() {
           polygonGeoJson: target.polygonGeoJson || undefined,
         },
       ],
-      evacuationAreaIds: selectedEvacuationAreas,
+      evacuationAreaIds: [] as string[],
     }),
     [
       title,
@@ -115,7 +105,7 @@ export function ManualWarningPage() {
       {step === 'compose' ? (
         <div className="grid-list">
           <article className="card">
-            <h2 className="card-title">1) Compose Message / Karang Mesej</h2>
+            <h2 className="card-title">1) Compose Message & Target Area / Karang Mesej & Kawasan Sasaran</h2>
             <label className="field-label">
               Title
               <input className="field" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -177,36 +167,10 @@ export function ManualWarningPage() {
                 />
               </label>
             </div>
-            <button
-              type="button"
-              className="btn btn-neutral"
-              onClick={() => {
-                promptMutation.mutate(
-                  {
-                    data: {
-                      hazardType,
-                      areaOrRegion: target.areaName || 'selected area',
-                      radiusKm: Number(target.radiusKm),
-                    },
-                  },
-                  {
-                    onSuccess: (response: unknown) => {
-                      const d = response as { data?: { prompt?: string } } | undefined;
-                      const prompt = String(d?.data?.prompt ?? '');
-                      if (prompt) {
-                        setMessage(prompt);
-                      }
-                    },
-                  },
-                );
-              }}
-            >
-              Suggest Prompt / Cadang Teks
-            </button>
-          </article>
 
-          <article className="card">
-            <h2 className="card-title">2) Target Area / Kawasan Sasaran</h2>
+
+            <hr style={{ margin: '2rem 0', borderColor: 'var(--border-color, #eee)', borderStyle: 'solid', borderWidth: '1px 0 0 0' }} />
+
             <label className="field-label">
               Area or Region Name
               <input
@@ -254,9 +218,14 @@ export function ManualWarningPage() {
 
             <div style={{ marginBottom: '1rem' }}>
               <label className="field-label">Draw Target Area on Map</label>
-              <WarningMapSupport 
-                onTargetChange={(data) => {
-                  setTarget(prev => ({
+              <WarningMapSupport
+                onTargetChange={(data: {
+                  latitude?: number | string;
+                  longitude?: number | string;
+                  radiusKm?: number | string;
+                  polygonGeoJson?: string;
+                }) => {
+                  setTarget((prev) => ({
                     ...prev,
                     latitude: data.latitude?.toString() ?? prev.latitude,
                     longitude: data.longitude?.toString() ?? prev.longitude,
@@ -272,10 +241,38 @@ export function ManualWarningPage() {
               )}
             </div>
 
+            <button
+              type="button"
+              className="btn btn-neutral"
+              style={{ marginTop: '1rem', width: '100%' }}
+              onClick={() => {
+                promptMutation.mutate(
+                  {
+                    data: {
+                      hazardType,
+                      areaOrRegion: target.areaName || 'selected area',
+                      radiusKm: Number(target.radiusKm),
+                    },
+                  },
+                  {
+                    onSuccess: (response: unknown) => {
+                      const d = response as { prompt?: string } | undefined;
+                      const prompt = String(d?.prompt ?? '');
+                      if (prompt) {
+                        setMessage(prompt);
+                      }
+                    },
+                  },
+                );
+              }}
+              disabled={promptMutation.isPending}
+            >
+              {promptMutation.isPending ? 'Generating Prompt...' : 'Suggest Prompt / Cadang Teks'}
+            </button>
           </article>
 
           <article className="card">
-            <h2 className="card-title">3) Final Checkpoint / Semakan Akhir</h2>
+            <h2 className="card-title">2) Final Checkpoint / Semakan Akhir</h2>
             <p className="warning-note">
               Dispatch is never automatic. Admin must manually confirm every warning send.
             </p>
@@ -329,7 +326,6 @@ export function ManualWarningPage() {
                       setTitle('');
                       setMessage('');
                       setTarget(defaultTarget);
-                      setSelectedEvacuationAreas([]);
                     },
                   },
                 );

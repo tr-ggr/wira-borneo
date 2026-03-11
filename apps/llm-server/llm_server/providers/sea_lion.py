@@ -97,14 +97,19 @@ class SeaLionProvider(LLMProvider):
             }
         ]
 
-        effective_system_instruction = (
-            (system_instruction or "")
-            + "\n\nTOOL: You MUST call get_user_demographics(reason: str) BEFORE answering."
-            + "\nUse the returned demographics to tailor advice."
-            + "\nIf profileComplete is false, clearly tell the user their profile is incomplete and ask them to update it."
-            + "\nCall the tool at most once."
-            + "\nNever mention or reveal any user IDs, account IDs, or internal identifiers in your response."
-        ).strip()
+        is_admin = user_id == "system-admin"
+
+        if is_admin:
+            effective_system_instruction = system_instruction or ""
+        else:
+            effective_system_instruction = (
+                (system_instruction or "")
+                + "\n\nTOOL: You MUST call get_user_demographics(reason: str) BEFORE answering."
+                + "\nUse the returned demographics to tailor advice."
+                + "\nIf profileComplete is false, clearly tell the user their profile is incomplete and ask them to update it."
+                + "\nCall the tool at most once."
+                + "\nNever mention or reveal any user IDs, account IDs, or internal identifiers in your response."
+            ).strip()
 
         messages: list[dict] = []
         # The SEA-LION OpenAI-compatible gateway (LiteLLM) can be strict about
@@ -119,8 +124,8 @@ class SeaLionProvider(LLMProvider):
         logger.info("SEA-LION: calling OpenAI chat.completions.create")
         # #endregion agent log
 
-        if not user_id:
-            # No user context available: answer generally and ask user to complete profile.
+        if is_admin or not user_id:
+            # No user context available or admin bypass: answer strictly based on the system prompt.
             result = self._client.chat.completions.create(
                 model=self._model,
                 messages=messages,
@@ -128,10 +133,14 @@ class SeaLionProvider(LLMProvider):
                 timeout=self._timeout,
             )
             content = (result.choices[0].message.content or "").strip()
-            if content:
-                content += "\n\nNote: I couldn’t access your profile. Please complete/update your profile for personalized guidance."
-            else:
-                content = "I couldn’t access your profile. Please complete/update your profile for personalized guidance."
+            
+            # Ask users to complete profiles if it wasn't an admin bypass
+            if not is_admin:
+                if content:
+                    content += "\n\nNote: I couldn’t access your profile. Please complete/update your profile for personalized guidance."
+                else:
+                    content = "I couldn’t access your profile. Please complete/update your profile for personalized guidance."
+            
             self._record_request()
             elapsed_ms = (time.monotonic() - start) * 1000
             logger.info("SEA-LION: response received in %.0f ms", elapsed_ms)

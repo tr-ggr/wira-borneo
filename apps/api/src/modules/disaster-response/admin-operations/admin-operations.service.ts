@@ -10,6 +10,7 @@ import {
   OpenMeteoForecastParams,
   OpenMeteoGeocodingParams,
 } from '../../../providers/open-meteo/open-meteo.types';
+import { AssistantService } from '../assistant/assistant.service';
 
 @Injectable()
 export class AdminOperationsService {
@@ -17,7 +18,8 @@ export class AdminOperationsService {
     private readonly prisma: PrismaService,
     private readonly riskService: RiskIntelligenceService,
     private readonly openMeteoService: OpenMeteoService,
-  ) {}
+    private readonly assistantService: AssistantService,
+  ) { }
 
   async listVolunteerApplications(options: {
     status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
@@ -428,15 +430,23 @@ export class AdminOperationsService {
     });
   }
 
-  getWarningPromptSuggestion(input: {
+  async getWarningPromptSuggestion(input: {
     hazardType: string;
     areaOrRegion: string;
     radiusKm?: number;
   }) {
     const radius = input.radiusKm ? ` within ${input.radiusKm}km` : '';
+    const question = `Generate a localized emergency notification message for a ${input.hazardType.toLowerCase()} warning targeting ${input.areaOrRegion}${radius}. Write the notification in the local language or dialect appropriate for this region. Include nearest evacuation guidance, expected impact, and immediate safety actions. Return only the notification text, no JSON wrapping.`;
+
+    const assistantResponse = await this.assistantService.answerInquiry({
+      userId: 'system-admin',
+      question,
+      location: input.areaOrRegion,
+      hazardType: input.hazardType,
+    });
 
     return {
-      prompt: `Issue a ${input.hazardType.toLowerCase()} warning for ${input.areaOrRegion}${radius}. Include nearest evacuation areas, expected impact window, and immediate safety actions.`,
+      prompt: assistantResponse.answer,
       reminder:
         'Review and send manually to avoid false alarms. Warning dispatch is never automatic.',
     };

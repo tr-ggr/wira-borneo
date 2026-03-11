@@ -517,7 +517,7 @@ function parseCsv<T extends string>(value?: string): T[] | undefined {
 @UseGuards(AuthSessionGuard, AdminRoleGuard)
 @Controller('admin')
 export class AdminOperationsController {
-  constructor(private readonly adminService: AdminOperationsService) {}
+  constructor(private readonly adminService: AdminOperationsService) { }
 
   @Get('volunteers/applications')
   @ApiOperation({ summary: 'List volunteer applications for admin review' })
@@ -694,7 +694,7 @@ export class AdminOperationsController {
   @Post('warnings/prompt-suggestion')
   @ApiOperation({ summary: 'Get suggested warning prompt template' })
   @ApiBody({ type: WarningPromptSuggestionDto })
-  getPromptSuggestion(@Body() body: WarningPromptSuggestionDto) {
+  async getPromptSuggestion(@Body() body: WarningPromptSuggestionDto) {
     assertWarningPromptSuggestionDto(body);
     return this.adminService.getWarningPromptSuggestion(body);
   }
