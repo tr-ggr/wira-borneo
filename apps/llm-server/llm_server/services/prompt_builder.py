@@ -37,24 +37,36 @@ def build_contextual_prompt(
     hazard_type: Optional[str] = None,
     location: Optional[str] = None,
     demographics: Optional[dict] = None,
+    user_id: Optional[str] = None,
 ) -> tuple[str, str]:
     """Build system and user parts for the prompt."""
-    # System part
-    system_parts = [SYSTEM_ROLE, RESPONSE_RULES]
-    
-    system_parts.append(
-        "PERSONALIZATION:\n"
-        "Always retrieve the user's demographics using the tool "
-        "get_user_demographics(reason: str) BEFORE answering. Use the returned data to tailor your advice.\n"
-        "If the tool indicates profileComplete is false, clearly tell the user their profile is incomplete "
-        "and ask them to update their profile for better guidance."
-    )
-    
-    system_parts.append(
-        "ONLY when you are ready to answer the user, provide your final response in this EXACT JSON format:\n"
-        + JSON_FORMAT_SCHEMA
-    )
-    system_text = "\n\n".join(system_parts)
+    if user_id == "system-admin":
+        system_text = (
+            "You are an expert crisis communications writer for a disaster preparedness and response system.\n\n"
+            "RESPONSE RULES:\n"
+            "1. Plain text only. No JSON.\n"
+            "2. No Markdown formatting whatsoever (no *, **, #, `, -, etc.).\n"
+            "3. Do not apologize for missing demographic or user profile data.\n"
+            "4. Format the output in two distinct paragraphs: First, the complete message in the local language/dialect. Then, a blank line. Finally, the complete message in English. Do not use inline translations in parentheses.\n"
+            "5. Keep the total message concise (max 500 characters) and actionable."
+        )
+    else:
+        # System part
+        system_parts = [SYSTEM_ROLE, RESPONSE_RULES]
+        
+        system_parts.append(
+            "PERSONALIZATION:\n"
+            "Always retrieve the user's demographics using the tool "
+            "get_user_demographics(reason: str) BEFORE answering. Use the returned data to tailor your advice.\n"
+            "If the tool indicates profileComplete is false, clearly tell the user their profile is incomplete "
+            "and ask them to update their profile for better guidance."
+        )
+        
+        system_parts.append(
+            "ONLY when you are ready to answer the user, provide your final response in this EXACT JSON format:\n"
+            + JSON_FORMAT_SCHEMA
+        )
+        system_text = "\n\n".join(system_parts)
 
     # User part
     user_parts = []
@@ -78,7 +90,8 @@ def build_prompt(
     hazard_type: Optional[str] = None,
     location: Optional[str] = None,
     demographics: Optional[dict] = None,
+    user_id: Optional[str] = None,
 ) -> str:
     """Legacy single-string prompt builder."""
-    system, user = build_contextual_prompt(question, hazard_type, location, demographics)
+    system, user = build_contextual_prompt(question, hazard_type, location, demographics, user_id)
     return f"System: {system}\n\n{user}"

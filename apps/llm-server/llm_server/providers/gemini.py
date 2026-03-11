@@ -98,33 +98,44 @@ class GeminiProvider(LLMProvider):
                 cache["alreadyFetched"] = False
                 return cache
 
-            afc_enabled = True
-            effective_system_instruction = (
-                (system_instruction or "")
-                + "\n\nTOOL: You can call get_user_demographics(reason: str) to retrieve the logged-in user's profile."
-                + "\nYou MUST call get_user_demographics(reason: str) ONCE BEFORE answering."
-                + "\nUse the returned demographics to tailor advice."
-                + "\nIf profileComplete is false, clearly tell the user their profile is incomplete and ask them to update it."
-                + "\nIf the tool response contains alreadyFetched=true, you MUST NOT call any tools again and MUST answer immediately."
-                + "\nDo not call the tool more than once."
-                + "\nNever mention or reveal any user IDs, account IDs, or internal identifiers in your response."
-            ).strip()
+            afc_enabled = user_id != "system-admin"
+            
+            if user_id == "system-admin":
+                effective_system_instruction = system_instruction or ""
+            else:
+                effective_system_instruction = (
+                    (system_instruction or "")
+                    + "\n\nTOOL: You can call get_user_demographics(reason: str) to retrieve the logged-in user's profile."
+                    + "\nYou MUST call get_user_demographics(reason: str) ONCE BEFORE answering."
+                    + "\nUse the returned demographics to tailor advice."
+                    + "\nIf profileComplete is false, clearly tell the user their profile is incomplete and ask them to update it."
+                    + "\nIf the tool response contains alreadyFetched=true, you MUST NOT call any tools again and MUST answer immediately."
+                    + "\nDo not call the tool more than once."
+                    + "\nNever mention or reveal any user IDs, account IDs, or internal identifiers in your response."
+                ).strip()
 
-            config = types.GenerateContentConfig(
-                system_instruction=effective_system_instruction,
-                tools=[get_user_demographics],
-                # Turn ON AFC so the SDK handles the tool execution loop automatically
-                automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                    disable=not afc_enabled,
-                    # We expect a single tool lookup then an answer; prevent AFC loops.
-                    maximum_remote_calls=4,
-                ),
-                # Enforce the structured JSON response
-                response_mime_type="application/json",
-                response_schema=WiraResponseSchema,
-                max_output_tokens=2048,
-                http_options=types.HttpOptions(timeout=self._timeout * 1000),
-            )
+            config_kwargs = {
+                "system_instruction": effective_system_instruction,
+                "max_output_tokens": 2048,
+                "http_options": types.HttpOptions(timeout=self._timeout * 1000),
+            }
+            
+            if afc_enabled:
+                config_kwargs.update({
+                    "tools": [get_user_demographics],
+                    "automatic_function_calling": types.AutomaticFunctionCallingConfig(
+                        disable=False,
+                        maximum_remote_calls=4,
+                    ),
+                    "response_mime_type": "application/json",
+                    "response_schema": WiraResponseSchema,
+                })
+            else:
+                config_kwargs.update({
+                    "response_mime_type": "text/plain",
+                })
+
+            config = types.GenerateContentConfig(**config_kwargs)
 
             chat = self._client.chats.create(model=self._model_name, config=config)
             response = chat.send_message(prompt)
