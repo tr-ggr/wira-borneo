@@ -8,6 +8,7 @@ import { EvacuationModule } from './evacuation/evacuation.module';
 import { AssistantModule } from './assistant/assistant.module';
 import { AdminOperationsModule } from './admin-operations/admin-operations.module';
 import { PinsModule } from './pins/pins.module';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PinsModule } from './pins/pins.module';
     AssistantModule,
     AdminOperationsModule,
     PinsModule,
+    AssetsModule,
   ],
 })
 export class DisasterResponseModule {}

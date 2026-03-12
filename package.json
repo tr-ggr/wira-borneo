@@ -9,7 +9,7 @@
     "api": "nx serve api",
     "android": "nx run-android mobile",
     "llm-server": "nx serve llm-server",
-    "migrate": "nx run api:prisma-migrate-dev",
+    "migrate": "npm run prisma:migrate-dev -w @wira-borneo/api",
     "prisma:validate": "nx run api:prisma-validate",
     "prisma:format": "nx run api:prisma-format",
     "prisma:generate": "nx run api:prisma-generate",

@@ -17,6 +17,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
   ApiTags,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import type {
   OpenMeteoForecastDailyVariable,
@@ -45,6 +46,13 @@ class BulkReviewVolunteerDto {
 }
 
 class SuspendReactivateVolunteerDto {
+  reason?: string;
+}
+
+class ReviewAssetDto {
+  @ApiProperty({ enum: ['APPROVE', 'REJECT'] })
+  action!: 'APPROVE' | 'REJECT';
+  @ApiPropertyOptional()
   reason?: string;
 }
 
@@ -242,14 +250,28 @@ class AdminAssetRegistryEntryDto {
   id!: string;
   @ApiProperty()
   name!: string;
+  @ApiPropertyOptional()
+  description?: string;
+  @ApiProperty({ enum: ['PENDING', 'APPROVED', 'REJECTED'] })
+  status!: 'PENDING' | 'APPROVED' | 'REJECTED';
+  @ApiPropertyOptional()
+  photoUrl?: string;
+  @ApiPropertyOptional()
+  latitude?: number;
+  @ApiPropertyOptional()
+  longitude?: number;
   @ApiProperty()
-  email!: string;
+  ownerId!: string;
   @ApiProperty()
-  createdAt!: Date;
-  @ApiProperty({ type: [String], description: 'List of volunteered assets (e.g. cars, boats)' })
-  assets!: string[];
+  ownerName!: string;
+  @ApiProperty()
+  ownerEmail!: string;
+  @ApiProperty()
+  ownerCreatedAt!: Date;
   @ApiPropertyOptional({ enum: ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'] })
   volunteerStatus!: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | null;
+  @ApiProperty()
+  createdAt!: Date;
 }
 
 class MapOverviewResponseDto {
@@ -617,8 +639,29 @@ export class AdminOperationsController {
 
   @Get('assets/registry')
   @ApiOperation({ summary: 'List volunteered assets (users who registered assets for disaster use)' })
+  @ApiOkResponse({ type: [AdminAssetRegistryEntryDto] })
   async getAssetRegistry() {
     return this.adminService.getAssetRegistry();
+  }
+
+  @Post('assets/:id/review')
+  @ApiOperation({ summary: 'Approve or reject a volunteered asset' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiBody({ type: ReviewAssetDto })
+  async reviewAsset(
+    @Param('id') assetId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: ReviewAssetDto,
+  ) {
+    if (!['APPROVE', 'REJECT'].includes(body.action)) {
+      throw new BadRequestException('action must be APPROVE or REJECT');
+    }
+    return this.adminService.reviewAsset({
+      assetId,
+      reviewerId: session.user.id,
+      action: body.action,
+      reason: body.reason,
+    });
   }
 
   @Post('warnings')

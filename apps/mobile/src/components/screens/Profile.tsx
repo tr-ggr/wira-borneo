@@ -12,7 +12,11 @@ import {
   Download,
   Globe,
   Plus,
+  Wrench,
+  Package,
 } from 'lucide-react';
+import { AssetRegistrationForm } from '../assets/AssetRegistrationForm';
+import { MyAssets } from '../assets/MyAssets';
 import {
   useAuthControllerGetSession,
   useAuthControllerSignOut,
@@ -50,6 +54,7 @@ export default function Profile() {
   const [settingHome, setSettingHome] = useState(false);
   const [safeMode, setSafeMode] = useState(false);
   const [regionalLanguage, setRegionalLanguage] = useState<RegionalLanguageOption>('ENg');
+  const [showAssetForm, setShowAssetForm] = useState(false);
   const demographicsRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user as SessionUser | undefined;
@@ -298,7 +303,7 @@ export default function Profile() {
               </div>
               <button
                 type="button"
-                onClick={() => {}}
+                onClick={() => console.log('Add contact')}
                 className="flex items-center gap-1.5 font-sagip text-xs text-sagip-muted uppercase tracking-wider hover:text-asean-blue transition-colors"
               >
                 ADD NEW CONTACT
@@ -307,7 +312,40 @@ export default function Profile() {
                 </span>
               </button>
             </div>
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-asean-yellow/10">
+                  <Wrench size={20} className="text-asean-yellow" aria-hidden />
+                </div>
+                <div>
+                  <p className="font-sagip font-bold text-sm text-sagip-heading">Response Assets</p>
+                  <p className="font-sagip text-[10px] text-sagip-muted">VOLUNTEERED EQUIPMENT</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAssetForm(true)}
+                className="flex items-center gap-1.5 font-sagip text-xs text-asean-blue underline uppercase tracking-wider hover:text-navy-900 transition-colors"
+                aria-label="Register asset"
+              >
+                REGISTER ASSET
+              </button>
+            </div>
           </div>
+        </section>
+
+        {/* My Registered Assets */}
+        <section className="wira-card p-4 space-y-4" aria-labelledby="my-assets-heading">
+          <div className="flex items-center justify-between">
+            <h2
+              id="my-assets-heading"
+              className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading flex items-center gap-2"
+            >
+              <Package size={18} className="text-asean-blue shrink-0" aria-hidden />
+              My Registered Assets
+            </h2>
+          </div>
+          <MyAssets />
         </section>
 
         {/* Demographics & Needs (scroll target for Edit Profile) */}
@@ -406,6 +444,15 @@ export default function Profile() {
           </button>
         </div>
       </div>
+
+      {/* Asset Registration Modal Overlay */}
+      {showAssetForm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end">
+          <div className="bg-white rounded-t-3xl h-[90vh] overflow-hidden">
+            <AssetRegistrationForm onClose={() => setShowAssetForm(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

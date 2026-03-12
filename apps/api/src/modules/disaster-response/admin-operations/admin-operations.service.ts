@@ -235,46 +235,62 @@ export class AdminOperationsService {
   }
 
   async getAssetRegistry() {
-    const users = await this.prisma.user.findMany({
-      where: {
-        OR: [
-          { assets: { not: null } },
-          { assetRecords: { some: {} } },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        assets: true,
-        assetRecords: {
-          select: { name: true },
-        },
-        volunteerProfile: {
-          select: { status: true },
+    const assets = await this.prisma.asset.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+            volunteerProfile: {
+              select: { status: true },
+            },
+          },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: { createdAt: 'desc' },
     });
 
-    return users
-      .map((u) => {
-        // Merge legacy JSON assets with new structured records
-        const legacyAssets = Array.isArray(u.assets) ? (u.assets as string[]) : [];
-        const recordAssets = u.assetRecords.map((r) => r.name);
-        const allAssets = Array.from(new Set([...legacyAssets, ...recordAssets]));
+    return assets.map((a) => ({
+      id: a.id,
+      name: a.name,
+      description: a.description,
+      status: a.status,
+      photoUrl: a.photoUrl,
+      latitude: a.latitude,
+      longitude: a.longitude,
+      ownerId: a.user.id,
+      ownerName: a.user.name,
+      ownerEmail: a.user.email,
+      ownerCreatedAt: a.user.createdAt,
+      volunteerStatus: a.user.volunteerProfile?.status ?? null,
+      createdAt: a.createdAt,
+    }));
+  }
 
-        return {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          createdAt: u.createdAt,
-          assets: allAssets,
-          volunteerStatus: u.volunteerProfile?.status ?? null,
-        };
-      })
-      .filter((u) => u.assets.length > 0);
+  async reviewAsset(input: {
+    assetId: string;
+    reviewerId: string;
+    action: 'APPROVE' | 'REJECT';
+    reason?: string;
+  }) {
+    const asset = await this.prisma.asset.findUnique({
+      where: { id: input.assetId },
+    });
+
+    if (!asset) {
+      throw new NotFoundException('Asset not found.');
+    }
+
+    const nextStatus = input.action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+
+    return this.prisma.asset.update({
+      where: { id: input.assetId },
+      data: {
+        status: nextStatus,
+      },
+    });
   }
 
   async getApplicationHistory(applicationId: string) {
