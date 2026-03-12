@@ -5,12 +5,14 @@ import { DisasterResponseModule } from './modules/disaster-response/disaster-res
 import { RoutingModule } from './modules/routing/routing.module';
 import { TrackerModule } from './modules/tracker/tracker.module';
 import { OpenMeteoModule } from './providers/open-meteo/open-meteo.module';
+import { SupabaseModule } from './providers/supabase/supabase.module';
 
 @Module({
   imports: [
     DatabaseModule,
     AuthModule,
     OpenMeteoModule,
+    SupabaseModule,
     DisasterResponseModule,
     RoutingModule,
     TrackerModule,
