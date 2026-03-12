@@ -11,7 +11,6 @@ import {
   warningSummary,
 } from './warning-flow.utils';
 import WarningMapSupport from './WarningMapSupport';
-import WarningMapSupport from './WarningMapSupport';
 
 type HazardType = 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
 type SeverityLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
