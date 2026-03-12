@@ -2,42 +2,35 @@
 
 import React, { useEffect } from 'react';
 import { Globe, Check } from 'lucide-react';
-
-export type LanguageOption = 'ENg' | 'BISAYA';
+import { useI18n, LOCALES } from '../../i18n/context';
+import type { Locale } from '../../i18n/locales';
+import { LOCALE_DISPLAY } from '../../i18n/locales';
 
 type LanguageSelectorProps = {
   open: boolean;
   onClose: () => void;
-  currentLanguage: LanguageOption;
-  onSelect: (lang: LanguageOption) => void;
 };
 
-const LANGUAGES: LanguageOption[] = ['ENg', 'BISAYA'];
+export function LanguageSelector({ open, onClose }: LanguageSelectorProps) {
+  const { locale, setLocale, t } = useI18n();
 
-export function LanguageSelector({
-  open,
-  onClose,
-  currentLanguage,
-  onSelect,
-}: LanguageSelectorProps) {
   useEffect(() => {
-    if (open) {
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose();
-      };
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.removeEventListener('keydown', handleEscape);
-        document.body.style.overflow = '';
-      };
-    }
+    if (!open) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
-  const handleSelect = (lang: LanguageOption) => {
-    onSelect(lang);
+  const handleSelect = (loc: Locale) => {
+    setLocale(loc);
     onClose();
   };
 
@@ -52,22 +45,28 @@ export function LanguageSelector({
         className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] max-w-[90vw] bg-white rounded-xl shadow-xl z-50 p-4 animate-fade-in"
         role="dialog"
         aria-modal="true"
-        aria-label="Select language"
+        aria-label={t('language.ariaSelect')}
       >
         <div className="flex items-center gap-2 pb-3 border-b border-slate-200">
           <Globe className="size-5 text-asean-blue shrink-0" />
-          <span className="font-sagip font-bold text-sagip-heading text-sm">Language</span>
+          <span className="font-sagip font-bold text-sagip-heading text-sm">
+            {t('language.title')}
+          </span>
         </div>
         <ul className="py-2">
-          {LANGUAGES.map((lang) => (
-            <li key={lang}>
+          {LOCALES.map((loc) => (
+            <li key={loc}>
               <button
                 type="button"
-                onClick={() => handleSelect(lang)}
+                onClick={() => handleSelect(loc)}
                 className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-sagip font-medium text-sm text-sagip-heading hover:bg-asean-blue/10 transition-colors"
+                aria-label={LOCALE_DISPLAY[loc].nativeLabel ?? LOCALE_DISPLAY[loc].displayLabel}
               >
-                {lang}
-                {currentLanguage === lang && (
+                <span className="flex items-center gap-2">
+                  <span aria-hidden className="text-base leading-none">{LOCALE_DISPLAY[loc].flagEmoji}</span>
+                  {LOCALE_DISPLAY[loc].displayLabel}
+                </span>
+                {locale === loc && (
                   <Check className="size-4 text-asean-blue shrink-0" aria-hidden />
                 )}
               </button>

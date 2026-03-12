@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
+    "qrcode": "^1.5.4",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@types/ol": "^6.5.3",
     "lucide-react": "^0.577.0",

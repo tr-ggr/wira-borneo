@@ -154,6 +154,40 @@ export class EvacuationService {
     return [...withRoute, ...rest];
   }
 
+  /**
+   * Hazard-aware route between two coordinates (no evacuation area).
+   * Returns null if hazard server is unavailable.
+   */
+  async getHazardRoute(
+    fromLat: number,
+    fromLon: number,
+    toLat: number,
+    toLon: number,
+    rainfallMm: number,
+  ): Promise<{
+    geometry: { type: 'LineString'; coordinates: [number, number][] };
+    durationSeconds: number;
+    distanceMeters: number;
+    avgRisk: number;
+    totalRiskCost: number;
+  } | null> {
+    const result = await this.hazardRoutingProvider.getHazardAwareRoute(
+      fromLat,
+      fromLon,
+      toLat,
+      toLon,
+      rainfallMm,
+    );
+    if (!result) return null;
+    return {
+      geometry: result.geometry,
+      durationSeconds: result.durationSeconds,
+      distanceMeters: result.distanceMeters,
+      avgRisk: result.avgRisk,
+      totalRiskCost: result.totalRiskCost,
+    };
+  }
+
   async getRouteToArea(
     latitude: number,
     longitude: number,

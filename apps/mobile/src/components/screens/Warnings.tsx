@@ -22,21 +22,22 @@ import {
   useRiskIntelligenceControllerGetForecast,
   useHazardRiskLayerControllerGetRiskLayer,
 } from '@wira-borneo/api-client';
+import { useI18n } from '../../i18n/context';
 
 const FALLBACK_COORDS = { latitude: 1.5533, longitude: 110.3592 };
 
 type FilterCategory = 'critical' | 'warning' | 'info' | 'all';
 
-function formatRelativeTime(date: Date | string): string {
+function formatRelativeTime(date: Date | string, t: (key: string) => string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffMins = Math.floor(diffMs / 60_000);
   const diffHours = Math.floor(diffMs / 3_600_000);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${Math.floor(diffHours / 24)}d ago`;
+  if (diffMins < 1) return t('alerts.time.justNow');
+  if (diffMins < 60) return `${diffMins} ${t('alerts.time.minsAgo')}`;
+  if (diffHours < 24) return `${diffHours} ${t('alerts.time.hoursAgo')}`;
+  return `${Math.floor(diffHours / 24)} ${t('alerts.time.daysAgo')}`;
 }
 
 function severityToFilterCategory(severity: string): FilterCategory {
@@ -48,27 +49,27 @@ function severityToFilterCategory(severity: string): FilterCategory {
 
 function severityToCardStyle(severity: string): {
   border: string;
-  label: string;
+  labelKey: string;
   labelColor: string;
 } {
   const s = (severity ?? '').toLowerCase();
   if (s === 'critical') {
     return {
       border: 'border-l-asean-red',
-      label: 'Immediate Action Required',
+      labelKey: 'alerts.immediateAction',
       labelColor: 'text-[#ff4500]',
     };
   }
   if (s === 'high' || s === 'moderate') {
     return {
       border: 'border-l-[#ffbf00]',
-      label: 'Weather Advisory',
+      labelKey: 'alerts.weatherAdvisory',
       labelColor: 'text-[#ffbf00]',
     };
   }
   return {
     border: 'border-l-asean-blue',
-    label: 'System Update',
+    labelKey: 'alerts.systemUpdate',
     labelColor: 'text-[#007ba7]',
   };
 }
@@ -93,10 +94,11 @@ export default function Warnings({
   onOpenMap?: () => void;
   onReportIncident?: () => void;
 }) {
+  const { t } = useI18n();
   const { data: session } = useAuthControllerGetSession();
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('all');
-  const [mapLastUpdated, setMapLastUpdated] = useState<Date>(new Date());
+  const [mapLastUpdated] = useState<Date>(new Date());
   const situationMapRef = useRef<HTMLDivElement>(null);
   const situationMapInstanceRef = useRef<Map | null>(null);
 
@@ -167,13 +169,13 @@ export default function Warnings({
         title: w.title ?? 'Warning',
         description: w.message ?? '',
         startsAt: w.startsAt,
-        relativeTime: formatRelativeTime(w.startsAt),
+        relativeTime: formatRelativeTime(w.startsAt, t),
         severity: w.severity ?? '',
         filterCategory: severityToFilterCategory(w.severity ?? ''),
         cardStyle: severityToCardStyle(w.severity ?? ''),
         isFamily: w.isFamily,
       })),
-    [sortedWarnings],
+    [sortedWarnings, t],
   );
 
   const counts = useMemo(() => {
@@ -204,20 +206,20 @@ export default function Warnings({
   const rain = daily?.precipitation_sum?.[0];
 
   const riskPoints = Array.isArray(riskLayerData) ? riskLayerData : [];
-  const zoneLabel = riskPoints.length > 0 ? `Zone ${Math.min(4, riskPoints.length)}: High Risk` : 'View map';
+  const zoneLabel = riskPoints.length > 0
+    ? `${t('alerts.zone')} ${Math.min(4, riskPoints.length)}: ${t('alerts.highRisk')}`
+    : t('alerts.viewMap');
 
   const mapUpdatedMins = Math.max(0, Math.floor((Date.now() - mapLastUpdated.getTime()) / 60_000));
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="tnalak-stripe w-full shrink-0 -mx-4" aria-hidden />
-
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-sagip font-bold text-sagip-heading text-lg tracking-tight">Situation Map</h2>
+          <h2 className="font-sagip font-bold text-sagip-heading text-lg tracking-tight">{t('alerts.situationMap')}</h2>
           <div className="flex items-center gap-1 rounded-full bg-[#ff4500] px-2 py-0.5">
             <span className="size-2 rounded-full bg-white shrink-0" />
-            <span className="font-sagip font-bold text-white text-xs">LIVE</span>
+            <span className="font-sagip font-bold text-white text-xs">{t('alerts.live')}</span>
           </div>
         </div>
         <button
@@ -236,7 +238,7 @@ export default function Warnings({
                 {zoneLabel}
               </span>
               <span className="font-sagip text-[10px] font-medium uppercase tracking-wider text-white/90">
-                Last updated: {mapUpdatedMins < 1 ? 'Just now' : `${mapUpdatedMins} mins ago`}
+                {t('alerts.lastUpdated')} {mapUpdatedMins < 1 ? t('alerts.time.justNow') : `${mapUpdatedMins} ${t('alerts.time.minsAgo')}`}
               </span>
             </div>
             <span
@@ -260,7 +262,7 @@ export default function Warnings({
           }`}
         >
           <AlertCircle className="size-4 shrink-0" />
-          Critical ({counts.critical})
+          {t('alerts.critical')} ({counts.critical})
         </button>
         <button
           type="button"
@@ -272,7 +274,7 @@ export default function Warnings({
           }`}
         >
           <AlertCircle className="size-4 shrink-0" />
-          Warning
+          {t('alerts.warning')}
         </button>
         <button
           type="button"
@@ -284,24 +286,24 @@ export default function Warnings({
           }`}
         >
           <AlertCircle className="size-4 shrink-0" />
-          Info
+          {t('alerts.info')}
         </button>
       </section>
 
       <section className="grid grid-cols-3 gap-3">
         <div className="wira-card flex flex-col items-center gap-1 rounded-xl p-3">
           <Thermometer className="size-5 text-sagip-muted shrink-0" />
-          <span className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">Temp</span>
+          <span className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">{t('alerts.temp')}</span>
           <span className="font-sagip font-bold text-lg text-sagip-heading">{temp != null ? `${Math.round(temp)}°C` : '--'}</span>
         </div>
         <div className="wira-card flex flex-col items-center gap-1 rounded-xl p-3">
           <Wind className="size-5 text-sagip-muted shrink-0" />
-          <span className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">Wind</span>
+          <span className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">{t('alerts.wind')}</span>
           <span className="font-sagip font-bold text-lg text-sagip-heading">{wind != null ? `${Math.round(wind)} km/h` : '--'}</span>
         </div>
         <div className="wira-card flex flex-col items-center gap-1 rounded-xl p-3">
           <CloudRain className="size-5 text-sagip-muted shrink-0" />
-          <span className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">Rain</span>
+          <span className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">{t('alerts.rain')}</span>
           <span className="font-sagip font-bold text-lg text-sagip-heading">{rain != null ? `${rain} mm` : '--'}</span>
         </div>
       </section>
@@ -313,26 +315,26 @@ export default function Warnings({
           className="flex w-full items-center justify-center gap-3 rounded-xl bg-asean-blue py-4 font-sagip font-bold text-base text-white shadow-lg transition-transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-blue focus-visible:ring-offset-2"
         >
           <Bell className="size-5 shrink-0" />
-          REPORT INCIDENT
+          {t('alerts.reportIncident')}
         </button>
       )}
 
       <section className="space-y-3">
-        <h3 className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading/80">Active Alerts</h3>
+        <h3 className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading/80">{t('alerts.activeAlerts')}</h3>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="h-10 w-10 rounded-full border-4 border-wira-teal border-t-transparent animate-spin" />
-            <p className="text-sm font-body text-wira-earth/60">Fetching latest alerts...</p>
+            <p className="text-sm font-body text-wira-earth/60">{t('alerts.fetchingAlerts')}</p>
           </div>
         ) : isError ? (
           <div className="wira-card p-8 text-center space-y-3">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-status-critical/10 text-status-critical">
               <AlertCircle size={24} />
             </div>
-            <h2 className="text-lg font-display font-bold wira-card-title">Connection Error</h2>
+            <h2 className="text-lg font-display font-bold wira-card-title">{t('alerts.connectionError')}</h2>
             <p className="text-xs font-body wira-card-body leading-relaxed">
-              We couldn&apos;t retrieve the latest warnings. Please check your connection or try again later.
+              {t('alerts.retrieveError')}
             </p>
           </div>
         ) : filteredAlerts.length === 0 ? (
@@ -340,11 +342,11 @@ export default function Warnings({
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-status-safe/10 text-status-safe">
               <AlertCircle size={24} />
             </div>
-            <h2 className="text-lg font-display font-bold wira-card-title">Everything is Clear</h2>
+            <h2 className="text-lg font-display font-bold wira-card-title">{t('alerts.everythingClear')}</h2>
             <p className="text-xs font-body wira-card-body leading-relaxed">
               {filterCategory === 'all'
-                ? 'No active warnings or hazards reported in your area at this time. Stay safe!'
-                : `No ${filterCategory} alerts at this time.`}
+                ? t('alerts.noWarningsArea')
+                : t('alerts.noFilteredAlerts').replace('{filter}', t(`alerts.${filterCategory}`))}
             </p>
           </div>
         ) : (
@@ -357,7 +359,7 @@ export default function Warnings({
                   <div className="flex flex-1 min-w-0 flex-col gap-1">
                     <div className="flex items-start justify-between gap-2 text-[10px]">
                       <span className={`font-sagip font-bold uppercase tracking-tight ${alert.cardStyle.labelColor}`}>
-                        {alert.cardStyle.label}
+                        {t(alert.cardStyle.labelKey)}
                       </span>
                       <span className="font-sagip font-medium text-sagip-muted shrink-0">{alert.relativeTime}</span>
                     </div>
@@ -372,7 +374,7 @@ export default function Warnings({
       </section>
 
       {!session?.user && (
-        <p className="text-center text-[11px] font-body text-wira-earth/50">Sign in to see personalized warnings.</p>
+        <p className="text-center text-[11px] font-body text-wira-earth/50">{t('alerts.signInWarnings')}</p>
       )}
     </div>
   );

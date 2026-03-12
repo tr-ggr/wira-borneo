@@ -489,7 +489,7 @@
             "bearer": []
           }
         ],
-        "summary": "One-tap SOS: create help request with current location only",
+        "summary": "One-tap SOS: create help request with current location only (time-limited)",
         "tags": [
           "help-requests"
         ]
@@ -725,6 +725,62 @@
           }
         },
         "summary": "Nearest evacuation sites; with rainfall_mm uses hazard-aware routing (safest first)",
+        "tags": [
+          "evacuation"
+        ]
+      }
+    },
+    "/api/evacuation/hazard-route": {
+      "get": {
+        "operationId": "EvacuationController_hazardRoute",
+        "parameters": [
+          {
+            "name": "fromLat",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "fromLon",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "toLat",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "toLon",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "rainfall_mm",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Hazard-aware route between two coordinates; uses hazard server with rainfall_mm",
         "tags": [
           "evacuation"
         ]

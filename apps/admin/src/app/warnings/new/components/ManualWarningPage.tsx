@@ -6,6 +6,7 @@ import {
   useEvacuationControllerAreas,
 } from '@wira-borneo/api-client';
 import { useMemo, useState } from 'react';
+import { useI18n } from '../../../../i18n/context';
 import {
   canProceedToConfirmation,
   warningFlowReducer,
@@ -38,6 +39,7 @@ function toAreas(raw: unknown): EvacuationArea[] {
 }
 
 export function ManualWarningPage() {
+  const { t } = useI18n();
   const [step, setStep] = useState<'compose' | 'confirm'>('compose');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -48,7 +50,7 @@ export function ManualWarningPage() {
   const [target, setTarget] = useState(defaultTarget);
   const [selectedEvacuationAreas, setSelectedEvacuationAreas] = useState<string[]>([]);
 
-  const areasQuery = useEvacuationControllerAreas({
+  useEvacuationControllerAreas({
     query: { select: (response: unknown) => toAreas(response) },
   });
   const promptMutation = useAdminOperationsControllerGetPromptSuggestion();
@@ -105,23 +107,21 @@ export function ManualWarningPage() {
   return (
     <section className="page-shell">
       <header className="section-header">
-        <p className="eyebrow">Manual Warning Dispatch</p>
-        <h1 className="title">Send Warning / Hantar Amaran</h1>
-        <p className="subtitle">
-          Dispatch is manual only. Review all details before final confirmation.
-        </p>
+        <p className="eyebrow">{t('warnings.eyebrow')}</p>
+        <h1 className="title">{t('warnings.title')}</h1>
+        <p className="subtitle">{t('warnings.subtitle')}</p>
       </header>
 
       {step === 'compose' ? (
         <div className="grid-list">
           <article className="card">
-            <h2 className="card-title">1) Compose Message / Karang Mesej</h2>
+            <h2 className="card-title">{t('warnings.composeTitle')}</h2>
             <label className="field-label">
-              Title
+              {t('warnings.fieldTitle')}
               <input className="field" value={title} onChange={(event) => setTitle(event.target.value)} />
             </label>
             <label className="field-label">
-              Message
+              {t('warnings.fieldMessage')}
               <textarea
                 className="field"
                 rows={5}
@@ -131,35 +131,35 @@ export function ManualWarningPage() {
             </label>
             <div className="row-2">
               <label className="field-label">
-                Hazard
+                {t('warnings.hazard')}
                 <select
                   className="field"
                   value={hazardType}
                   onChange={(event) => setHazardType(event.target.value as HazardType)}
                 >
-                  <option value="FLOOD">Flood</option>
-                  <option value="TYPHOON">Typhoon</option>
-                  <option value="EARTHQUAKE">Earthquake</option>
-                  <option value="AFTERSHOCK">Aftershock</option>
+                  <option value="FLOOD">{t('warnings.hazard.FLOOD')}</option>
+                  <option value="TYPHOON">{t('warnings.hazard.TYPHOON')}</option>
+                  <option value="EARTHQUAKE">{t('warnings.hazard.EARTHQUAKE')}</option>
+                  <option value="AFTERSHOCK">{t('warnings.hazard.AFTERSHOCK')}</option>
                 </select>
               </label>
               <label className="field-label">
-                Severity
+                {t('warnings.severity')}
                 <select
                   className="field"
                   value={severity}
                   onChange={(event) => setSeverity(event.target.value as SeverityLevel)}
                 >
-                  <option value="LOW">Low</option>
-                  <option value="MODERATE">Moderate</option>
-                  <option value="HIGH">High</option>
-                  <option value="CRITICAL">Critical</option>
+                  <option value="LOW">{t('warnings.severity.LOW')}</option>
+                  <option value="MODERATE">{t('warnings.severity.MODERATE')}</option>
+                  <option value="HIGH">{t('warnings.severity.HIGH')}</option>
+                  <option value="CRITICAL">{t('warnings.severity.CRITICAL')}</option>
                 </select>
               </label>
             </div>
             <div className="row-2">
               <label className="field-label">
-                Start (MYT)
+                {t('warnings.startMyt')}
                 <input
                   type="datetime-local"
                   className="field"
@@ -168,7 +168,7 @@ export function ManualWarningPage() {
                 />
               </label>
               <label className="field-label">
-                End (optional)
+                {t('warnings.endOptional')}
                 <input
                   type="datetime-local"
                   className="field"
@@ -201,14 +201,14 @@ export function ManualWarningPage() {
                 );
               }}
             >
-              Suggest Prompt / Cadang Teks
+              {t('warnings.suggestPrompt')}
             </button>
           </article>
 
           <article className="card">
-            <h2 className="card-title">2) Target Area / Kawasan Sasaran</h2>
+            <h2 className="card-title">{t('warnings.targetTitle')}</h2>
             <label className="field-label">
-              Area or Region Name
+              {t('warnings.areaName')}
               <input
                 className="field"
                 value={target.areaName}
@@ -219,7 +219,7 @@ export function ManualWarningPage() {
             </label>
             <div className="row-3">
               <label className="field-label">
-                Latitude
+                {t('warnings.latitude')}
                 <input
                   className="field"
                   value={target.latitude}
@@ -229,7 +229,7 @@ export function ManualWarningPage() {
                 />
               </label>
               <label className="field-label">
-                Longitude
+                {t('warnings.longitude')}
                 <input
                   className="field"
                   value={target.longitude}
@@ -239,7 +239,7 @@ export function ManualWarningPage() {
                 />
               </label>
               <label className="field-label">
-                Radius (km)
+                {t('warnings.radiusKm')}
                 <input
                   type="number"
                   min={1}
@@ -253,8 +253,8 @@ export function ManualWarningPage() {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label className="field-label">Draw Target Area on Map</label>
-              <WarningMapSupport 
+              <label className="field-label">{t('warnings.drawTargetArea')}</label>
+              <WarningMapSupport
                 onTargetChange={(data) => {
                   setTarget(prev => ({
                     ...prev,
@@ -267,7 +267,7 @@ export function ManualWarningPage() {
               />
               {target.polygonGeoJson && (
                 <p className="small success-text" style={{ marginTop: '0.5rem' }}>
-                  ✓ Custom shape captured.
+                  ✓ {t('warnings.customShapeCaptured')}
                 </p>
               )}
             </div>
@@ -275,10 +275,8 @@ export function ManualWarningPage() {
           </article>
 
           <article className="card">
-            <h2 className="card-title">3) Final Checkpoint / Semakan Akhir</h2>
-            <p className="warning-note">
-              Dispatch is never automatic. Admin must manually confirm every warning send.
-            </p>
+            <h2 className="card-title">{t('warnings.checkpointTitle')}</h2>
+            <p className="warning-note">{t('warnings.checkpointNote')}</p>
             <button
               type="button"
               className="btn btn-warning"
@@ -291,22 +289,22 @@ export function ManualWarningPage() {
               }
               onClick={() => setStep((current) => warningFlowReducer(current, { type: 'CONTINUE' }))}
             >
-              Continue to Confirmation / Teruskan
+              {t('warnings.continueToConfirm')}
             </button>
           </article>
         </div>
       ) : (
         <article className="card">
-          <h2 className="card-title">Confirm Warning Dispatch / Sahkan Amaran</h2>
-          <p className="muted">Review summary before sending.</p>
+          <h2 className="card-title">{t('warnings.confirmTitle')}</h2>
+          <p className="muted">{t('warnings.reviewSummary')}</p>
           <dl className="summary-grid">
-            <dt>Title</dt>
+            <dt>{t('warnings.summaryTitle')}</dt>
             <dd>{summary.heading}</dd>
-            <dt>Message</dt>
+            <dt>{t('warnings.summaryMessage')}</dt>
             <dd>{summary.body}</dd>
-            <dt>Target</dt>
+            <dt>{t('warnings.summaryTarget')}</dt>
             <dd>{summary.target}</dd>
-            <dt>Evacuation Areas</dt>
+            <dt>{t('warnings.summaryEvacuationAreas')}</dt>
             <dd>{summary.evacuationCount}</dd>
           </dl>
           <div className="action-row">
@@ -315,7 +313,7 @@ export function ManualWarningPage() {
               className="btn btn-neutral"
               onClick={() => setStep((current) => warningFlowReducer(current, { type: 'CANCEL' }))}
             >
-              Cancel / Batal
+              {t('warnings.cancel')}
             </button>
             <button
               type="button"
@@ -336,11 +334,11 @@ export function ManualWarningPage() {
               }}
               disabled={createWarningMutation.isPending}
             >
-              Confirm and Send / Sahkan & Hantar
+              {t('warnings.confirmAndSend')}
             </button>
           </div>
           {createWarningMutation.error ? (
-            <p className="error-text">Unable to dispatch warning.</p>
+            <p className="error-text">{t('warnings.dispatchError')}</p>
           ) : null}
         </article>
       )}

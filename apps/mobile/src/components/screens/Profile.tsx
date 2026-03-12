@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import QRCode from 'qrcode';
 import {
   User,
   Settings,
@@ -24,6 +25,7 @@ import {
 } from '@wira-borneo/api-client';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useI18n } from '../../i18n/context';
 
 type SessionUser = {
   name?: string | null;
@@ -38,11 +40,11 @@ type SessionUser = {
 const REPORTS_FILED = 0;
 const REPORTS_TREND = '+0%';
 const AID_VERIFIED = 0;
-const REGION_PLACEHOLDER = 'Philippines';
 
 type RegionalLanguageOption = 'ENg' | 'Cebuano';
 
 export default function Profile() {
+  const { t } = useI18n();
   const { data: session } = useAuthControllerGetSession();
   const { data: volunteerStatus } = useVolunteersControllerGetStatus();
   const queryClient = useQueryClient();
@@ -50,7 +52,18 @@ export default function Profile() {
   const [settingHome, setSettingHome] = useState(false);
   const [safeMode, setSafeMode] = useState(false);
   const [regionalLanguage, setRegionalLanguage] = useState<RegionalLanguageOption>('ENg');
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [isKinLoading, setIsKinLoading] = useState(true);
+  const [kinContacts] = useState<Array<{ id: string; name: string; avatar?: string }>>(() => [
+    { id: 'kin-1', name: 'Jane D.' },
+    { id: 'kin-2', name: 'John K.' },
+  ]);
   const demographicsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => setIsKinLoading(false), 1000);
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const user = session?.user as SessionUser | undefined;
   const updateProfile = useAuthControllerUpdateProfile({
@@ -131,46 +144,73 @@ export default function Profile() {
 
   const displayId = profile?.id ?? 'SG-XXXX-2024-0000';
 
+  useEffect(() => {
+    const payload = JSON.stringify({
+      id: displayId,
+      name: user?.name ?? '',
+      app: 'Sagip',
+    });
+    QRCode.toDataURL(payload, { width: 256, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
+  }, [displayId, user?.name]);
+
   return (
     <div className="animate-fade-in pb-10 -mx-4" role="main" aria-label="Profile">
-      {/* Dark blue hero */}
-      <section className="bg-asean-blue rounded-t-2xl pt-6 pb-8 px-4 flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="h-24 w-24 rounded-full border-4 border-asean-yellow bg-asean-blue flex items-center justify-center overflow-hidden shadow-lg">
-            {user?.image ? (
-              <Image
-                src={user.image}
-                alt=""
-                width={96}
-                height={96}
-                className="object-cover w-full h-full"
-              />
-            ) : (
-              <User size={48} className="text-white" aria-hidden />
-            )}
+      {/* Dark blue hero with cover area */}
+      <section className="relative bg-asean-blue rounded-t-2xl pt-10 pb-12 px-4 flex flex-col items-center gap-5 overflow-hidden">
+        {/* Cover layer: gradient from darker blue to asean-blue */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden
+          style={{
+            background: 'linear-gradient(180deg, rgba(0, 30, 70, 0.95) 0%, transparent 45%, #00368e 100%)',
+          }}
+        />
+        <div className="relative flex flex-col items-center gap-5 w-full">
+          <div className="relative">
+            <div className="h-24 w-24 rounded-full border-4 border-asean-yellow bg-asean-blue flex items-center justify-center overflow-hidden shadow-lg ring-2 ring-white/20">
+              {user?.image ? (
+                <Image
+                  src={user.image}
+                  alt=""
+                  width={96}
+                  height={96}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <Image
+                  src={`https://api.dicebear.com/7.x/avataaars/png?seed=profile&backgroundColor=1e3a5f`}
+                  alt=""
+                  width={96}
+                  height={96}
+                  className="object-cover w-full h-full"
+                />
+              )}
+            </div>
+            <div
+              className="absolute -bottom-0.5 -right-0.5 h-8 w-8 rounded-full border-2 border-asean-yellow bg-asean-blue flex items-center justify-center shadow-md"
+              aria-hidden
+            >
+              <Settings className="text-asean-yellow w-4 h-4" />
+            </div>
           </div>
-          <div
-            className="absolute -bottom-0.5 -right-0.5 h-8 w-8 rounded-full border-2 border-asean-yellow bg-asean-blue flex items-center justify-center shadow-md"
-            aria-hidden
+          <div className="text-center space-y-1">
+            <h1 className="text-xl font-sagip font-bold text-white leading-tight">
+              {user?.name || t('profile.wiraUser')}
+            </h1>
+            <p className="text-white/90 font-sagip text-xs uppercase tracking-widest">
+              {isCommunityResponder ? t('profile.communityResponder') : t('profile.volunteer')} • {t('profile.regionPlaceholder')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={scrollToDemographics}
+            className="w-full max-w-[200px] py-2.5 rounded-xl bg-asean-blue border-2 border-white/40 text-white font-sagip font-bold text-sm uppercase tracking-widest hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
           >
-            <Settings className="text-asean-yellow w-4 h-4" />
-          </div>
+            {t('profile.editProfile')}
+          </button>
         </div>
-        <div className="text-center space-y-1">
-          <h1 className="text-xl font-sagip font-bold text-white leading-tight">
-            {user?.name || 'WIRA User'}
-          </h1>
-          <p className="text-white/90 font-sagip text-xs uppercase tracking-widest">
-            {isCommunityResponder ? 'COMMUNITY RESPONDER' : 'Volunteer'} • {REGION_PLACEHOLDER}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={scrollToDemographics}
-          className="w-full max-w-[200px] py-2.5 rounded-xl bg-asean-blue border-2 border-white/40 text-white font-sagip font-bold text-sm uppercase tracking-widest hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
-        >
-          EDIT PROFILE
-        </button>
       </section>
 
       <div className="px-4 space-y-4 mt-4">
@@ -178,17 +218,17 @@ export default function Profile() {
         <section className="grid grid-cols-2 gap-3" aria-label="User statistics">
           <div className="wira-card p-4 rounded-xl">
             <p className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">
-              REPORTS FILED
+              {t('profile.reportsFiled')}
             </p>
             <p className="text-2xl font-sagip font-bold text-asean-blue mt-1">{REPORTS_FILED}</p>
             <p className="text-xs font-sagip text-status-safe">{REPORTS_TREND}</p>
           </div>
           <div className="wira-card p-4 rounded-xl">
             <p className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">
-              AID VERIFIED
+              {t('profile.aidVerified')}
             </p>
             <p className="text-2xl font-sagip font-bold text-status-critical mt-1">{AID_VERIFIED}</p>
-            <p className="text-xs font-sagip text-sagip-muted">Cases</p>
+            <p className="text-xs font-sagip text-sagip-muted">{t('profile.cases')}</p>
           </div>
         </section>
 
@@ -199,13 +239,23 @@ export default function Profile() {
             className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading flex items-center gap-2"
           >
             <Lock size={18} className="text-sagip-heading shrink-0" aria-hidden />
-            EMERGENCY DIGITAL IDENTITY
+            {t('profile.emergencyDigitalIdentity')}
           </h2>
           <div className="flex flex-col items-center gap-2">
-            <div className="w-32 h-32 rounded-lg bg-status-safe/90 border-2 border-white ring-2 ring-asean-blue/30 flex items-center justify-center">
-              <div className="w-24 h-24 bg-white rounded flex items-center justify-center text-sagip-muted text-[10px] font-mono text-center px-1 break-all">
-                QR
-              </div>
+            <div className="w-32 h-32 rounded-lg bg-white border-2 border-sagip-border ring-2 ring-asean-blue/30 flex items-center justify-center p-1.5">
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt={t('profile.qrAlt')}
+                  className="w-full h-full object-contain rounded"
+                  width={128}
+                  height={128}
+                />
+              ) : (
+                <div className="w-full h-full rounded bg-sagip-border/50 animate-pulse flex items-center justify-center">
+                  <span className="font-mono text-[10px] text-sagip-muted">QR</span>
+                </div>
+              )}
             </div>
             <p className="font-sagip text-sm text-sagip-muted">ID: {displayId}</p>
           </div>
@@ -216,17 +266,17 @@ export default function Profile() {
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-asean-blue/10 text-asean-blue font-sagip font-bold text-sm hover:bg-asean-blue/20 transition-colors focus:outline-none focus:ring-2 focus:ring-asean-blue/30"
             >
               <Download size={18} aria-hidden />
-              EXPORT OFFLINE ID
+              {t('profile.exportOfflineId')}
             </button>
             <button
               type="button"
               onClick={handleSetHome}
               disabled={settingHome || setHome.isPending}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-status-safe/20 text-status-safe font-sagip font-bold text-sm hover:bg-status-safe/30 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-status-safe/30"
-              aria-label={hasHome ? 'Update home location' : 'Set home location'}
+              aria-label={hasHome ? t('profile.ariaUpdateHome') : t('profile.ariaSetHome')}
             >
               <MapPin size={18} aria-hidden />
-              {settingHome || setHome.isPending ? 'Setting…' : 'UPDATE CURRENT LOCATION'}
+              {settingHome || setHome.isPending ? t('profile.setting') : t('profile.updateCurrentLocation')}
             </button>
           </div>
         </section>
@@ -237,7 +287,7 @@ export default function Profile() {
             id="control-center-heading"
             className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading"
           >
-            CONTROL CENTER
+            {t('profile.controlCenter')}
           </h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -247,16 +297,16 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="font-sagip font-bold text-sm text-sagip-heading">
-                    Regional Language
+                    {t('profile.regionalLanguage')}
                   </p>
-                  <p className="font-sagip text-[10px] text-sagip-muted">MCATL ENABLED</p>
+                  <p className="font-sagip text-[10px] text-sagip-muted">{t('profile.mcatlEnabled')}</p>
                 </div>
               </div>
               <select
                 value={regionalLanguage}
                 onChange={(e) => setRegionalLanguage(e.target.value as RegionalLanguageOption)}
                 className="font-sagip text-sm text-sagip-heading bg-sagip-border/50 border border-sagip-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-asean-blue/30"
-                aria-label="Regional language"
+                aria-label={t('profile.ariaRegionalLanguage')}
               >
                 <option value="ENg">ENg</option>
                 <option value="Cebuano">Cebuano</option>
@@ -268,8 +318,8 @@ export default function Profile() {
                   <Shield size={20} className="text-asean-blue" aria-hidden />
                 </div>
                 <div>
-                  <p className="font-sagip font-bold text-sm text-sagip-heading">Safe Mode</p>
-                  <p className="font-sagip text-[10px] text-sagip-muted">AUTO-REPORT IF IDLE</p>
+                  <p className="font-sagip font-bold text-sm text-sagip-heading">{t('profile.safeMode')}</p>
+                  <p className="font-sagip text-[10px] text-sagip-muted">{t('profile.autoReportIdle')}</p>
                 </div>
               </div>
               <button
@@ -290,18 +340,40 @@ export default function Profile() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-sagip font-bold text-sm text-sagip-heading">Kin Contacts</p>
-                <div className="flex -space-x-2 mt-1.5">
-                  <div className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white" aria-hidden />
-                  <div className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white" aria-hidden />
-                </div>
+                <p className="font-sagip font-bold text-sm text-sagip-heading">{t('profile.kinContacts')}</p>
+                {isKinLoading ? (
+                  <div className="flex -space-x-2 mt-1.5" aria-busy="true" aria-label={t('profile.loadingKin')}>
+                    <div className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white animate-pulse" aria-hidden />
+                    <div className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white animate-pulse" aria-hidden />
+                  </div>
+                ) : kinContacts.length === 0 ? (
+                  <p className="font-sagip text-xs text-sagip-muted mt-1.5">{t('profile.noKinYet')}</p>
+                ) : (
+                  <div className="flex -space-x-2 mt-1.5">
+                    {kinContacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        className="w-8 h-8 rounded-full bg-asean-blue/20 border-2 border-white flex items-center justify-center text-asean-blue font-sagip font-bold text-[10px] shrink-0"
+                        title={contact.name}
+                        aria-hidden
+                      >
+                        {contact.name
+                          .split(/\s+/)
+                          .map((s) => s[0])
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <button
                 type="button"
                 onClick={() => {}}
                 className="flex items-center gap-1.5 font-sagip text-xs text-sagip-muted uppercase tracking-wider hover:text-asean-blue transition-colors"
               >
-                ADD NEW CONTACT
+                {t('profile.addNewContact')}
                 <span className="w-6 h-6 rounded-full bg-asean-blue/10 flex items-center justify-center">
                   <Plus size={14} className="text-asean-blue" aria-hidden />
                 </span>
@@ -321,12 +393,12 @@ export default function Profile() {
             className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading flex items-center gap-2"
           >
             <User size={18} className="text-asean-blue shrink-0" aria-hidden />
-            Demographics & Needs
+            {t('profile.demographicsNeeds')}
           </h2>
           <div className="space-y-3">
             <label className="flex flex-col gap-1.5">
               <span className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">
-                Age Group
+                {t('profile.ageGroup')}
               </span>
               <select
                 className="bg-sagip-border/50 border border-sagip-border rounded-xl text-sm p-3 font-body text-sagip-heading outline-none focus:ring-2 focus:ring-asean-blue/30 focus:border-asean-blue"
@@ -335,29 +407,29 @@ export default function Profile() {
                   handleDemographicChange('ageGroup', e.target.value || null)
                 }
                 disabled={updateProfile.isPending}
-                aria-label="Age group"
+                aria-label={t('profile.ariaAgeGroup')}
               >
-                <option value="">Not specified</option>
-                <option value="UNDER_12">Under 12</option>
-                <option value="AGE_12_17">12 - 17</option>
-                <option value="AGE_18_59">18 - 59</option>
-                <option value="AGE_60_PLUS">60+</option>
+                <option value="">{t('profile.notSpecified')}</option>
+                <option value="UNDER_12">{t('profile.under12')}</option>
+                <option value="AGE_12_17">{t('profile.age12_17')}</option>
+                <option value="AGE_18_59">{t('profile.age18_59')}</option>
+                <option value="AGE_60_PLUS">{t('profile.age60Plus')}</option>
               </select>
             </label>
             <label className="flex items-center justify-between p-3 rounded-xl bg-sagip-border/50 border border-sagip-border active:scale-[0.98] transition-all cursor-pointer">
-              <span className="text-sm font-sagip font-medium text-sagip-heading">Pregnant</span>
+              <span className="text-sm font-sagip font-medium text-sagip-heading">{t('profile.pregnant')}</span>
               <input
                 type="checkbox"
                 className="w-5 h-5 rounded text-asean-blue focus:ring-asean-blue/30 border-sagip-border"
                 checked={user?.pregnantStatus ?? false}
                 onChange={(e) => handleDemographicChange('pregnantStatus', e.target.checked)}
                 disabled={updateProfile.isPending}
-                aria-label="Pregnant"
+                aria-label={t('profile.ariaPregnant')}
               />
             </label>
             <label className="flex items-center justify-between p-3 rounded-xl bg-sagip-border/50 border border-sagip-border active:scale-[0.98] transition-all cursor-pointer">
               <span className="text-sm font-sagip font-medium text-sagip-heading">
-                Person with Disability (PWD)
+                {t('profile.pwd')}
               </span>
               <input
                 type="checkbox"
@@ -365,7 +437,7 @@ export default function Profile() {
                 checked={user?.isPWD ?? false}
                 onChange={(e) => handleDemographicChange('isPWD', e.target.checked)}
                 disabled={updateProfile.isPending}
-                aria-label="Person with disability"
+                aria-label={t('profile.ariaPwd')}
               />
             </label>
           </div>
@@ -379,15 +451,15 @@ export default function Profile() {
               className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading flex items-center gap-2"
             >
               <MapPin size={20} className="text-asean-blue shrink-0" aria-hidden />
-              Volunteer Home
+              {t('profile.volunteerHome')}
             </h2>
             {hasHome ? (
               <p className="text-xs font-sagip text-sagip-muted flex items-center gap-1.5">
                 <MapPin size={14} className="text-asean-blue shrink-0" aria-hidden />
-                Set at {profile.baseLatitude?.toFixed(5)}, {profile.baseLongitude?.toFixed(5)}
+                {t('profile.setAt')} {profile.baseLatitude?.toFixed(5)}, {profile.baseLongitude?.toFixed(5)}
               </p>
             ) : (
-              <p className="text-xs font-sagip text-sagip-muted">Not set</p>
+              <p className="text-xs font-sagip text-sagip-muted">{t('profile.notSet')}</p>
             )}
           </section>
         )}
@@ -399,10 +471,10 @@ export default function Profile() {
             onClick={() => signOut.mutate()}
             disabled={signOut.isPending}
             className="w-full flex items-center justify-center gap-3 py-4 bg-status-critical text-white font-sagip font-bold text-sm uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-status-critical/50 disabled:opacity-50"
-            aria-label="Log out"
+            aria-label={t('profile.ariaLogout')}
           >
             <LogOut size={18} aria-hidden />
-            LOGOUT
+            {t('profile.logout')}
           </button>
         </div>
       </div>

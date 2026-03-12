@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import 'ol/ol.css';
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -18,7 +18,9 @@ import Point from 'ol/geom/Point';
 import Icon from 'ol/style/Icon';
 import Polygon, { circular } from 'ol/geom/Polygon';
 import Overlay from 'ol/Overlay';
+import { defaults } from 'ol/control/defaults';
 import { boundingExtent } from 'ol/extent';
+import GeoJSON from 'ol/format/GeoJSON';
 
 interface RiskRegion {
   id: string;
@@ -86,8 +88,28 @@ interface MapComponentProps {
   hazardRiskPoints?: HazardRiskPoint[];
   /** When set, map click returns lat/lon for location picker (e.g. hazard pin / help request). */
   onMapClick?: (latitude: number, longitude: number) => void;
+  /** When set, a pin is shown on the map at this point (e.g. weather-at-selected-point). */
+  selectedPoint?: { latitude: number; longitude: number } | null;
   /** When true, wrapper uses w-full h-full instead of aspect-square for embedded use (e.g. SOS page). */
   fillContainer?: boolean;
+  /** GeoJSON FeatureCollection for region risk choropleth (e.g. dengue). Each feature should have properties.risk_score (number) and optionally name/region_name. */
+  regionRiskChoropleth?: RegionRiskChoroplethGeoJSON | null;
+}
+
+/** GeoJSON FeatureCollection with risk_score in feature properties. */
+export interface RegionRiskChoroplethGeoJSON {
+  type: 'FeatureCollection';
+  features: Array<{
+    type: 'Feature';
+    geometry: unknown;
+    properties?: { risk_score?: number; region_name?: string; name?: string };
+  }>;
+}
+
+export interface MapComponentHandle {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  centerOnUser: () => void;
 }
 
 /** Returns SVG markup for the evac marker based on type so not all look like churches. */
@@ -115,19 +137,56 @@ function getEvacIconSvg(type: string | null | undefined): string {
   }
 }
 
-/** Solid teardrop pin SVG (no outline); fill color for status. */
+/** Teardrop pin SVG with stroke for visibility on map; fill color for status. */
 function getHazardPinSvg(fill: string): string {
-  return `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C5.5 2 0 7.5 0 14c0 8 12 18 12 18s12-10 12-18C24 7.5 18.5 2 12 2zm0 10a4 4 0 100-8 4 4 0 000 8z" fill="${fill}"/></svg>`;
+  const stroke = '#ffffff';
+  return `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C5.5 2 0 7.5 0 14c0 8 12 18 12 18s12-10 12-18C24 7.5 18.5 2 12 2zm0 10a4 4 0 100-8 4 4 0 000 8z" fill="${fill}" stroke="${stroke}" stroke-width="1.25"/></svg>`;
 }
 
-/** Risk value to color: green (low), yellow (mid), red (high). */
+/** Teardrop pin for selected point (weather / tap); teal with white stroke. */
+function getSelectionPinSvg(): string {
+  const fill = '#0D9488';
+  const stroke = 'white';
+  return `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C5.5 2 0 7.5 0 14c0 8 12 18 12 18s12-10 12-18C24 7.5 18.5 2 12 2zm0 10a4 4 0 100-8 4 4 0 000 8z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/></svg>`;
+}
+
+/** House icon for volunteer home location (teal, distinct from pins). Tight viewBox so anchor [0.5,1] places bottom on map point. */
+function getHomeIconSvg(): string {
+  const fill = '#0D9488';
+  const stroke = 'white';
+  return `<svg width="32" height="32" viewBox="0 0 24 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="${fill}" stroke="${stroke}" stroke-width="2"/><polygon points="9 22 9 12 15 12 15 22" fill="${stroke}" opacity="0.9"/></svg>`;
+}
+
+/** Risk value to color: green (low), yellow (mid), red (high) – e.g. choropleth. */
 function getRiskColor(risk: number): string {
   if (risk <= 1 / 3) return '#22c55e';
   if (risk <= 2 / 3) return '#eab308';
   return '#dc2626';
 }
 
-export default function MapComponent({
+/** Hazard risk points: red with opacity (low risk = faint, high risk = solid). */
+function getHazardRiskColor(risk: number): string {
+  const opacity = 0.15 + 0.85 * Math.min(1, Math.max(0, risk));
+  return `rgba(220, 38, 38, ${opacity.toFixed(2)})`;
+}
+
+/** Approximate distance in meters between two WGS84 points (Haversine). */
+function distanceMeters(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+): number {
+  const R = 6371000;
+  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
+  const dLon = ((b.longitude - a.longitude) * Math.PI) / 180;
+  const lat1 = (a.latitude * Math.PI) / 180;
+  const lat2 = (b.latitude * Math.PI) / 180;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+const AT_HOME_THRESHOLD_M = 50;
+
+const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function MapComponent({
   weatherLocation,
   vulnerableRegions = [],
   helpRequests = [],
@@ -141,13 +200,18 @@ export default function MapComponent({
   hazardRouteGeometry,
   hazardRiskPoints = [],
   onMapClick,
+  selectedPoint = null,
   fillContainer = false,
-}: MapComponentProps) {
+  regionRiskChoropleth = null,
+}, ref) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
+  const userCoordsRef = useRef<number[] | null>(null);
   const regionsLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const choroplethLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const helpLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const hazardLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const selectionLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const riskLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const homeLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const evacLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
@@ -155,12 +219,41 @@ export default function MapComponent({
   const hazardRouteLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const riskHoverPopupRef = useRef<HTMLDivElement>(null);
   const userLocationRef = useRef<HTMLDivElement>(null);
+  const lastFittedMapFocusRef = useRef<string | null>(null);
+  const locationOverlayRef = useRef<Overlay | null>(null);
+  const homeLocationRef = useRef<typeof homeLocation>(null);
+  homeLocationRef.current = homeLocation;
   const onEvacClickRef = useRef(onEvacClick);
   onEvacClickRef.current = onEvacClick;
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
   const [error, setError] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<number[] | null>(null);
+
+  userCoordsRef.current = userCoords;
+
+  useImperativeHandle(ref, () => ({
+    zoomIn() {
+      const m = mapRef.current;
+      if (!m) return;
+      const view = m.getView();
+      const z = view.getZoom();
+      if (z != null) view.animate({ zoom: z + 1 });
+    },
+    zoomOut() {
+      const m = mapRef.current;
+      if (!m) return;
+      const view = m.getView();
+      const z = view.getZoom();
+      if (z != null) view.animate({ zoom: z - 1 });
+    },
+    centerOnUser() {
+      const m = mapRef.current;
+      const coords = userCoordsRef.current;
+      if (!m || !coords) return;
+      m.getView().animate({ center: coords, zoom: 14 });
+    },
+  }), []);
 
   useEffect(() => {
     if (!mapElement.current || mapRef.current) return;
@@ -176,6 +269,7 @@ export default function MapComponent({
 
     const map = new Map({
       target: mapElement.current,
+      controls: defaults({ zoom: false }),
       layers: [
         new TileLayer({
           source: new OSM(),
@@ -192,6 +286,7 @@ export default function MapComponent({
       stopEvent: false,
     });
     map.addOverlay(locationOverlay);
+    locationOverlayRef.current = locationOverlay;
 
     // 3. Setup Geolocation
     const geolocation = new Geolocation({
@@ -205,7 +300,12 @@ export default function MapComponent({
       const coordinates = geolocation.getPosition();
       if (coordinates) {
         setUserCoords(coordinates);
-        locationOverlay.setPosition(coordinates);
+        const home = homeLocationRef.current;
+        const atHome = home && distanceMeters(
+          { latitude: toLonLat(coordinates)[1], longitude: toLonLat(coordinates)[0] },
+          home,
+        ) < AT_HOME_THRESHOLD_M;
+        locationOverlay.setPosition(atHome ? undefined : coordinates);
         // Only auto-animate if NOT focused on something specific
         if (!mapFocus) {
           view.animate({ center: coordinates, zoom: 14 });
@@ -225,7 +325,12 @@ export default function MapComponent({
           // Once permission is granted and position found, enable tracking on the map
           const coords = fromLonLat([pos.coords.longitude, pos.coords.latitude]);
           setUserCoords(coords);
-          locationOverlay.setPosition(coords);
+          const home = homeLocationRef.current;
+          const atHome = home && distanceMeters(
+            { latitude: pos.coords.latitude, longitude: pos.coords.longitude },
+            home,
+          ) < AT_HOME_THRESHOLD_M;
+          locationOverlay.setPosition(atHome ? undefined : coords);
           view.animate({ center: coords, zoom: 14 });
           geolocation.setTracking(true);
         },
@@ -238,6 +343,26 @@ export default function MapComponent({
     } else {
         setError("Geolocation is not supported by this browser.");
     }
+
+    // 3b. Setup Choropleth Layer (region risk e.g. dengue) — below other overlays, above base
+    const choroplethSource = new VectorSource();
+    const RISK_SCALE_MAX = 150;
+    const choroplethLayer = new VectorLayer({
+      source: choroplethSource,
+      zIndex: 4,
+      style: (feature) => {
+        const riskScore = feature.get('risk_score') as number | undefined;
+        const normalized = typeof riskScore === 'number' ? Math.min(1, riskScore / RISK_SCALE_MAX) : 0;
+        const color = getRiskColor(normalized);
+        const fillColor = `${color}40`;
+        return new Style({
+          fill: new Fill({ color: fillColor }),
+          stroke: new Stroke({ color, width: 1.5 }),
+        });
+      },
+    });
+    map.addLayer(choroplethLayer);
+    choroplethLayerRef.current = choroplethLayer;
 
     // 4. Setup Regions Layer
     const regionsSource = new VectorSource();
@@ -265,6 +390,15 @@ export default function MapComponent({
     });
     map.addLayer(hazardLayer);
     hazardLayerRef.current = hazardLayer;
+
+    // 5c. Setup selection pin layer (weather-at-selected-point)
+    const selectionSource = new VectorSource();
+    const selectionLayer = new VectorLayer({
+      source: selectionSource,
+      zIndex: 11,
+    });
+    map.addLayer(selectionLayer);
+    selectionLayerRef.current = selectionLayer;
 
     // 6. Setup Home Layer
     const homeSource = new VectorSource();
@@ -384,8 +518,19 @@ export default function MapComponent({
       geolocation.setTracking(false);
       map.setTarget(undefined);
       mapRef.current = null;
+      locationOverlayRef.current = null;
     };
   }, []);
+
+  // When userCoords or homeLocation change, show "you are here" overlay only when not at home
+  useEffect(() => {
+    const overlay = locationOverlayRef.current;
+    if (!overlay || !userCoords) return;
+    const [lon, lat] = toLonLat(userCoords);
+    const home = homeLocation ?? null;
+    const atHome = home && distanceMeters({ latitude: lat, longitude: lon }, home) < AT_HOME_THRESHOLD_M;
+    overlay.setPosition(atHome ? undefined : userCoords);
+  }, [userCoords, homeLocation]);
 
   // Sync map view center when weatherLocation changes, without recreating the map
   useEffect(() => {
@@ -437,6 +582,27 @@ export default function MapComponent({
 
     source.addFeatures(features);
   }, [vulnerableRegions]);
+
+  // Update Choropleth Layer (region risk e.g. dengue)
+  useEffect(() => {
+    const layer = choroplethLayerRef.current;
+    if (!layer) return;
+    const source = layer.getSource();
+    if (!source) return;
+    source.clear();
+    if (!regionRiskChoropleth?.features?.length) return;
+    const geoJsonFormat = new GeoJSON();
+    const features = geoJsonFormat.readFeatures(regionRiskChoropleth as Parameters<InstanceType<typeof GeoJSON>['readFeatures']>[0], {
+      dataProjection: 'EPSG:4326',
+      featureProjection: 'EPSG:3857',
+    });
+    features.forEach((f, i) => {
+      const geojsonFeature = regionRiskChoropleth.features[i];
+      const riskScore = geojsonFeature?.properties?.risk_score;
+      if (typeof riskScore === 'number') f.set('risk_score', riskScore);
+    });
+    source.addFeatures(features);
+  }, [regionRiskChoropleth]);
 
   // Update Help Requests Layer
   useEffect(() => {
@@ -512,7 +678,28 @@ export default function MapComponent({
     source.addFeatures(features);
   }, [hazardPins]);
 
-  // Update Hazard Risk Points Layer (color by risk: green / yellow / red)
+  // Update selection pin (weather-at-selected-point)
+  useEffect(() => {
+    if (!selectionLayerRef.current) return;
+    const source = selectionLayerRef.current.getSource();
+    if (!source) return;
+    source.clear();
+    if (!selectedPoint) return;
+    const point = new Point(fromLonLat([selectedPoint.longitude, selectedPoint.latitude]));
+    const feature = new Feature({ geometry: point });
+    feature.setStyle(
+      new Style({
+        image: new Icon({
+          src: `data:image/svg+xml;utf8,${encodeURIComponent(getSelectionPinSvg())}`,
+          scale: 1,
+          anchor: [0.5, 1],
+        }),
+      }),
+    );
+    source.addFeature(feature);
+  }, [selectedPoint]);
+
+  // Update Hazard Risk Points Layer (red with opacity by risk level)
   useEffect(() => {
     if (!riskLayerRef.current) return;
     const source = riskLayerRef.current.getSource();
@@ -523,13 +710,13 @@ export default function MapComponent({
       const point = new Point(fromLonLat([p.longitude, p.latitude]));
       const feature = new Feature({ geometry: point });
       feature.set('riskData', p);
-      const color = getRiskColor(p.risk);
+      const color = getHazardRiskColor(p.risk);
       feature.setStyle(
         new Style({
           image: new CircleStyle({
-            radius: 4,
+            radius: 6,
             fill: new Fill({ color }),
-            stroke: new Stroke({ color: '#fff', width: 1 }),
+            stroke: new Stroke({ color: 'rgba(255,255,255,0.4)', width: 1 }),
           }),
         }),
       );
@@ -548,15 +735,10 @@ export default function MapComponent({
     const feature = new Feature({ geometry: point });
     feature.setStyle(new Style({
       image: new Icon({
-        src: `data:image/svg+xml;utf8,${encodeURIComponent(`
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="#0D9488" stroke="white" stroke-width="2"/>
-            <polygon points="9 22 9 12 15 12 15 22" fill="white" opacity="0.9"/>
-          </svg>
-        `)}`,
-        scale: 1,
+        src: `data:image/svg+xml;utf8,${encodeURIComponent(getHomeIconSvg())}`,
+        scale: 1.1,
         anchor: [0.5, 1],
-      })
+      }),
     }));
     source.addFeature(feature);
   }, [homeLocation]);
@@ -585,7 +767,7 @@ export default function MapComponent({
     source.addFeatures(features);
   }, [evacuationSites]);
 
-  // Update Route / Navigation Path (OSRM – fastest)
+  // Update Route / Navigation Path (OSRM or hazard path; when hazard path exists, draw only the pin here so the green line is not duplicated)
   useEffect(() => {
     if (!routeLayerRef.current || !mapRef.current) return;
     const source = routeLayerRef.current.getSource();
@@ -593,12 +775,18 @@ export default function MapComponent({
 
     source.clear();
 
-    if (!mapFocus) return;
+    if (!mapFocus) {
+      lastFittedMapFocusRef.current = null;
+      return;
+    }
 
     const targetCoords = fromLonLat([mapFocus.longitude, mapFocus.latitude]);
     let routeCoords: number[][];
+    const useHazardPath = hazardRouteGeometry && hazardRouteGeometry.length >= 2;
 
-    if (routeGeometry && routeGeometry.length >= 2) {
+    if (useHazardPath) {
+      routeCoords = hazardRouteGeometry!.map(([lon, lat]) => fromLonLat([lon, lat]));
+    } else if (routeGeometry && routeGeometry.length >= 2) {
       routeCoords = routeGeometry.map(([lon, lat]) => fromLonLat([lon, lat]));
     } else if (userCoords) {
       routeCoords = [userCoords, targetCoords];
@@ -606,10 +794,12 @@ export default function MapComponent({
       return;
     }
 
-    const line = new Feature({
-      geometry: new LineString(routeCoords),
-    });
-    source.addFeature(line);
+    if (!useHazardPath) {
+      const line = new Feature({
+        geometry: new LineString(routeCoords),
+      });
+      source.addFeature(line);
+    }
 
     const pin = new Feature({
       geometry: new Point(targetCoords),
@@ -622,18 +812,23 @@ export default function MapComponent({
             <circle cx="16" cy="12" r="4" fill="white"/>
           </svg>
         `)}`,
-        anchor: [0.5, 1],
+        anchor: [0.5, 0],
       })
     }));
     source.addFeature(pin);
 
-    const extent = boundingExtent(routeCoords);
-    mapRef.current.getView().fit(extent, {
-      padding: [120, 80, 250, 80],
-      duration: 1000,
-      maxZoom: 16,
-    });
-  }, [mapFocus, userCoords, routeGeometry]);
+    const mapFocusKey = `${mapFocus.latitude},${mapFocus.longitude}`;
+    const shouldFit = lastFittedMapFocusRef.current !== mapFocusKey;
+    if (shouldFit) {
+      lastFittedMapFocusRef.current = mapFocusKey;
+      const extent = boundingExtent(routeCoords);
+      mapRef.current.getView().fit(extent, {
+        padding: [120, 80, 250, 80],
+        duration: 1000,
+        maxZoom: 16,
+      });
+    }
+  }, [mapFocus, userCoords, routeGeometry, hazardRouteGeometry]);
 
   // Update Hazard Route Layer (safest – green)
   useEffect(() => {
@@ -659,20 +854,13 @@ export default function MapComponent({
           className="absolute px-2 py-1 text-xs font-body text-wira-earth bg-white/95 border border-wira-teal/30 rounded shadow-lg pointer-events-none whitespace-nowrap"
           style={{ display: 'none' }}
         />
-        {/* 3D Person Pin Overlay */}
+        {/* You are here: teardrop pin overlay */}
         <div ref={userLocationRef} className={`absolute pointer-events-none ${!userCoords ? 'hidden' : ''}`}>
-          <div className="relative flex items-center justify-center -translate-y-4">
-            {/* Ping effect */}
-            <div className="absolute w-12 h-12 bg-wira-gold/40 rounded-full animate-ping"></div>
-            {/* 3D pin wrapper */}
-            <div className="relative z-10 flex flex-col items-center drop-shadow-lg">
-              {/* Head */}
-              <div className="w-4 h-4 rounded-full bg-wira-gold border-2 border-white shadow-md z-20"></div>
-              {/* Body */}
-              <div className="w-5 h-6 bg-wira-gold rounded-t-[10px] border-2 border-white shadow-md z-10 -mt-1"></div>
-              {/* Shadow */}
-              <div className="w-4 h-1.5 bg-black/40 rounded-full blur-[2px] mt-1 relative z-0"></div>
-            </div>
+          <div className="relative flex items-center justify-center drop-shadow-md">
+            <svg width="32" height="42" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C5.5 2 0 7.5 0 14c0 8 12 18 12 18s12-10 12-18C24 7.5 18.5 2 12 2zm0 10a4 4 0 100-8 4 4 0 000 8z" fill="#0D9488" stroke="white" strokeWidth="1.5"/>
+              <circle cx="12" cy="12" r="3" fill="white" opacity="0.95"/>
+            </svg>
           </div>
         </div>
 
@@ -683,4 +871,6 @@ export default function MapComponent({
         )}
     </div>
   );
-}
+});
+
+export default MapComponent;

@@ -17,6 +17,10 @@ import LLMAssistant from '../components/screens/LLMAssistant';
 import HelpDashboard from '../components/screens/HelpDashboard';
 import Profile from '../components/screens/Profile';
 import SosPage from '../components/screens/SosPage';
+import BlockchainPage from '../components/screens/BlockchainPage';
+import FloodSimulation from '../components/screens/FloodSimulation';
+import HealthOutbreaks from './screens/HealthOutbreaks';
+import PinLocationScreen from '../components/screens/PinLocationScreen';
 
 export default function MainApp() {
   const { data: session, isLoading } = useAuthControllerGetSession();
@@ -63,6 +67,7 @@ export default function MainApp() {
         <SagipHome
           onOpenMap={() => setCurrentScreen('/map')}
           onOpenChat={() => setCurrentScreen('/assistant')}
+          onOpenBlockchain={() => setCurrentScreen('/blockchain')}
         />
       );
       case '/map': return (
@@ -81,8 +86,41 @@ export default function MainApp() {
             setMapFocusLabel(null);
             setMapFocusEvac(null);
           }}
+          onNavigateToFeature={setCurrentScreen}
         />
       );
+      case '/map/flood-simulation':
+        return (
+          <FloodSimulation onNavigateToMap={() => setCurrentScreen('/map')} />
+        );
+      case '/map/health-outbreaks':
+        return (
+          <HealthOutbreaks onNavigateToMap={() => setCurrentScreen('/map')} />
+        );
+      case '/map/pin-location':
+        return (
+          <PinLocationScreen
+            initialLocation={formLocation}
+            onConfirm={(loc) => {
+              setFormLocation(loc);
+              setCurrentScreen('/map');
+            }}
+            onBack={() => setCurrentScreen('/map')}
+          />
+        );
+      case '/map/building-vulnerability':
+        return (
+          <div className="flex flex-col flex-1 items-center justify-center px-6 py-10 bg-wira-ivory wira-batik-bg">
+            <p className="text-wira-earth font-body text-center mb-4">Coming soon</p>
+            <button
+              type="button"
+              onClick={() => setCurrentScreen('/map')}
+              className="wira-btn-primary max-w-xs"
+            >
+              Back to Map
+            </button>
+          </div>
+        );
       case '/warnings': return (
         <Warnings
           onViewSafeRoute={(evac) => {
@@ -126,12 +164,17 @@ export default function MainApp() {
         />
       );
       case '/profile': return <Profile />;
-      default: return (
-        <SagipHome
-          onOpenMap={() => setCurrentScreen('/map')}
-          onOpenChat={() => setCurrentScreen('/assistant')}
-        />
+      case '/blockchain': return (
+        <BlockchainPage onBack={() => setCurrentScreen('/')} onNavigate={setCurrentScreen} />
       );
+      default:
+        return (
+          <SagipHome
+            onOpenMap={() => setCurrentScreen('/map')}
+            onOpenChat={() => setCurrentScreen('/assistant')}
+            onOpenBlockchain={() => setCurrentScreen('/blockchain')}
+          />
+        );
     }
   };
 

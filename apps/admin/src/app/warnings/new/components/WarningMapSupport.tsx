@@ -5,11 +5,12 @@ import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
-import { Draw, Modify, Snap } from 'ol/interaction';
+import { Draw, Snap } from 'ol/interaction';
 import { createBox } from 'ol/interaction/Draw';
 import { fromLonLat, toLonLat } from 'ol/proj';
 import { useEffect, useRef, useState } from 'react';
 import { GeoJSON } from 'ol/format';
+import { useI18n } from '../../../../i18n/context';
 import 'ol/ol.css';
 
 interface WarningMapSupportProps {
@@ -22,6 +23,7 @@ interface WarningMapSupportProps {
 }
 
 export default function WarningMapSupport({ onTargetChange }: WarningMapSupportProps) {
+  const { t } = useI18n();
   const mapRef = useRef<HTMLDivElement>(null);
   const olMap = useRef<Map | null>(null);
   const vectorSource = useRef(new VectorSource());
@@ -93,10 +95,8 @@ export default function WarningMapSupport({ onTargetChange }: WarningMapSupportP
         dataProjection: 'EPSG:4326',
       });
 
-      // If it's a box or polygon, we primary report the GeoJSON
-      // We can also estimate a center for convenience
+      // If it's a box or polygon, we primary report the GeoJSON and center for convenience
       const extent = geometry.getExtent();
-      const center = fromLonLat(toLonLat([(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2]));
       const lonLat = toLonLat([(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2]);
 
       onTargetChange({
@@ -117,32 +117,32 @@ export default function WarningMapSupport({ onTargetChange }: WarningMapSupportP
   return (
     <div className="warning-map-support card" style={{ padding: '0', overflow: 'hidden' }}>
       <div className="map-toolbar-row" style={{ padding: '0.5rem', background: 'var(--wira-ivory-dark)', borderBottom: '1px solid var(--wira-earth-muted)' }}>
-        <button 
-          className={`btn ${drawMode === 'box' ? 'btn-warning' : 'btn-neutral'}`} 
+        <button
+          className={`btn ${drawMode === 'box' ? 'btn-warning' : 'btn-neutral'}`}
           onClick={() => setDrawMode('box')}
         >
-          Draw Box
+          {t('warnings.map.drawBox')}
         </button>
-        <button 
-          className={`btn ${drawMode === 'polygon' ? 'btn-warning' : 'btn-neutral'}`} 
+        <button
+          className={`btn ${drawMode === 'polygon' ? 'btn-warning' : 'btn-neutral'}`}
           onClick={() => setDrawMode('polygon')}
         >
-          Draw Polygon
+          {t('warnings.map.drawPolygon')}
         </button>
-        <button 
-          className="btn btn-neutral" 
+        <button
+          className="btn btn-neutral"
           onClick={() => {
             vectorSource.current.clear();
             setDrawMode('none');
             onTargetChange({});
           }}
         >
-          Clear
+          {t('warnings.map.clear')}
         </button>
       </div>
       <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
       <p className="small muted" style={{ padding: '0.5rem' }}>
-        Click and drag to draw a box, or click points to draw a polygon (double-click to finish).
+        {t('warnings.map.hint')}
       </p>
     </div>
   );

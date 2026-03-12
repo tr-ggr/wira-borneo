@@ -1,39 +1,30 @@
-import Link from 'next/link';
+'use client';
 
-const modules = [
-  {
-    href: '/volunteers',
-    title: 'Volunteer Approvals',
-    subtitle: 'Approve or reject pending volunteer requests.',
-  },
-  {
-    href: '/warnings/new',
-    title: 'Manual Warning Dispatch',
-    subtitle: 'Compose and confirm warnings with area and radius targeting.',
-  },
-  {
-    href: '/map',
-    title: 'Hazard & Pin Map View',
-    subtitle: 'OpenLayers map with vulnerability overlays and pin statuses.',
-  },
-];
+import Link from 'next/link';
+import { useI18n } from '../i18n/context';
+
+const MODULE_HREFS = [
+  { href: '/volunteers', titleKey: 'dashboard.moduleVolunteers.title', subtitleKey: 'dashboard.moduleVolunteers.subtitle' },
+  { href: '/warnings/new', titleKey: 'dashboard.moduleWarnings.title', subtitleKey: 'dashboard.moduleWarnings.subtitle' },
+  { href: '/map', titleKey: 'dashboard.moduleMap.title', subtitleKey: 'dashboard.moduleMap.subtitle' },
+] as const;
 
 export default function HomePage() {
+  const { t } = useI18n();
+
   return (
     <section className="page-shell">
       <header className="section-header">
-        <p className="eyebrow">WIRA Admin Console</p>
-        <h1 className="title">Manual Disaster Operations / Operasi Manual</h1>
-        <p className="subtitle">
-          Warning dispatch is manual only to prevent false alarms.
-        </p>
+        <p className="eyebrow">{t('dashboard.eyebrow')}</p>
+        <h1 className="title">{t('dashboard.title')}</h1>
+        <p className="subtitle">{t('dashboard.subtitle')}</p>
       </header>
 
       <div className="grid-list">
-        {modules.map((module) => (
-          <Link key={module.href} href={module.href} className="card module-card">
-            <h2 className="card-title">{module.title}</h2>
-            <p className="muted">{module.subtitle}</p>
+        {MODULE_HREFS.map(({ href, titleKey, subtitleKey }) => (
+          <Link key={href} href={href} className="card module-card">
+            <h2 className="card-title">{t(titleKey)}</h2>
+            <p className="muted">{t(subtitleKey)}</p>
           </Link>
         ))}
       </div>

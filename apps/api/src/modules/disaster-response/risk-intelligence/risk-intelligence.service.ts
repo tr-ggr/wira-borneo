@@ -49,6 +49,7 @@ export class RiskIntelligenceService implements OnModuleInit {
       latitude,
       longitude,
       forecast_days: forecastDays,
+      current_weather: true,
       hourly: ['temperature_2m', 'precipitation_probability', 'wind_speed_10m'],
       daily: ['temperature_2m_max', 'temperature_2m_min', 'precipitation_sum'],
       timezone: 'auto',

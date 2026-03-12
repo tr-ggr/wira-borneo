@@ -5,6 +5,8 @@ import { setApiClientBaseUrl } from '@wira-borneo/api-client';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { AuthProvider } from '../lib/auth';
+import { I18nProvider } from '../i18n/context';
+import { LocaleLangSync } from '../components/LocaleLangSync';
 
 export function Providers({ children }: { children: ReactNode }) {
   const queryClient = useMemo(() => new QueryClient(), []);
@@ -17,7 +19,10 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {children}
+        <I18nProvider>
+          <LocaleLangSync />
+          {children}
+        </I18nProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

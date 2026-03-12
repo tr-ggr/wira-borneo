@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Header, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthSessionGuard } from '../../auth/auth-session.guard';
 import { AuthSessionParam } from '../../auth/auth-session.decorator';
@@ -55,6 +55,46 @@ export class EvacuationController {
       limit,
       vehicleType ?? 'driving',
       Number.isNaN(rainfallMm as number) ? undefined : rainfallMm,
+    );
+  }
+
+  @Get('hazard-route')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({
+    summary: 'Hazard-aware route between two coordinates; uses hazard server with rainfall_mm',
+  })
+  @ApiQuery({ name: 'fromLat', required: true, type: Number })
+  @ApiQuery({ name: 'fromLon', required: true, type: Number })
+  @ApiQuery({ name: 'toLat', required: true, type: Number })
+  @ApiQuery({ name: 'toLon', required: true, type: Number })
+  @ApiQuery({ name: 'rainfall_mm', required: true, type: Number })
+  async hazardRoute(
+    @Query('fromLat') fromLatStr: string,
+    @Query('fromLon') fromLonStr: string,
+    @Query('toLat') toLatStr: string,
+    @Query('toLon') toLonStr: string,
+    @Query('rainfall_mm') rainfallMmStr: string,
+  ) {
+    const fromLat = parseFloat(fromLatStr);
+    const fromLon = parseFloat(fromLonStr);
+    const toLat = parseFloat(toLatStr);
+    const toLon = parseFloat(toLonStr);
+    const rainfallMm = parseFloat(rainfallMmStr);
+    if (
+      Number.isNaN(fromLat) ||
+      Number.isNaN(fromLon) ||
+      Number.isNaN(toLat) ||
+      Number.isNaN(toLon) ||
+      Number.isNaN(rainfallMm)
+    ) {
+      return null;
+    }
+    return this.evacuationService.getHazardRoute(
+      fromLat,
+      fromLon,
+      toLat,
+      toLon,
+      rainfallMm,
     );
   }
 

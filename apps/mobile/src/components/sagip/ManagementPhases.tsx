@@ -1,4 +1,7 @@
+'use client';
+
 import { Radio, TrendingUp, Users } from 'lucide-react';
+import { useI18n } from '../../i18n/context';
 import { PhaseCard } from './PhaseCard';
 
 function IconInfo({ className }: { className?: string }) {
@@ -19,40 +22,42 @@ function IconInfo({ className }: { className?: string }) {
 }
 
 export function ManagementPhases() {
+  const { t } = useI18n();
+
   return (
     <section className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between w-full">
         <h2 className="font-sagip font-bold text-asean-blue text-lg tracking-[-0.45px] uppercase leading-7">
-          Management Phases
+          {t('home.managementPhases.title')}
         </h2>
         <button
           type="button"
           className="size-5 text-asean-blue hover:opacity-80"
-          aria-label="More information"
+          aria-label={t('home.managementPhases.ariaMoreInfo')}
         >
           <IconInfo className="size-5" />
         </button>
       </div>
       <PhaseCard
-        phaseLabel="Phase 01"
-        title="Proactive Intelligence"
-        description="Early warning systems and predictive mapping for upcoming events."
+        phaseLabel={t('home.managementPhases.phase01')}
+        title={t('home.managementPhases.proactiveTitle')}
+        description={t('home.managementPhases.proactiveDesc')}
         borderColor="yellow"
         icon={<TrendingUp className="size-10" />}
         progress={1}
       />
       <PhaseCard
-        phaseLabel="Phase 02"
-        title="Golden Hour Response"
-        description="Critical 72-hour mobilization and tactical resource deployment."
+        phaseLabel={t('home.managementPhases.phase02')}
+        title={t('home.managementPhases.goldenHourTitle')}
+        description={t('home.managementPhases.goldenHourDesc')}
         borderColor="red"
         icon={<Radio className="size-10" />}
-        liveLabel="Live Updates Available"
+        liveLabel={t('home.managementPhases.liveUpdates')}
       />
       <PhaseCard
-        phaseLabel="Phase 03"
-        title="Recovery & Trust"
-        description="Community rebuilding and strengthening institutional transparency."
+        phaseLabel={t('home.managementPhases.phase03')}
+        title={t('home.managementPhases.recoveryTitle')}
+        description={t('home.managementPhases.recoveryDesc')}
         borderColor="blue"
         icon={<Users className="size-10" />}
       />

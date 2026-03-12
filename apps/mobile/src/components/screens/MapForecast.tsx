@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 
 import {
   useRiskIntelligenceControllerGetForecast,
@@ -11,10 +11,22 @@ import {
   useRoutingControllerGetRoute,
   useEvacuationControllerAreas,
   useEvacuationControllerRoute,
-  useHazardRiskLayerControllerGetRiskLayer,
 } from '@wira-borneo/api-client';
-import MapComponent, { type EvacuationSite, type HazardRiskPoint } from '../MapComponent';
-import { X, Navigation2, MapPin, Home } from 'lucide-react';
+import MapComponent, { type EvacuationSite, type MapComponentHandle } from '../MapComponent';
+import { X, Navigation2, MapPin, Home, Plus, Minus, Locate, Layers, CloudRain, Building2, Wind, ChevronUp, ChevronDown, Activity } from 'lucide-react';
+import { useI18n } from '../../i18n/context';
+
+function weatherCodeToKey(code: number): string {
+  if (code === 0) return 'map.clear';
+  if (code <= 3) return 'map.mainlyClear';
+  if (code <= 48) return 'map.fog';
+  if (code <= 67) return 'map.rain';
+  if (code <= 77) return 'map.snow';
+  if (code <= 82) return 'map.showers';
+  if (code <= 86) return 'map.snowShowers';
+  if (code === 95) return 'map.thunderstorm';
+  return 'map.variable';
+}
 
 export type RouteOrigin = 'current' | 'home';
 
@@ -30,6 +42,7 @@ export default function MapForecast({
   onCancelRouting,
   pickLocationFor = null,
   onLocationPicked,
+  onNavigateToFeature,
 }: {
   focusedHelpRequestId: string | null;
   mapFocus: { latitude: number, longitude: number } | null;
@@ -42,10 +55,15 @@ export default function MapForecast({
   onCancelRouting: () => void;
   pickLocationFor?: 'hazard' | 'help' | null;
   onLocationPicked?: (latitude: number, longitude: number) => void;
+  onNavigateToFeature?: (path: string) => void;
 }) {
+  const { t } = useI18n();
+  const mapRef = useRef<MapComponentHandle>(null);
+  const [layersOpen, setLayersOpen] = React.useState(false);
   const [userLocation, setUserLocation] = React.useState<{ latitude: number, longitude: number } | null>(null);
   const [routeOrigin, setRouteOrigin] = React.useState<RouteOrigin>('current');
   const [selectedLocationForWeather, setSelectedLocationForWeather] = React.useState<{ latitude: number; longitude: number } | null>(null);
+  const [actionButtonsExpanded, setActionButtonsExpanded] = React.useState(false);
 
   React.useEffect(() => {
     if ('geolocation' in navigator) {
@@ -64,7 +82,7 @@ export default function MapForecast({
   });
 
   // Forecast for user-selected point on the map (shown in panel), without reloading map
-  const { data: clickedForecast } = useRiskIntelligenceControllerGetForecast(
+  const { data: clickedForecast, isLoading: isForecastLoading } = useRiskIntelligenceControllerGetForecast(
     selectedLocationForWeather ?? activeLoc,
     { query: { enabled: !!selectedLocationForWeather } },
   );
@@ -119,13 +137,6 @@ export default function MapForecast({
   );
   const hazardRouteGeometry = (hazardRouteResponse as { geometry?: { coordinates?: [number, number][] } } | undefined)?.geometry?.coordinates ?? null;
 
-  const [showRiskLayer, setShowRiskLayer] = React.useState(true);
-  const { data: riskLayerData } = useHazardRiskLayerControllerGetRiskLayer(
-    { rainfall_mm: 0 },
-    { query: { enabled: showRiskLayer } },
-  );
-  const hazardRiskPoints: HazardRiskPoint[] = Array.isArray(riskLayerData) ? (riskLayerData as HazardRiskPoint[]) : [];
-
   const { data: areasData } = useEvacuationControllerAreas();
   const areasList = Array.isArray(areasData) ? areasData : [];
   type AreaItem = { id: string; name: string; latitude: number; longitude: number; type?: string | null; capacity?: string | null; population?: string | null; source?: string | null };
@@ -165,91 +176,117 @@ export default function MapForecast({
     showHazardPins && Array.isArray(hazardPins) ? (hazardPins as any) : [];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-display font-bold wira-card-title leading-tight">Kuching, Sarawak</h1>
-        <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 rounded-full bg-status-safe"></span>
-          <p className="text-xs font-body font-medium text-wira-earth/70 uppercase tracking-wider">Status: Secure</p>
-        </div>
-      </header>
-
-      {/* Map Interactive Component */}
-      <div className="relative">
+    <div className="flex flex-col flex-1 min-h-0 animate-fade-in">
+      <div className="relative flex-1 min-h-0 flex flex-col">
         {pickLocationFor && (
-          <div className="absolute top-4 left-4 right-4 z-10 animate-slide-up">
+          <div className="absolute top-4 left-4 right-4 z-20 animate-slide-up">
             <div className="bg-wira-teal text-white rounded-2xl p-4 shadow-xl border border-wira-teal-dark">
-              <p className="text-sm font-body font-semibold">Tap map to set location</p>
+              <p className="text-sm font-body font-semibold">{t('map.tapMapSetLocation')}</p>
               <p className="text-xs font-body opacity-90 mt-0.5">
-                {pickLocationFor === 'hazard' ? 'Where is the hazard?' : 'Where do you need help?'}
+                {pickLocationFor === 'hazard' ? t('map.whereHazard') : t('map.whereHelp')}
               </p>
             </div>
           </div>
         )}
-        {/* Filters */}
-        <div className="mb-3 flex flex-wrap gap-2 items-center">
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] font-display uppercase tracking-widest text-wira-earth/60">
-              Evac types
-            </span>
-            <button
-              type="button"
-              onClick={() => setEvacTypeFilter('ALL')}
-              className={`px-2 py-1 rounded-full text-[10px] font-body ${
-                evacTypeFilter === 'ALL'
-                  ? 'bg-wira-teal text-white'
-                  : 'bg-white text-wira-earth/70 border border-wira-ivory-dark'
-              }`}
-            >
-              All
-            </button>
-            {evacTypes.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setEvacTypeFilter(t)}
-                className={`px-2 py-1 rounded-full text-[10px] font-body ${
-                  evacTypeFilter === t
-                    ? 'bg-wira-teal text-white'
-                    : 'bg-white text-wira-earth/70 border border-wira-ivory-dark'
-                }`}
-              >
-                {t}
+
+        {/* Collapsible Layers panel */}
+        {layersOpen && (
+          <div className="absolute top-4 left-4 right-4 z-20 max-w-sm animate-slide-up bg-white/95 backdrop-blur-md border border-wira-teal/20 rounded-2xl p-3 shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-display font-bold uppercase tracking-widest text-wira-teal">{t('map.layers')}</span>
+              <button type="button" onClick={() => setLayersOpen(false)} className="p-1 rounded-full hover:bg-wira-earth/5 text-wira-earth/70" aria-label={t('map.ariaCloseLayers')}>
+                <X size={14} />
               </button>
-            ))}
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-[10px] font-display uppercase tracking-widest text-wira-earth/60 w-full">{t('map.evacTypes')}</span>
+              <button type="button" onClick={() => setEvacTypeFilter('ALL')} className={`px-2 py-1 rounded-full text-[10px] font-body ${evacTypeFilter === 'ALL' ? 'bg-wira-teal text-white' : 'bg-white text-wira-earth/70 border border-wira-ivory-dark'}`}>{t('map.all')}</button>
+              {evacTypes.map((evacType) => (
+                <button key={evacType} type="button" onClick={() => setEvacTypeFilter(evacType)} className={`px-2 py-1 rounded-full text-[10px] font-body ${evacTypeFilter === evacType ? 'bg-wira-teal text-white' : 'bg-white text-wira-earth/70 border border-wira-ivory-dark'}`}>{evacType}</button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-3 mt-2 pt-2 border-t border-wira-teal/10 text-[10px] font-body text-wira-earth/70">
+              <label className="inline-flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" checked={showVulnerableRegions} onChange={(e) => setShowVulnerableRegions(e.target.checked)} className="h-3 w-3 rounded border-wira-ivory-dark" />
+                <span>{t('map.riskAreas')}</span>
+              </label>
+              <label className="inline-flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" checked={showHazardPins} onChange={(e) => setShowHazardPins(e.target.checked)} className="h-3 w-3 rounded border-wira-ivory-dark" />
+                <span>{t('map.hazardPins')}</span>
+              </label>
+            </div>
           </div>
-          <div className="flex items-center gap-2 ml-auto text-[10px] font-body text-wira-earth/70">
-            <label className="inline-flex items-center gap-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showVulnerableRegions}
-                onChange={(e) => setShowVulnerableRegions(e.target.checked)}
-                className="h-3 w-3 rounded border-wira-ivory-dark"
-              />
-              <span>Risk areas</span>
-            </label>
-            <label className="inline-flex items-center gap-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showHazardPins}
-                onChange={(e) => setShowHazardPins(e.target.checked)}
-                className="h-3 w-3 rounded border-wira-ivory-dark"
-              />
-              <span>Hazard pins</span>
-            </label>
-            <label className="inline-flex items-center gap-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showRiskLayer}
-                onChange={(e) => setShowRiskLayer(e.target.checked)}
-                className="h-3 w-3 rounded border-wira-ivory-dark"
-              />
-              <span>Risk layer</span>
-            </label>
-          </div>
+        )}
+
+        {/* Map controls overlay (top right) */}
+        <div className="absolute top-4 right-4 z-20 flex flex-col gap-1 bg-white/95 backdrop-blur-md rounded-xl border border-wira-teal/20 shadow-lg p-1">
+          <button type="button" onClick={() => mapRef.current?.zoomIn()} className="flex items-center justify-center size-11 rounded-lg hover:bg-wira-earth/5 text-wira-earth transition-colors" aria-label={t('map.ariaZoomIn')}>
+            <Plus size={20} />
+          </button>
+          <button type="button" onClick={() => mapRef.current?.zoomOut()} className="flex items-center justify-center size-11 rounded-lg hover:bg-wira-earth/5 text-wira-earth transition-colors" aria-label={t('map.ariaZoomOut')}>
+            <Minus size={20} />
+          </button>
+          <button type="button" onClick={() => mapRef.current?.centerOnUser()} className="flex items-center justify-center size-11 rounded-lg hover:bg-wira-earth/5 text-wira-earth transition-colors" aria-label={t('map.ariaCenterOnMe')}>
+            <Locate size={20} />
+          </button>
         </div>
 
-        <MapComponent 
+        {/* Layers toggle (top left when panel closed) */}
+        {!layersOpen && (
+          <button type="button" onClick={() => setLayersOpen(true)} className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-white/95 backdrop-blur-md rounded-xl border border-wira-teal/20 shadow-lg px-3 py-2.5 text-wira-earth font-body text-sm font-medium hover:bg-wira-earth/5 transition-colors" aria-label={t('map.ariaOpenLayers')}>
+            <Layers size={18} />
+            <span>{t('map.layers')}</span>
+          </button>
+        )}
+
+        {/* Collapsible FAB: Flood sim / Pin location / Vulnerability */}
+        {onNavigateToFeature && (
+          <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
+            {actionButtonsExpanded && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Close map actions"
+                  onClick={() => setActionButtonsExpanded(false)}
+                  className="fixed inset-0 z-0"
+                />
+                <div className="relative z-10 flex flex-col gap-2 animate-slide-up">
+                  <button type="button" onClick={() => { onNavigateToFeature('/map/flood-simulation'); setActionButtonsExpanded(false); }} className="flex items-center gap-2 bg-white/95 backdrop-blur-md rounded-xl border border-wira-teal/20 shadow-lg px-3 py-2.5 text-wira-earth font-sagip text-sm font-medium hover:bg-wira-teal/10 transition-colors min-h-[44px]" title={t('map.titleFloodSim')}>
+                    <CloudRain size={18} className="text-wira-teal" />
+                    <span>{t('map.floodSim')}</span>
+                  </button>
+                  <button type="button" onClick={() => { onNavigateToFeature('/map/pin-location'); setActionButtonsExpanded(false); }} className="flex items-center gap-2 bg-white/95 backdrop-blur-md rounded-xl border border-wira-teal/20 shadow-lg px-3 py-2.5 text-wira-earth font-sagip text-sm font-medium hover:bg-wira-teal/10 transition-colors min-h-[44px]" title={t('map.titlePinLocation')}>
+                    <MapPin size={18} className="text-wira-teal" />
+                    <span>{t('map.pinLocation')}</span>
+                  </button>
+                  <button type="button" onClick={() => { onNavigateToFeature('/map/building-vulnerability'); setActionButtonsExpanded(false); }} className="flex items-center gap-2 bg-white/95 backdrop-blur-md rounded-xl border border-wira-teal/20 shadow-lg px-3 py-2.5 text-wira-earth font-sagip text-sm font-medium hover:bg-wira-teal/10 transition-colors min-h-[44px]" title={t('map.titleBuildingVuln')}>
+                    <Building2 size={18} className="text-wira-teal" />
+                    <span>{t('map.vulnerability')}</span>
+                  </button>
+                  <button type="button" onClick={() => { onNavigateToFeature('/map/health-outbreaks'); setActionButtonsExpanded(false); }} className="flex items-center gap-2 bg-white/95 backdrop-blur-md rounded-xl border border-wira-teal/20 shadow-lg px-3 py-2.5 text-wira-earth font-sagip text-sm font-medium hover:bg-wira-teal/10 transition-colors min-h-[44px]" title={t('map.titleHealthOutbreaks')}>
+                    <Activity size={18} className="text-wira-teal" />
+                    <span>{t('map.healthOutbreaks')}</span>
+                  </button>
+                </div>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => setActionButtonsExpanded((prev) => !prev)}
+              aria-expanded={actionButtonsExpanded}
+              aria-label={actionButtonsExpanded ? 'Close map actions' : 'Open map actions'}
+              className="flex items-center justify-center gap-2 bg-white/95 backdrop-blur-md rounded-xl border border-wira-teal/20 shadow-lg px-3 py-2.5 text-wira-earth font-sagip text-sm font-medium hover:bg-wira-teal/10 transition-colors min-h-[44px] min-w-[44px]"
+            >
+              {actionButtonsExpanded ? <ChevronDown size={20} className="text-wira-teal" /> : <ChevronUp size={20} className="text-wira-teal" />}
+              <span className="sr-only">{actionButtonsExpanded ? 'Close' : 'Actions'}</span>
+            </button>
+          </div>
+        )}
+
+        <div className="flex-1 min-h-0 h-full rounded-none">
+        <MapComponent
+          ref={mapRef}
+          fillContainer
           weatherLocation={activeLoc} 
           vulnerableRegions={filteredVulnerableRegions} 
           helpRequests={showAllPins ? (openRequests as any) : []}
@@ -260,53 +297,86 @@ export default function MapForecast({
           evacuationSites={filteredEvacuationSites}
           onEvacClick={(evac) => {
             setMapFocus({ latitude: evac.latitude, longitude: evac.longitude });
-            setMapFocusLabel('Evacuation site');
+            setMapFocusLabel(t('map.evacuationSite'));
             setMapFocusEvac(evac);
           }}
           routeGeometry={routeGeometry}
           hazardRouteGeometry={hazardRouteGeometry}
-          hazardRiskPoints={showRiskLayer ? hazardRiskPoints : []}
           routeEta={routeEta}
+          selectedPoint={selectedLocationForWeather}
           onMapClick={
             pickLocationFor && onLocationPicked
               ? (lat, lon) => onLocationPicked(lat, lon)
               : (lat, lon) => setSelectedLocationForWeather({ latitude: lat, longitude: lon })
           }
         />
+        </div>
 
-        {/* Weather for clicked point (no map reload) */}
+        {/* Weather for clicked point — bottom, high z-index so never blocked */}
         {selectedLocationForWeather && !pickLocationFor && (
-          <div className="absolute bottom-4 left-4 right-4 z-10 animate-slide-up">
-            <div className="bg-white/90 backdrop-blur-md border border-wira-teal/20 rounded-2xl p-3 shadow-lg flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-display font-bold uppercase tracking-widest text-wira-teal">
-                  Weather at selected point
+          <div className="absolute bottom-4 left-4 right-4 z-30 animate-slide-up">
+            <div className="bg-white border border-wira-teal/30 rounded-2xl p-4 shadow-xl flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1 flex flex-col gap-1">
+                <p className="text-[10px] font-sagip font-bold uppercase tracking-widest text-wira-teal">
+                  {t('map.weatherAtPoint')}
                 </p>
-                <p className="text-[10px] font-body text-wira-earth/60">
-                  {selectedLocationForWeather.latitude.toFixed(3)},{' '}
-                  {selectedLocationForWeather.longitude.toFixed(3)}
-                </p>
-                {/* Keep this defensive: structure of forecast may change */}
-                {(() => {
-                  const f: any = clickedForecast;
-                  const temp =
-                    f?.current?.temperature ??
-                    f?.currentTemperature ??
-                    f?.summary?.temperature ??
-                    null;
-                  return temp != null ? (
-                    <p className="text-xs font-body text-wira-earth mt-0.5">
-                      Approx. temperature: {Math.round(temp)}°
+                {isForecastLoading ? (
+                  <>
+                    <p className="text-sm font-sagip font-normal text-wira-earth/70">{t('map.loadingWeather')}</p>
+                    <p className="text-[10px] font-sagip font-normal text-wira-earth/50">
+                      {selectedLocationForWeather.latitude.toFixed(3)}, {selectedLocationForWeather.longitude.toFixed(3)}
                     </p>
-                  ) : null;
-                })()}
+                  </>
+                ) : (
+                  (() => {
+                    const forecastPayload = clickedForecast as { forecast?: { current_weather?: { temperature?: number; weathercode?: number; windspeed?: number }; hourly?: { temperature_2m?: (number | null)[] } } } | null | undefined;
+                    const cw = forecastPayload?.forecast?.current_weather;
+                    const hourly = forecastPayload?.forecast?.hourly?.temperature_2m;
+                    const temp =
+                      cw?.temperature != null
+                        ? Number(cw.temperature)
+                        : Array.isArray(hourly) && hourly.length > 0 && hourly[0] != null
+                          ? Number(hourly[0])
+                          : null;
+                    const weatherCode = cw?.weathercode != null ? Number(cw.weathercode) : null;
+                    const windSpeed = cw?.windspeed != null ? Number(cw.windspeed) : null;
+                    const conditionLabel =
+                      weatherCode != null ? t(weatherCodeToKey(weatherCode)) : null;
+                    return (
+                      <>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          {temp != null && (
+                            <span className="text-xl font-sagip font-bold text-wira-earth">
+                              {Math.round(temp)}°
+                            </span>
+                          )}
+                          {conditionLabel != null && (
+                            <span className="text-sm font-sagip font-medium text-wira-earth/80">
+                              {conditionLabel}
+                            </span>
+                          )}
+                          {windSpeed != null && (
+                            <span className="flex items-center gap-1 text-sm font-sagip font-normal text-wira-earth/70">
+                              <Wind size={14} className="text-wira-teal shrink-0" />
+                              {Math.round(windSpeed)} km/h
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] font-sagip font-normal text-wira-earth/50">
+                          {selectedLocationForWeather.latitude.toFixed(3)}, {selectedLocationForWeather.longitude.toFixed(3)}
+                        </p>
+                      </>
+                    );
+                  })()
+                )}
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedLocationForWeather(null)}
-                className="h-7 w-7 rounded-full bg-wira-earth/5 flex items-center justify-center text-wira-earth/40 hover:bg-wira-earth/10 hover:text-wira-earth transition-all"
+                className="h-8 w-8 shrink-0 rounded-full bg-wira-earth/5 flex items-center justify-center text-wira-earth/50 hover:bg-wira-earth/10 hover:text-wira-earth transition-all"
+                aria-label="Close weather panel"
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -321,7 +391,7 @@ export default function MapForecast({
                 </div>
                 <div>
                   <p className="text-[10px] font-display font-bold uppercase tracking-widest text-wira-gold">
-                    Navigating to {mapFocusLabel ?? 'destination'}
+                    {t('map.navigatingTo')} {mapFocusLabel ?? t('map.destination')}
                     {mapFocusEvac?.type && ` · ${mapFocusEvac.type}`}
                   </p>
                   {(mapFocusEvac?.capacity ?? mapFocusEvac?.source) && (
@@ -330,7 +400,7 @@ export default function MapForecast({
                     </p>
                   )}
                   <p className="text-xs font-body text-wira-earth/60">
-                    Route from {routeOrigin === 'home' ? 'home' : 'current location'}
+                    {routeOrigin === 'home' ? t('map.routeFromHome') : t('map.routeFromCurrent')}
                   </p>
                   {routeEta && (
                     <p className="text-xs font-body text-wira-teal font-medium mt-0.5">
@@ -354,7 +424,7 @@ export default function MapForecast({
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-body font-bold transition-colors ${routeOrigin === 'current' ? 'bg-wira-teal text-white' : 'text-wira-earth/70 hover:bg-wira-teal/10'}`}
                 >
                   <MapPin size={14} />
-                  Current
+                  {t('map.current')}
                 </button>
                 <button
                   type="button"
@@ -362,7 +432,7 @@ export default function MapForecast({
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-body font-bold transition-colors ${routeOrigin === 'home' ? 'bg-wira-teal text-white' : 'text-wira-earth/70 hover:bg-wira-teal/10'}`}
                 >
                   <Home size={14} />
-                  Home
+                  {t('map.home')}
                 </button>
               </div>
             )}

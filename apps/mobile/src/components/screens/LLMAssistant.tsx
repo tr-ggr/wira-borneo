@@ -12,6 +12,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { useAssistantControllerInquire } from '@wira-borneo/api-client';
+import { useI18n } from '../../i18n/context';
 
 type LLMAssistantProps = {
   onOpenMap?: () => void;
@@ -44,13 +45,10 @@ const sendQuickQuestion = (
 };
 
 export default function LLMAssistant({ onOpenMap }: LLMAssistantProps) {
+  const { t } = useI18n();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: 'assistant',
-      content:
-        'Welcome to SEA-LION SAGIP. I am here to help you with evacuations, aid, or status. How can I help you today with your safety?',
-    },
+    { role: 'assistant', content: t('assistant.welcome') },
   ]);
 
   const inquire = useAssistantControllerInquire({
@@ -71,10 +69,7 @@ export default function LLMAssistant({ onOpenMap }: LLMAssistantProps) {
       onError: () => {
         setMessages((prev) => [
           ...prev,
-          {
-            role: 'assistant',
-            content: 'Sorry, the system is experiencing some issues. Please try again in a moment.',
-          },
+          { role: 'assistant', content: t('assistant.error') },
         ]);
       },
     },

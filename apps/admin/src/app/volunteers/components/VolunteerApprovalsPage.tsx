@@ -9,6 +9,7 @@ import {
   useAdminOperationsControllerGetApplicationHistory,
 } from '@wira-borneo/api-client';
 import { useState } from 'react';
+import { useI18n } from '../../../i18n/context';
 import { ActionModal } from './ActionModal';
 
 interface VolunteerApplication {
@@ -40,6 +41,7 @@ function toApplications(raw: unknown): VolunteerApplication[] {
 }
 
 export function VolunteerApprovalsPage() {
+  const { t } = useI18n();
   const [status, setStatus] = useState<VolunteerApplication['status']>('PENDING');
   const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -88,7 +90,7 @@ export function VolunteerApprovalsPage() {
 
   const handleBulkReview = (nextStatus: 'APPROVED' | 'REJECTED') => {
     if (nextStatus === 'REJECTED' && !rejectionReason) {
-      alert('Please provide a rejection reason.');
+      alert(t('volunteers.rejectionReasonRequired'));
       return;
     }
 
@@ -137,11 +139,9 @@ export function VolunteerApprovalsPage() {
   return (
     <section className="page-shell">
       <header className="section-header">
-        <p className="eyebrow">Volunteer Admin</p>
-        <h1 className="title">Volunteer Management / Pengurusan Sukarelawan</h1>
-        <p className="subtitle">
-          Review applications, manage lifecycle, and audit decisions.
-        </p>
+        <p className="eyebrow">{t('volunteers.eyebrow')}</p>
+        <h1 className="title">{t('volunteers.title')}</h1>
+        <p className="subtitle">{t('volunteers.subtitle')}</p>
       </header>
 
       <div className="card filter-row" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -153,63 +153,63 @@ export function VolunteerApprovalsPage() {
               className={`chip ${status === item ? 'chip-active' : ''}`}
               onClick={() => setStatus(item)}
             >
-              {item}
+              {t(`volunteers.status.${item}`)}
             </button>
           ))}
         </div>
         
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
-          <select 
-            className="input small" 
-            value={sortBy} 
-            onChange={(e) => setSortBy(e.target.value as any)}
+          <select
+            className="input small"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'createdAt' | 'updatedAt')}
           >
-            <option value="createdAt">Sort by Submitted Date</option>
-            <option value="updatedAt">Sort by Review Date</option>
+            <option value="createdAt">{t('volunteers.sortBySubmitted')}</option>
+            <option value="updatedAt">{t('volunteers.sortByReview')}</option>
           </select>
-          <select 
-            className="input small" 
-            value={sortOrder} 
-            onChange={(e) => setSortOrder(e.target.value as any)}
+          <select
+            className="input small"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
           >
-            <option value="desc">Newest First</option>
-            <option value="asc">Oldest First</option>
+            <option value="desc">{t('volunteers.newestFirst')}</option>
+            <option value="asc">{t('volunteers.oldestFirst')}</option>
           </select>
         </div>
       </div>
 
       {selectedIds.length > 0 && (
         <div className="card toolbar" style={{ background: 'rgba(var(--brand-primary-rgb), 0.1)', border: '1px solid var(--brand-primary)' }}>
-          <p className="mono small">{selectedIds.length} applications selected</p>
+          <p className="mono small">{t('volunteers.applicationsSelected').replace('{count}', String(selectedIds.length))}</p>
           <div className="action-row" style={{ marginTop: '0.5rem' }}>
-            <input 
-              type="text" 
-              placeholder="Reason (required for rejection)..." 
-              className="input" 
+            <input
+              type="text"
+              placeholder={t('volunteers.reasonPlaceholder')}
+              className="input"
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
             />
-            <button 
-              className="btn btn-safe" 
+            <button
+              className="btn btn-safe"
               onClick={() => handleBulkReview('APPROVED')}
               disabled={bulkReviewMutation.isPending}
             >
-              Bulk Approve
+              {t('volunteers.bulkApprove')}
             </button>
-            <button 
-              className="btn btn-critical" 
+            <button
+              className="btn btn-critical"
               onClick={() => handleBulkReview('REJECTED')}
               disabled={bulkReviewMutation.isPending}
             >
-              Bulk Reject
+              {t('volunteers.bulkReject')}
             </button>
           </div>
         </div>
       )}
 
-      {applicationsQuery.isLoading ? <p className="muted">Loading requests...</p> : null}
+      {applicationsQuery.isLoading ? <p className="muted">{t('volunteers.loadingRequests')}</p> : null}
       {applicationsQuery.error ? (
-        <p className="error-text">Unable to load volunteer requests.</p>
+        <p className="error-text">{t('volunteers.loadError')}</p>
       ) : null}
 
       <div className="grid-list">
@@ -231,13 +231,13 @@ export function VolunteerApprovalsPage() {
                 )}
                 <div style={{ flex: 1 }}>
                   <p className="mono small">ID: {application.id}</p>
-                  <h2 className="card-title">{application.user?.name ?? 'Unknown Applicant'}</h2>
-                  <p className="muted">{application.user?.email ?? 'No email available'}</p>
-                  <p className="muted">Notes: {application.notes ?? 'None'}</p>
-                  <p className="muted small">Submitted: {new Date(application.createdAt).toLocaleString()}</p>
+                  <h2 className="card-title">{application.user?.name ?? t('volunteers.unknownApplicant')}</h2>
+                  <p className="muted">{application.user?.email ?? t('volunteers.noEmail')}</p>
+                  <p className="muted">{t('volunteers.notes')}: {application.notes ?? t('volunteers.notesNone')}</p>
+                  <p className="muted small">{t('volunteers.submitted')}: {new Date(application.createdAt).toLocaleString()}</p>
                   <p className="badge-row">
                     <span className={`status-badge status-${application.status.toLowerCase()}`}>
-                      {application.status}
+                      {t(`volunteers.status.${application.status}`)}
                     </span>
                   </p>
                 </div>
@@ -257,7 +257,7 @@ export function VolunteerApprovalsPage() {
                         );
                       }}
                     >
-                      Approve
+                      {t('volunteers.approve')}
                     </button>
                     <button
                       type="button"
@@ -271,7 +271,7 @@ export function VolunteerApprovalsPage() {
                         });
                       }}
                     >
-                      Reject
+                      {t('volunteers.reject')}
                     </button>
                   </>
                 )}
@@ -289,7 +289,7 @@ export function VolunteerApprovalsPage() {
                       });
                     }}
                   >
-                    Suspend
+                    {t('volunteers.suspend')}
                   </button>
                 )}
 
@@ -306,32 +306,40 @@ export function VolunteerApprovalsPage() {
                       });
                     }}
                   >
-                    Reactivate
+                    {t('volunteers.reactivate')}
                   </button>
                 )}
 
-                <button 
+                <button
                   className="btn btn-secondary"
                   onClick={() => setShowHistoryId(showHistoryId === application.id ? null : application.id)}
                 >
-                  {showHistoryId === application.id ? 'Hide History' : 'History'}
+                  {showHistoryId === application.id ? t('volunteers.hideHistory') : t('volunteers.history')}
                 </button>
               </div>
 
               {showHistoryId === application.id && (
                 <div className="history-view small" style={{ marginTop: '1rem', background: 'var(--bg-subtle)', padding: '0.5rem', borderRadius: '4px' }}>
-                  <h3 className="mono small bold">Decision Log:</h3>
-                  {historyQuery.isLoading ? <p className="muted">Loading history...</p> : null}
+                  <h3 className="mono small bold">{t('volunteers.decisionLog')}</h3>
+                  {historyQuery.isLoading ? <p className="muted">{t('volunteers.loadingHistory')}</p> : null}
                   <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {((historyQuery.data as any)?.data ?? historyQuery.data ?? []).map((log: any) => (
-                      <li key={log.id} style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--border-subtle)' }}>
+                    {(() => {
+                      const raw = historyQuery.data as unknown;
+                      const arr = (raw && typeof raw === 'object' && 'data' in raw ? (raw as { data?: unknown[] }).data : raw) ?? [];
+                      const list = Array.isArray(arr) ? arr : [];
+                      return list.map((log: unknown) => {
+                        const l = log as { id: string; previousStatus: string; nextStatus: string; actor?: { name?: string }; createdAt: string; reason?: string };
+                        return (
+                      <li key={l.id} style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--border-subtle)' }}>
                         <p className="mono">
-                          {log.previousStatus} → <strong>{log.nextStatus}</strong>
+                          {l.previousStatus} → <strong>{l.nextStatus}</strong>
                         </p>
-                        <p className="muted">By: {log.actor?.name ?? 'System'} on {new Date(log.createdAt).toLocaleString()}</p>
-                        {log.reason && <p className="italic">"{log.reason}"</p>}
+                        <p className="muted">{t('volunteers.by')} {l.actor?.name ?? 'System'} on {new Date(l.createdAt).toLocaleString()}</p>
+                        {l.reason && <p className="italic">"{l.reason}"</p>}
                       </li>
-                    ))}
+                        );
+                      });
+                    })()}
                   </ul>
                 </div>
               )}
@@ -346,26 +354,29 @@ export function VolunteerApprovalsPage() {
         onConfirm={handleActionConfirm}
         title={
           modalConfig.actionType === 'REJECT'
-            ? 'Reject Application'
+            ? t('volunteers.modal.rejectTitle')
             : modalConfig.actionType === 'SUSPEND'
-            ? 'Suspend Volunteer'
-            : 'Reactivate Volunteer'
+            ? t('volunteers.modal.suspendTitle')
+            : t('volunteers.modal.reactivateTitle')
         }
         description={
           modalConfig.actionType === 'REJECT'
-            ? `You are rejecting the application for ${modalConfig.application?.user?.name}. This action will notify the user.`
+            ? t('volunteers.modal.rejectDescription').replace('{name}', modalConfig.application?.user?.name ?? '')
             : modalConfig.actionType === 'SUSPEND'
-            ? `You are suspending ${modalConfig.application?.user?.name}. They will no longer be able to claim requests.`
-            : `You are reactivating ${modalConfig.application?.user?.name}. They will be able to claim requests again.`
+            ? t('volunteers.modal.suspendDescription').replace('{name}', modalConfig.application?.user?.name ?? '')
+            : t('volunteers.modal.reactivateDescription').replace('{name}', modalConfig.application?.user?.name ?? '')
         }
         confirmText={
           modalConfig.actionType === 'REJECT'
-            ? 'Reject Application'
+            ? t('volunteers.modal.rejectConfirm')
             : modalConfig.actionType === 'SUSPEND'
-            ? 'Suspend Account'
-            : 'Reactivate Account'
+            ? t('volunteers.modal.suspendConfirm')
+            : t('volunteers.modal.reactivateConfirm')
         }
         type={modalConfig.actionType === 'REACTIVATE' ? 'SAFE' : 'CRITICAL'}
+        placeholder={t('volunteers.reasonPlaceholderModal')}
+        cancelText={t('common.cancel')}
+        requiredMessage={t('common.reasonRequired')}
       />
     </section>
   );

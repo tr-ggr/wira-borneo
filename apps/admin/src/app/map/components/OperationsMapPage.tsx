@@ -30,6 +30,7 @@ import {
 import { Zoom } from 'ol/control';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import 'ol/ol.css';
+import { useI18n } from '../../../i18n/context';
 import {
   filterPinStatuses,
   filterRiskLayers,
@@ -218,6 +219,7 @@ function getVulnerabilityColor(score: number): string {
 }
 
 export function OperationsMapPage() {
+  const { t } = useI18n();
   const mapTargetRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const mapViewRef = useRef<View | null>(null);
@@ -272,7 +274,7 @@ export function OperationsMapPage() {
 
   const overviewQuery = useAdminOperationsControllerMapOverview({
     query: {
-      select: (response) => toMapOverview(response?.data ?? response),
+      select: (response: unknown) => toMapOverview((response as { data?: unknown })?.data ?? response),
     },
   });
 
@@ -918,11 +920,9 @@ export function OperationsMapPage() {
   return (
     <section className="page-shell">
       <header className="section-header">
-        <p className="eyebrow">OpenLayers Operations Map</p>
-        <h1 className="title">Hazard & Pin Monitoring / Pemantauan Peta</h1>
-        <p className="subtitle">
-          ASEAN-focused operations view with user pins, hazard layers, and weather insight.
-        </p>
+        <p className="eyebrow">{t('map.eyebrow')}</p>
+        <h1 className="title">{t('map.title')}</h1>
+        <p className="subtitle">{t('map.subtitle')}</p>
       </header>
 
       <div className="map-mobile-actions">
@@ -931,37 +931,37 @@ export function OperationsMapPage() {
           className="btn btn-neutral"
           onClick={() => setIsFilterDrawerOpen((current) => !current)}
         >
-          {isFilterDrawerOpen ? 'Close Filters' : 'Open Filters'}
+          {isFilterDrawerOpen ? t('map.closeFilters') : t('map.openFilters')}
         </button>
       </div>
 
       <div className="map-layout map-layout-large">
         <aside className={`card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
-          <h2 className="card-title">Risk & Intelligence</h2>
+          <h2 className="card-title">{t('map.riskIntelligence')}</h2>
           <label className="checkbox-row">
             <input
               type="checkbox"
               checked={viewBuildingProfiles}
               onChange={(event) => setViewBuildingProfiles(event.target.checked)}
             />
-            <span>View Building Profiles (Overlay)</span>
+            <span>{t('map.viewBuildingProfiles')}</span>
           </label>
 
           {viewBuildingProfiles && (
             <div className="card-content-stack" style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
-              <p className="small muted">Data fetched dynamically based on map area.</p>
+              <p className="small muted">{t('map.dataFetchedDynamic')}</p>
               <label className="field-label">
-                Country
+                {t('map.country')}
                 <select
                   className="field"
                   value={buildingProfilingCountry}
                   onChange={(e) => setBuildingProfilingCountry(e.target.value)}
                 >
-                  <option value="brn">Brunei</option>
-                  <option value="idn">Indonesia</option>
-                  <option value="mys">Malaysia</option>
-                  <option value="phl">Philippines</option>
-                  <option value="sgp">Singapore</option>
+                  <option value="brn">{t('map.country.brn')}</option>
+                  <option value="idn">{t('map.country.idn')}</option>
+                  <option value="mys">{t('map.country.mys')}</option>
+                  <option value="phl">{t('map.country.phl')}</option>
+                  <option value="sgp">{t('map.country.sgp')}</option>
                 </select>
               </label>
               <button
@@ -970,15 +970,15 @@ export function OperationsMapPage() {
                 onClick={applyBuildingProfileFilter}
                 style={{ marginTop: '0.5rem' }}
               >
-                Apply Filter
+                {t('map.applyFilter')}
               </button>
-              <p className="small muted">Showing full detail profiles</p>
+              <p className="small muted">{t('map.showingFullDetail')}</p>
             </div>
           )}
 
           <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
  
-          <h2 className="card-title">Hazard Layers</h2>
+          <h2 className="card-title">{t('map.hazardLayers')}</h2>
           {Object.keys(hazardFilter).map((key) => (
             <label className="checkbox-row" key={key}>
               <input
@@ -988,11 +988,11 @@ export function OperationsMapPage() {
                   setHazardFilter((current) => ({ ...current, [key]: event.target.checked }))
                 }
               />
-              <span>{key}</span>
+              <span>{t(`map.hazard.${key}`) || key}</span>
             </label>
           ))}
 
-          <h2 className="card-title">Pin Status Filters</h2>
+          <h2 className="card-title">{t('map.pinStatusFilters')}</h2>
           {Object.keys(pinStatusFilter).map((key) => (
             <label className="checkbox-row" key={key}>
               <input
@@ -1002,11 +1002,11 @@ export function OperationsMapPage() {
                   setPinStatusFilter((current) => ({ ...current, [key]: event.target.checked }))
                 }
               />
-              <span>{key}</span>
+              <span>{t(`map.pinStatus.${key}`) || key}</span>
             </label>
           ))}
 
-          <h2 className="card-title">User Location Recency</h2>
+          <h2 className="card-title">{t('map.userLocationRecency')}</h2>
           {Object.keys(userFilter).map((key) => (
             <label className="checkbox-row" key={key}>
               <input
@@ -1016,40 +1016,40 @@ export function OperationsMapPage() {
                   setUserFilter((current) => ({ ...current, [key]: event.target.checked }))
                 }
               />
-              <span>{key}</span>
+              <span>{t(`map.recency.${key}`) || key}</span>
             </label>
           ))}
 
           <div className="map-toolbar-row">
             <button className="btn btn-neutral" type="button" onClick={fitToData}>
-              Fit To Data
+              {t('map.fitToData')}
             </button>
             <button className="btn btn-neutral" type="button" onClick={refocusAsean}>
-              Recenter ASEAN
+              {t('map.recenterAsean')}
             </button>
           </div>
 
           <form onSubmit={onSearchLocation} className="map-search-form">
             <label className="field-label" htmlFor="map-search">
-              Geocoding Search
+              {t('map.geocodingSearch')}
               <input
                 id="map-search"
                 className="field"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Search city or region"
+                placeholder={t('map.searchPlaceholder')}
               />
             </label>
             <button className="btn btn-warning" type="submit">
-              Find Location
+              {t('map.findLocation')}
             </button>
           </form>
 
           {geocodeQuery ? (
             <div className="selection-list map-search-results">
-              {geocodingQuery.isLoading ? <p className="muted small">Searching...</p> : null}
+              {geocodingQuery.isLoading ? <p className="muted small">{t('map.searching')}</p> : null}
               {geocodingQuery.isError ? (
-                <p className="error-text">Geocoding request failed.</p>
+                <p className="error-text">{t('map.geocodingFailed')}</p>
               ) : null}
               {geocodingResults.length > 0
                 ? geocodingResults.map((result, index) => (
@@ -1064,7 +1064,7 @@ export function OperationsMapPage() {
                   ))
                 : null}
               {!geocodingQuery.isLoading && geocodingResults.length === 0 ? (
-                <p className="muted small">No matching locations from Open-Meteo geocoding.</p>
+                <p className="muted small">{t('map.noMatchingLocations')}</p>
               ) : null}
             </div>
           ) : null}
@@ -1073,30 +1073,30 @@ export function OperationsMapPage() {
         <div className="card map-card map-card-large">
           <div className="map-legend">
             <span className="legend-item">
-              <span className="legend-dot legend-hazard" /> Hazards
+              <span className="legend-dot legend-hazard" /> {t('map.legend.hazards')}
             </span>
             <span className="legend-item">
-              <span className="legend-dot legend-pin" /> Ops Pins
+              <span className="legend-dot legend-pin" /> {t('map.legend.opsPins')}
             </span>
             <span className="legend-item">
-              <span className="legend-dot legend-user" /> User Locations
+              <span className="legend-dot legend-user" /> {t('map.legend.userLocations')}
             </span>
             <span className="legend-item">
-              <span className="legend-dot legend-help" /> Help Requests
+              <span className="legend-dot legend-help" /> {t('map.legend.helpRequests')}
             </span>
           </div>
           <div className="map-status-row">
-            <span className="chip">Hazards: {filteredRisks.length}</span>
-            <span className="chip">Pins: {filteredPins.length}</span>
-            <span className="chip">Users: {filteredUsers.length}</span>
-            <span className="chip">Help: {filteredHelpRequests.length}</span>
+            <span className="chip">{t('map.statusHazards')}: {filteredRisks.length}</span>
+            <span className="chip">{t('map.statusPins')}: {filteredPins.length}</span>
+            <span className="chip">{t('map.statusUsers')}: {filteredUsers.length}</span>
+            <span className="chip">{t('map.statusHelp')}: {filteredHelpRequests.length}</span>
           </div>
-          {overviewQuery.isLoading ? <p className="muted small">Loading map datasets...</p> : null}
+          {overviewQuery.isLoading ? <p className="muted small">{t('map.loadingDatasets')}</p> : null}
           {overviewQuery.isError ? (
             <p className="error-text">
-              Failed to load map datasets.
+              {t('map.loadError')}
               {overviewQuery.error && typeof overviewQuery.error === 'object' && 'response' in overviewQuery.error
-                ? ' Check that you are logged in as an admin.'
+                ? ` ${t('map.checkAdminLogin')}`
                 : ''}
             </p>
           ) : null}
@@ -1116,15 +1116,15 @@ export function OperationsMapPage() {
           }}>
             {hoveredBuilding && (
               <div className="popup-content">
-                <h3 className="small mono">Building Data</h3>
+                <h3 className="small mono">{t('map.buildingData')}</h3>
                 <div className="divider" style={{ margin: '0.5rem 0' }} />
                 <dl className="summary-grid" style={{ gridTemplateColumns: '1fr 1fr', fontSize: '0.75rem' }}>
-                  <dt>Stories</dt> <dd>{hoveredBuilding.stories ?? 'N/A'}</dd>
-                  <dt>Population</dt> <dd>{hoveredBuilding.total_pop?.toFixed(2) ?? 'N/A'}</dd>
-                  <dt>Children</dt> <dd>{hoveredBuilding.child_count?.toFixed(2) ?? 'N/A'}</dd>
-                  <dt>Elderly</dt> <dd>{hoveredBuilding.elderly_count?.toFixed(2) ?? 'N/A'}</dd>
-                  <dt>Vulnerability</dt> <dd><strong>{hoveredBuilding.vulnerability_score?.toFixed(2) ?? 'N/A'}</strong></dd>
-                  <dt>Risk Status</dt> <dd>{hoveredBuilding.risk_status ?? 'N/A'}</dd>
+                  <dt>{t('map.stories')}</dt> <dd>{hoveredBuilding.stories ?? 'N/A'}</dd>
+                  <dt>{t('map.population')}</dt> <dd>{hoveredBuilding.total_pop?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>{t('map.children')}</dt> <dd>{hoveredBuilding.child_count?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>{t('map.elderly')}</dt> <dd>{hoveredBuilding.elderly_count?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>{t('map.vulnerability')}</dt> <dd><strong>{hoveredBuilding.vulnerability_score?.toFixed(2) ?? 'N/A'}</strong></dd>
+                  <dt>{t('map.riskStatus')}</dt> <dd>{hoveredBuilding.risk_status ?? 'N/A'}</dd>
                 </dl>
               </div>
             )}
@@ -1132,52 +1132,52 @@ export function OperationsMapPage() {
 
           {!isMapReady ? (
             <div className="map-overlay">
-              <p className="small muted">Initializing map viewport...</p>
+              <p className="small muted">{t('map.initializingViewport')}</p>
             </div>
           ) : null}
           {!overviewQuery.isLoading && !overviewQuery.isError && !hasAnyMapData ? (
             <div className="map-overlay map-overlay-warning">
-              <p className="small">Map loaded with no overlays. Base map should still be visible.</p>
+              <p className="small">{t('map.noOverlays')}</p>
             </div>
           ) : null}
         </div>
 
         <aside className="card sidebar details-sidebar">
-          <h2 className="card-title">Selection Details</h2>
+          <h2 className="card-title">{t('map.selectionDetails')}</h2>
 
           {selectedPin ? (
             <>
-              <p className="small muted">Operational Pin</p>
+              <p className="small muted">{t('map.operationalPin')}</p>
               <dl className="summary-grid">
-                <dt>Title</dt>
+                <dt>{t('map.detailTitle')}</dt>
                 <dd>{selectedPin.title}</dd>
-                <dt>Status</dt>
+                <dt>{t('map.detailStatus')}</dt>
                 <dd>{selectedPin.status}</dd>
-                <dt>Region</dt>
-                <dd>{selectedPin.region ?? 'Unknown'}</dd>
-                <dt>Hazard</dt>
+                <dt>{t('map.detailRegion')}</dt>
+                <dd>{selectedPin.region ?? t('map.unknown')}</dd>
+                <dt>{t('map.hazard')}</dt>
                 <dd>{selectedPin.hazardType}</dd>
                 {selectedPin.reporter ? (
                   <>
-                    <dt>Reporter</dt>
+                    <dt>{t('map.reporter')}</dt>
                     <dd>{selectedPin.reporter.name}</dd>
                   </>
                 ) : null}
                 {selectedPin.note ? (
                   <>
-                    <dt>Note</dt>
+                    <dt>{t('map.note')}</dt>
                     <dd className="small">{selectedPin.note}</dd>
                   </>
                 ) : null}
-                <dt>Updated</dt>
+                <dt>{t('map.updated')}</dt>
                 <dd>{selectedPin.updatedAt ?? 'N/A'}</dd>
                 {selectedPin.reviewStatus ? (
                   <>
-                    <dt>Review</dt>
+                    <dt>{t('map.review')}</dt>
                     <dd>{selectedPin.reviewStatus}</dd>
                     {selectedPin.reviewNote ? (
                       <>
-                        <dt>Review note</dt>
+                        <dt>{t('map.reviewNote')}</dt>
                         <dd className="small">{selectedPin.reviewNote}</dd>
                       </>
                     ) : null}
@@ -1186,11 +1186,11 @@ export function OperationsMapPage() {
               </dl>
               {selectedPin.photoUrl ? (
                 <div className="summary-grid" style={{ marginTop: '0.5rem' }}>
-                  <dt>Photo</dt>
+                  <dt>{t('map.photo')}</dt>
                   <dd>
                     <img
                       src={selectedPin.photoUrl}
-                      alt="Pin attachment"
+                      alt={t('map.pinAttachment')}
                       style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
                     />
                   </dd>
@@ -1198,15 +1198,15 @@ export function OperationsMapPage() {
               ) : null}
               {selectedPin.reviewStatus !== 'APPROVED' && selectedPin.reviewStatus !== 'REJECTED' ? (
                 <div style={{ marginTop: '1rem' }}>
-                  <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>Review pin</h3>
+                  <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>{t('map.reviewPin')}</h3>
                   <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
                     <input
                       type="text"
                       className="field"
-                      placeholder="Reason (required for reject)"
+                      placeholder={t('map.reasonRequiredReject')}
                       value={pinReviewReason}
                       onChange={(e) => setPinReviewReason(e.target.value)}
-                      aria-label="Review reason"
+                      aria-label={t('map.reviewPin')}
                     />
                     <button
                       type="button"
@@ -1219,7 +1219,7 @@ export function OperationsMapPage() {
                         });
                       }}
                     >
-                      Approve
+                      {t('volunteers.approve')}
                     </button>
                     <button
                       type="button"
@@ -1232,12 +1232,12 @@ export function OperationsMapPage() {
                         });
                       }}
                     >
-                      Reject
+                      {t('volunteers.reject')}
                     </button>
                   </div>
                   {reviewPinMutation.isError ? (
                     <p className="error-text small" style={{ marginTop: '0.5rem' }}>
-                      Review failed. Please try again.
+                      {t('map.reviewFailed')}
                     </p>
                   ) : null}
                 </div>
@@ -1247,82 +1247,80 @@ export function OperationsMapPage() {
 
           {selectedUser ? (
             <>
-              <p className="small muted">User Location</p>
+              <p className="small muted">{t('map.userLocation')}</p>
               <dl className="summary-grid">
-                <dt>User ID</dt>
+                <dt>{t('map.userId')}</dt>
                 <dd className="mono small">{selectedUser.userId}</dd>
-                <dt>Region</dt>
-                <dd>{selectedUser.region ?? 'Unknown'}</dd>
-                <dt>Coordinates</dt>
+                <dt>{t('map.detailRegion')}</dt>
+                <dd>{selectedUser.region ?? t('map.unknown')}</dd>
+                <dt>{t('map.coordinates')}</dt>
                 <dd>
                   {selectedUser.latitude.toFixed(4)}, {selectedUser.longitude.toFixed(4)}
                 </dd>
-                <dt>Recency</dt>
+                <dt>{t('map.recency')}</dt>
               </dl>
             </>
           ) : null}
 
           {selectedHelpRequest ? (
             <>
-              <p className="small muted">Emergency Help Request</p>
+              <p className="small muted">{t('map.emergencyHelpRequest')}</p>
               <dl className="summary-grid">
-                <dt>Requester</dt>
+                <dt>{t('map.requester')}</dt>
                 <dd>{selectedHelpRequest.requester.name}</dd>
-                <dt>Hazard</dt>
+                <dt>{t('map.hazard')}</dt>
                 <dd>{selectedHelpRequest.hazardType}</dd>
-                <dt>Urgency</dt>
+                <dt>{t('map.urgency')}</dt>
                 <dd>
                   <span className={`chip chip-${selectedHelpRequest.urgency.toLowerCase()}`}>
                     {selectedHelpRequest.urgency}
                   </span>
                 </dd>
-                <dt>Status</dt>
+                <dt>{t('map.detailStatus')}</dt>
                 <dd>{selectedHelpRequest.status}</dd>
-                <dt>Description</dt>
+                <dt>{t('map.description')}</dt>
                 <dd className="small">{selectedHelpRequest.description}</dd>
-                <dt>Created</dt>
+                <dt>{t('map.created')}</dt>
                 <dd>{new Date(selectedHelpRequest.createdAt).toLocaleString()}</dd>
               </dl>
             </>
           ) : null}
 
           {!selectedPin && !selectedUser && !selectedHelpRequest ? (
-            <p className="muted">
-              Select an operations pin, user, or help request to inspect details.
-            </p>
+            <p className="muted">{t('map.selectPinOrUser')}</p>
           ) : null}
 
-          <h2 className="card-title">Open-Meteo Weather</h2>
+          <h2 className="card-title">{t('map.weatherTitle')}</h2>
           {selectedCoords ? (
             <p className="small muted">
               Lat {selectedCoords[1].toFixed(4)}, Lon {selectedCoords[0].toFixed(4)}
             </p>
           ) : (
-            <p className="muted small">Select a pin or user location to load weather.</p>
+            <p className="muted small">{t('map.selectPinForWeather')}</p>
           )}
 
-          {weatherQuery.isLoading ? <p className="muted">Loading forecast...</p> : null}
+          {weatherQuery.isLoading ? <p className="muted">{t('map.loadingForecast')}</p> : null}
           {weatherQuery.isError ? (
-            <p className="error-text">Unable to load weather forecast for this selection.</p>
+            <p className="error-text">{t('map.weatherError')}</p>
           ) : null}
 
           {weatherSummary ? (
             <dl className="summary-grid">
-              <dt>Current Temp</dt>
+              <dt>{t('map.currentTemp')}</dt>
               <dd>{fmt(weatherSummary.temperature)} C</dd>
-              <dt>Wind Speed</dt>
+              <dt>{t('map.windSpeed')}</dt>
               <dd>{fmt(weatherSummary.windSpeed)} km/h</dd>
-              <dt>Weather Code</dt>
+              <dt>{t('map.weatherCode')}</dt>
               <dd>{fmt(weatherSummary.weatherCode, 0)}</dd>
-              <dt>Max (Today)</dt>
+              <dt>{t('map.maxToday')}</dt>
               <dd>
                 {fmt(weatherSummary.maxTemp)} {weatherSummary.tempUnit}
               </dd>
-              <dt>Min (Today)</dt>
+              <dt>{t('map.minToday')}</dt>
               <dd>
                 {fmt(weatherSummary.minTemp)} {weatherSummary.tempUnit}
               </dd>
-              <dt>Precipitation</dt>
+              <dt>{t('map.precipitation')}</dt>
               <dd>
                 {fmt(weatherSummary.precipitation)} {weatherSummary.precipitationUnit}
               </dd>
@@ -1335,7 +1333,7 @@ export function OperationsMapPage() {
         <button
           type="button"
           className="map-drawer-backdrop"
-          aria-label="Close map filters"
+          aria-label={t('map.ariaCloseFilters')}
           onClick={() => setIsFilterDrawerOpen(false)}
         />
       ) : null}

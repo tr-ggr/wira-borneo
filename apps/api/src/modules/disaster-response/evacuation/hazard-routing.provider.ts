@@ -34,6 +34,16 @@ export interface HazardRoutingProvider {
 @Injectable()
 export class HttpHazardRoutingProvider implements HazardRoutingProvider {
   private readonly logger = new Logger(HttpHazardRoutingProvider.name);
+  private loggedNoConfig = false;
+
+  private logOnceNoConfig(): void {
+    if (!this.loggedNoConfig) {
+      this.logger.warn(
+        'HAZARD_ROUTING_SERVER_URL not set; hazard risk layer and hazard-aware routes disabled.',
+      );
+      this.loggedNoConfig = true;
+    }
+  }
 
   async getHazardAwareRoute(
     fromLat: number,
@@ -43,7 +53,10 @@ export class HttpHazardRoutingProvider implements HazardRoutingProvider {
     rainfallMm: number,
   ): Promise<HazardRouteResult | null> {
     const config = getHazardRoutingConfig();
-    if (!config) return null;
+    if (!config) {
+      this.logOnceNoConfig();
+      return null;
+    }
 
     try {
       const response = await axios.post<{
@@ -77,10 +90,18 @@ export class HttpHazardRoutingProvider implements HazardRoutingProvider {
         avgRisk: data.avg_risk ?? 0,
         totalRiskCost: data.total_risk_cost ?? 0,
       };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+    } catch (error: unknown) {
+      const url = `${config.hazardRoutingServerUrl.replace(/\/$/, '')}/route`;
+      const msg = error instanceof Error ? error.message : String(error);
+      const axiosErr = error as { code?: string; response?: { status?: number; data?: unknown } };
+      const detail =
+        axiosErr.response != null
+          ? ` status=${axiosErr.response.status} body=${JSON.stringify(axiosErr.response.data)}`
+          : axiosErr.code != null
+            ? ` code=${axiosErr.code}`
+            : '';
       this.logger.warn(
-        `Hazard routing request failed (fallback to OSRM): ${message}`,
+        `Hazard routing request failed (fallback to OSRM): ${msg} (${url})${detail}`,
       );
       return null;
     }
@@ -88,7 +109,10 @@ export class HttpHazardRoutingProvider implements HazardRoutingProvider {
 
   async getRiskPoints(rainfallMm = 0): Promise<HazardRiskPoint[]> {
     const config = getHazardRoutingConfig();
-    if (!config) return [];
+    if (!config) {
+      this.logOnceNoConfig();
+      return [];
+    }
 
     try {
       const response = await axios.get<{ points?: Array<{ lat: number; lon: number; risk: number; elevation?: number; stagnation?: number; vulnerability?: number }> }>(
@@ -104,9 +128,19 @@ export class HttpHazardRoutingProvider implements HazardRoutingProvider {
         stagnation: p.stagnation,
         vulnerability: p.vulnerability,
       }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Hazard risk-points request failed: ${message}`);
+    } catch (error: unknown) {
+      const url = `${config.hazardRoutingServerUrl.replace(/\/$/, '')}/risk-points`;
+      const msg = error instanceof Error ? error.message : String(error);
+      const axiosErr = error as { code?: string; response?: { status?: number; data?: unknown } };
+      const detail =
+        axiosErr.response != null
+          ? ` status=${axiosErr.response.status} body=${JSON.stringify(axiosErr.response.data)}`
+          : axiosErr.code != null
+            ? ` code=${axiosErr.code}`
+            : '';
+      this.logger.warn(
+        `Hazard risk-points request failed: ${msg} (${url})${detail}`,
+      );
       return [];
     }
   }

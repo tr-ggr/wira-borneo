@@ -2,20 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useAuth } from '../lib/auth';
+import { useI18n } from '../i18n/context';
+import type { Locale } from '../i18n/locales';
+import { LOCALES, LOCALE_DISPLAY, getLocaleFlagEmoji, getLocaleDisplayLabel } from '../i18n/locales';
 
-const navItems = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/volunteers', label: 'Volunteers' },
-  { href: '/warnings/new', label: 'Warnings' },
-  { href: '/map', label: 'Map' },
-];
+const NAV_HREFS = [
+  { href: '/', key: 'shell.nav.dashboard' },
+  { href: '/volunteers', key: 'shell.nav.volunteers' },
+  { href: '/warnings/new', key: 'shell.nav.warnings' },
+  { href: '/map', key: 'shell.nav.map' },
+] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
-  
+  const { t, locale, setLocale } = useI18n();
+  const [langOpen, setLangOpen] = useState(false);
+
   const isLoginPage = pathname === '/login';
 
   if (isLoginPage) {
@@ -23,7 +28,11 @@ export function Shell({ children }: { children: ReactNode }) {
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading WIRA Console...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        {t('common.loadingConsole')}
+      </div>
+    );
   }
 
   if (user && user.role !== 'admin') {
@@ -35,15 +44,15 @@ export function Shell({ children }: { children: ReactNode }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-neutral-900 mb-2">{t('shell.accessDeniedTitle')}</h1>
           <p className="text-neutral-600 mb-6">
-            You do not have administrative privileges to access this console. Please log in with an admin account.
+            {t('shell.accessDeniedMessage')}
           </p>
-          <button 
+          <button
             onClick={logout}
             className="w-full bg-neutral-900 text-white py-3 rounded-md font-medium hover:bg-neutral-800 transition-colors"
           >
-            Logout / Log Keluar
+            {t('shell.logoutButton')}
           </button>
         </div>
       </div>
@@ -54,32 +63,80 @@ export function Shell({ children }: { children: ReactNode }) {
     <>
       <div className="status-banner" role="status" aria-live="polite">
         <span className="status-dot" />
-        <span>Manual Warning Mode / Mod Amaran Manual</span>
+        <span>{t('shell.statusBanner')}</span>
       </div>
 
       <div className="app-shell">
         <aside className="side-nav">
-          <h1 className="brand-title">WIRA Admin</h1>
-          <p className="brand-subtitle">Woven Intelligence for Regional Alertness</p>
-          
+          <h1 className="brand-title">{t('shell.brandTitle')}</h1>
+          <p className="brand-subtitle">{t('shell.brandSubtitle')}</p>
+
+          <div className="language-selector-block" style={{ marginBottom: '1rem' }}>
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">{t('shell.language')}</p>
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setLangOpen((o) => !o)}
+                className="nav-link w-full text-left flex items-center gap-2"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '12px' }}
+                aria-expanded={langOpen}
+                aria-haspopup="listbox"
+                aria-label={LOCALE_DISPLAY[locale].nativeLabel ?? getLocaleDisplayLabel(locale)}
+              >
+                <span aria-hidden>{getLocaleFlagEmoji(locale)}</span>
+                <span>{getLocaleDisplayLabel(locale)}</span>
+              </button>
+              {langOpen && (
+                <ul
+                  role="listbox"
+                  className="card"
+                  style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, padding: 4, zIndex: 50, listStyle: 'none' }}
+                >
+                  {LOCALES.map((loc: Locale) => (
+                    <li key={loc}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={locale === loc}
+                        onClick={() => {
+                          setLocale(loc);
+                          setLangOpen(false);
+                        }}
+                        className="nav-link w-full text-left flex items-center gap-2"
+                        style={{ background: locale === loc ? 'rgba(13, 79, 92, 0.1)' : 'transparent', border: 'none', cursor: 'pointer', padding: '8px 12px' }}
+                      >
+                        <span aria-hidden>{LOCALE_DISPLAY[loc].flagEmoji}</span>
+                        <span>{LOCALE_DISPLAY[loc].displayLabel}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
           <div className="user-profile mb-6 p-4 bg-teal-50 rounded-lg border border-teal-100">
             <p className="text-sm font-bold text-teal-900">{user?.name}</p>
             <p className="text-xs text-teal-700">{user?.email}</p>
           </div>
 
           <nav>
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className={`nav-link ${pathname === item.href ? 'nav-link-active' : ''}`}>
-                {item.label}
+            {NAV_HREFS.map(({ href, key }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`nav-link ${pathname === href ? 'nav-link-active' : ''}`}
+              >
+                {t(key)}
               </Link>
             ))}
-            
-            <button 
+
+            <button
               onClick={logout}
               className="nav-link w-full text-left mt-8 text-neutral-500 hover:text-red-600 border-t border-neutral-100 pt-4 rounded-none"
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', padding: '12px' }}
             >
-              Logout / Log Keluar
+              {t('shell.logoutButton')}
             </button>
           </nav>
         </aside>

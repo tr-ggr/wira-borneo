@@ -12,7 +12,6 @@ import {
   HelpCircle,
   AlertTriangle,
 } from 'lucide-react';
-import { TnalakDivider } from '../sagip/TnalakDivider';
 import {
   useHelpRequestsControllerMe,
   useHelpRequestsControllerCreateSos,
@@ -163,12 +162,10 @@ export default function SosPage({ onNavigateToMap, onNavigateToRequest, onNaviga
 
   return (
     <div className="flex flex-col min-h-full bg-sagip-border/30 animate-fade-in pb-20">
-      <TnalakDivider />
-
       <div className="flex-1 flex flex-col gap-4 px-4 py-4">
         {/* Status ring with optional red countdown timer */}
         <section className="flex flex-col items-center pt-2 pb-6">
-          <div className="relative flex items-center justify-center size-64">
+          <div className="relative flex items-center justify-center size-64 shrink-0 aspect-square">
             {/* Red countdown ring (SVG) when active */}
             {isActive && (
               <svg

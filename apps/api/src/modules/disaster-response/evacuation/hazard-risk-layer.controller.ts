@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Header, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HttpHazardRoutingProvider } from './hazard-routing.provider';
 
@@ -8,6 +8,7 @@ export class HazardRiskLayerController {
   constructor(private readonly hazardProvider: HttpHazardRoutingProvider) {}
 
   @Get()
+  @Header('Cache-Control', 'no-store')
   @ApiOperation({
     summary: 'Risk points for map layer (from hazard routing server); color by risk, hover for details',
   })

@@ -1,0 +1,19 @@
+[
+  { "region_name": "BARMM", "risk_score": 10.6741721854 },
+  { "region_name": "CAR", "risk_score": 23.4323557237 },
+  { "region_name": "CARAGA", "risk_score": 11.9066827213 },
+  { "region_name": "NATIONAL CAPITAL REGION", "risk_score": 34.309700039 },
+  { "region_name": "REGION III-CENTRAL LUZON", "risk_score": 72.1735657226 },
+  { "region_name": "REGION IV-A-CALABARZON", "risk_score": 136.8289760349 },
+  { "region_name": "REGION IVB-MIMAROPA", "risk_score": 25.8017429194 },
+  { "region_name": "REGION IX-ZAMBOANGA PENINSULA", "risk_score": 46.1157894737 },
+  { "region_name": "REGION V-BICOL REGION", "risk_score": 15.8048552754 },
+  { "region_name": "REGION VI-WESTERN VISAYAS", "risk_score": 80.8347039474 },
+  { "region_name": "REGION VII-CENTRAL VISAYAS", "risk_score": 72.8552631579 },
+  { "region_name": "REGION VII-EASTERN VISAYAS", "risk_score": 31.8314144737 },
+  { "region_name": "REGION X-NORTHERN MINDANAO", "risk_score": 56.6804511278 },
+  { "region_name": "REGION XI-DAVAO REGION", "risk_score": 25.1371882086 },
+  { "region_name": "REGION XII-SOCCSKSARGEN", "risk_score": 43.4392935982 },
+  { "region_name": "REGION I-ILOCOS REGION", "risk_score": 66.4535947712 },
+  { "region_name": "REGION II-CAGAYAN VALLEY", "risk_score": 37.3671023965 }
+]

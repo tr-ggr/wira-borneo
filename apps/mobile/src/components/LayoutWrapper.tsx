@@ -2,20 +2,41 @@
 
 import React, { useState } from 'react';
 import { Home, AlertTriangle, MapPin, User, Siren } from 'lucide-react';
-import { MobileHeader } from './sagip/MobileHeader';
-import { TnalakDivider } from './sagip/TnalakDivider';
-import { MenuDrawer } from './sagip/MenuDrawer';
 import {
-  LanguageSelector,
-  type LanguageOption,
-} from './sagip/LanguageSelector';
+  MobileHeader,
+  type MobileHeaderConfig,
+} from './sagip/MobileHeader';
+import { MenuDrawer } from './sagip/MenuDrawer';
+import { LanguageSelector } from './sagip/LanguageSelector';
+import { useI18n } from '../i18n/context';
+import { getLocaleDisplayLabel, getLocaleFlagEmoji } from '../i18n/locales';
 
-const SCREEN_TITLES: Record<string, string> = {
-  '/map': 'Map',
-  '/warnings': 'Alerts',
-  '/help': 'Help',
-  '/profile': 'Mobile/Profile',
-};
+function buildHeaderConfig(t: (key: string) => string): Record<string, MobileHeaderConfig> {
+  const systemsOnline = { label: t('header.systemsOnline'), dotColor: 'green' as const };
+  const mapConfig: MobileHeaderConfig = { title: t('header.titleMap'), status: systemsOnline, showDivider: true };
+  const defaultConfig: MobileHeaderConfig = { title: t('header.titleWira'), status: systemsOnline, showDivider: true };
+  return {
+    '/': { title: t('header.titleSagip'), showDivider: true },
+    '/sos': { title: t('header.titleSagip'), showSecurePill: true, showDivider: true },
+    '/assistant': {
+      title: t('header.titleSeaLionSagip'),
+      icon: 'message',
+      status: { label: t('header.aiResponderActive'), dotColor: 'green' },
+      showDivider: true,
+    },
+    '/map': mapConfig,
+    '/map/flood-simulation': mapConfig,
+    '/map/pin-location': mapConfig,
+    '/map/building-vulnerability': mapConfig,
+    '/map/health-outbreaks': mapConfig,
+    '/warnings': { title: t('header.titleAlerts'), status: systemsOnline, showDivider: true },
+    '/help': { title: t('header.titleHelp'), status: systemsOnline, showDivider: true },
+    '/profile': { title: t('header.titleProfile'), status: systemsOnline, showDivider: true },
+    '/family': { title: t('header.titleFamily'), status: systemsOnline, showDivider: true },
+    '/blockchain': { title: t('header.titleBlockchain'), status: systemsOnline, showDivider: true },
+    __default: defaultConfig,
+  };
+}
 
 export default function LayoutWrapper({
   children,
@@ -30,67 +51,29 @@ export default function LayoutWrapper({
   showNav?: boolean;
   onSignOut?: () => void;
 }) {
+  const { t, locale } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
-  const [language, setLanguage] = useState<LanguageOption>('ENg');
 
   const isHome = currentPath === '/';
-  const isSos = currentPath === '/sos';
   const isAssistant = currentPath === '/assistant';
-  const showTnalak = isHome || isAssistant || currentPath === '/profile';
+  const isMapScreen = currentPath === '/map' || currentPath.startsWith('/map/');
+  const configMap = buildHeaderConfig(t);
+  const headerConfig =
+    configMap[currentPath] ?? (isMapScreen ? configMap['/map'] : configMap.__default);
+  const headerLangLocale = isAssistant ? 'ceb' : locale;
+  const headerLanguageLabel = `${getLocaleFlagEmoji(headerLangLocale)} ${getLocaleDisplayLabel(headerLangLocale)}`;
 
-  const headerLanguageLabel = isAssistant ? 'BISAYA' : language;
-
-  const renderHeader = () => {
-    if (isHome) {
-      return (
-        <MobileHeader
-          languageLabel={headerLanguageLabel}
-          onMenuClick={() => setMenuOpen(true)}
-          onLanguageClick={() => setLanguageOpen(true)}
-        />
-      );
-    }
-    if (isSos) {
-      return (
-        <MobileHeader
-          showSecurePill
-          languageLabel={headerLanguageLabel}
-          onMenuClick={() => setMenuOpen(true)}
-          onLanguageClick={() => setLanguageOpen(true)}
-        />
-      );
-    }
-    if (isAssistant) {
-      return (
-        <MobileHeader
-          title="SEA-LION SAGIP"
-          icon="message"
-          status={{ label: 'AI Responder Active', dotColor: 'green' }}
-          languageLabel={headerLanguageLabel}
-          onMenuClick={() => setMenuOpen(true)}
-          onLanguageClick={() => setLanguageOpen(true)}
-        />
-      );
-    }
-    const title = SCREEN_TITLES[currentPath] ?? 'WIRA';
-    return (
+  return (
+    <div className={`flex flex-col overflow-hidden ${isMapScreen ? 'w-full max-w-full h-screen' : 'h-screen'} ${isHome || isAssistant ? 'bg-[var(--sagip-bg)]' : 'bg-wira-ivory wira-batik-bg'}`}>
       <MobileHeader
-        title={title}
-        status={{ label: 'Systems Online' }}
+        {...headerConfig}
         languageLabel={headerLanguageLabel}
         onMenuClick={() => setMenuOpen(true)}
         onLanguageClick={() => setLanguageOpen(true)}
       />
-    );
-  };
 
-  return (
-    <div className={`flex flex-col h-screen overflow-hidden ${isHome || isAssistant ? 'bg-[var(--sagip-bg)]' : 'bg-wira-ivory wira-batik-bg'}`}>
-      {renderHeader()}
-      {showTnalak && <TnalakDivider />}
-
-      <main className={`flex-1 ${showNav ? 'mobile-nav-safe' : 'pb-4'} ${isHome || isAssistant ? '' : 'px-4'} pt-0 ${isAssistant ? 'overflow-hidden min-h-0' : 'overflow-y-auto'} w-full max-w-md mx-auto scroll-smooth`}>
+      <main className={`flex-1 flex flex-col min-h-0 min-w-0 overflow-x-hidden ${showNav ? 'mobile-nav-safe' : 'pb-4'} ${isHome || isAssistant ? '' : isMapScreen ? 'px-0' : 'px-4'} pt-0 ${isAssistant ? 'overflow-hidden min-h-0' : isMapScreen ? 'overflow-hidden' : 'overflow-y-auto'} w-full ${isMapScreen ? 'max-w-none' : 'max-w-md mx-auto'} scroll-smooth`}>
         {children}
       </main>
 
@@ -104,8 +87,6 @@ export default function LayoutWrapper({
       <LanguageSelector
         open={languageOpen}
         onClose={() => setLanguageOpen(false)}
-        currentLanguage={language}
-        onSelect={setLanguage}
       />
 
       {showNav && (
@@ -118,7 +99,7 @@ export default function LayoutWrapper({
           >
             <Home className={`size-5 shrink-0 ${currentPath === '/' ? 'text-asean-blue' : 'text-slate-400'}`} />
             <span className={`font-sagip font-bold text-[9px] tracking-widest uppercase truncate w-full text-center ${currentPath === '/' ? 'text-asean-blue' : 'text-slate-400'}`}>
-              Home
+              {t('nav.home')}
             </span>
           </button>
 
@@ -130,7 +111,7 @@ export default function LayoutWrapper({
           >
             <AlertTriangle className={`size-5 shrink-0 ${currentPath === '/warnings' ? 'text-asean-blue' : 'text-slate-400'}`} />
             <span className={`font-sagip font-bold text-[9px] tracking-widest uppercase truncate w-full text-center ${currentPath === '/warnings' ? 'text-asean-blue' : 'text-slate-400'}`}>
-              Alerts
+              {t('nav.alerts')}
             </span>
           </button>
 
@@ -139,7 +120,7 @@ export default function LayoutWrapper({
               type="button"
               onClick={() => onNavigate('/sos')}
               className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center justify-center size-14 rounded-full bg-asean-red border-4 border-white shadow-[0_10px_15px_-3px_rgba(253,24,19,0.4),0_4px_6px_-4px_rgba(253,24,19,0.4)] p-1 text-white hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-red focus-visible:ring-offset-2"
-              aria-label="Emergency SOS"
+              aria-label={t('aria.emergencySos')}
             >
               <Siren className="size-6" />
             </button>
@@ -149,11 +130,11 @@ export default function LayoutWrapper({
             type="button"
             onClick={() => onNavigate('/map')}
             className="flex flex-col gap-0.5 items-center shrink-0 min-w-0 max-w-[72px] focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-blue focus-visible:ring-offset-2 rounded-lg"
-            aria-current={currentPath === '/map' ? 'page' : undefined}
+            aria-current={currentPath === '/map' || currentPath.startsWith('/map/') ? 'page' : undefined}
           >
-            <MapPin className={`size-5 shrink-0 ${currentPath === '/map' ? 'text-asean-blue' : 'text-slate-400'}`} />
-            <span className={`font-sagip font-bold text-[9px] tracking-widest uppercase truncate w-full text-center ${currentPath === '/map' ? 'text-asean-blue' : 'text-slate-400'}`}>
-              Map
+            <MapPin className={`size-5 shrink-0 ${currentPath === '/map' || currentPath.startsWith('/map/') ? 'text-asean-blue' : 'text-slate-400'}`} />
+            <span className={`font-sagip font-bold text-[9px] tracking-widest uppercase truncate w-full text-center ${currentPath === '/map' || currentPath.startsWith('/map/') ? 'text-asean-blue' : 'text-slate-400'}`}>
+              {t('nav.map')}
             </span>
           </button>
 
@@ -165,7 +146,7 @@ export default function LayoutWrapper({
           >
             <User className={`size-5 shrink-0 ${currentPath === '/profile' ? 'text-asean-blue' : 'text-slate-400'}`} />
             <span className={`font-sagip font-bold text-[9px] tracking-widest uppercase truncate w-full text-center ${currentPath === '/profile' ? 'text-asean-blue' : 'text-slate-400'}`}>
-              Profile
+              {t('nav.profile')}
             </span>
           </button>
         </nav>
