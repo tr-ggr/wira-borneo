@@ -465,36 +465,6 @@
         ]
       }
     },
-    "/api/help-requests/sos": {
-      "post": {
-        "operationId": "HelpRequestsController_createSos",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSosDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "One-tap SOS: create help request with current location only",
-        "tags": [
-          "help-requests"
-        ]
-      }
-    },
     "/api/help-requests/me": {
       "get": {
         "operationId": "HelpRequestsController_me",
@@ -698,101 +668,14 @@
               ],
               "type": "string"
             }
-          },
-          {
-            "name": "rainfall_mm",
-            "required": false,
-            "in": "query",
-            "description": "Rainfall in mm; when provided and hazard server configured, returns hazard-aware safest routes",
-            "schema": {
-              "type": "number"
-            }
           }
         ],
         "responses": {
           "200": {
-            "description": "List of nearest evacuation areas with optional route and risk metrics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NearestEvacResponseDto"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "summary": "Nearest evacuation sites; with rainfall_mm uses hazard-aware routing (safest first)",
-        "tags": [
-          "evacuation"
-        ]
-      }
-    },
-    "/api/evacuation/route": {
-      "get": {
-        "operationId": "EvacuationController_route",
-        "parameters": [
-          {
-            "name": "latitude",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "longitude",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "evacuationAreaId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "vehicleType",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "enum": [
-                "driving",
-                "walking",
-                "cycling"
-              ],
-              "type": "string"
-            }
-          },
-          {
-            "name": "rainfall_mm",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Route to the evacuation area with optional hazard metrics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RouteToAreaResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Route to a specific evacuation area; optional hazard-aware when rainfall_mm provided",
+        "summary": "Nearest evacuation sites by distance, top 5 re-sorted by OSRM duration",
         "tags": [
           "evacuation"
         ]
@@ -815,30 +698,6 @@
         "summary": "Get warning-context route suggestions to shelters",
         "tags": [
           "evacuation"
-        ]
-      }
-    },
-    "/api/hazard-risk-layer": {
-      "get": {
-        "operationId": "HazardRiskLayerController_getRiskLayer",
-        "parameters": [
-          {
-            "name": "rainfall_mm",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Array of risk points (latitude, longitude, risk, elevation, etc.)"
-          }
-        },
-        "summary": "Risk points for map layer (from hazard routing server); color by risk, hover for details",
-        "tags": [
-          "hazard-risk-layer"
         ]
       }
     },
@@ -1193,6 +1052,26 @@
         ]
       }
     },
+    "/api/admin/assets/registry": {
+      "get": {
+        "operationId": "AdminOperationsController_getAssetRegistry",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List volunteered assets (users who registered assets for disaster use)",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
     "/api/admin/warnings": {
       "post": {
         "operationId": "AdminOperationsController_createWarning",
@@ -1218,74 +1097,6 @@
           }
         ],
         "summary": "Manually create and dispatch warning event",
-        "tags": [
-          "admin-operations"
-        ]
-      }
-    },
-    "/api/admin/warnings/{id}": {
-      "patch": {
-        "operationId": "AdminOperationsController_updateWarning",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateWarningDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update an existing warning event",
-        "tags": [
-          "admin-operations"
-        ]
-      }
-    },
-    "/api/admin/warnings/{id}/cancel": {
-      "post": {
-        "operationId": "AdminOperationsController_cancelWarning",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Cancel an active warning event",
         "tags": [
           "admin-operations"
         ]
@@ -1619,34 +1430,6 @@
       }
     },
     "/api/pins": {
-      "get": {
-        "operationId": "PinsController_findVisible",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of pins",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/VisiblePinDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List hazard pins visible to the current user (approved + own)",
-        "tags": [
-          "pins"
-        ]
-      },
       "post": {
         "operationId": "PinsController_create",
         "parameters": [],
@@ -2035,129 +1818,9 @@
         "type": "object",
         "properties": {}
       },
-      "CreateSosDto": {
-        "type": "object",
-        "properties": {}
-      },
       "UpdateHelpRequestStatusDto": {
         "type": "object",
         "properties": {}
-      },
-      "NearestEvacResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "latitude": {
-            "type": "number"
-          },
-          "longitude": {
-            "type": "number"
-          },
-          "address": {
-            "type": "object",
-            "nullable": true
-          },
-          "region": {
-            "type": "object",
-            "nullable": true
-          },
-          "type": {
-            "type": "object",
-            "nullable": true
-          },
-          "capacity": {
-            "type": "object",
-            "nullable": true
-          },
-          "population": {
-            "type": "object",
-            "nullable": true
-          },
-          "source": {
-            "type": "object",
-            "nullable": true
-          },
-          "durationSeconds": {
-            "type": "number"
-          },
-          "distanceMeters": {
-            "type": "number"
-          },
-          "geometry": {
-            "type": "object",
-            "description": "Route geometry when hazard-aware or OSRM route is available",
-            "example": {
-              "type": "LineString",
-              "coordinates": [
-                [
-                  123.9,
-                  10.3
-                ],
-                [
-                  123.91,
-                  10.31
-                ]
-              ]
-            }
-          },
-          "avgRisk": {
-            "type": "number",
-            "description": "Average risk (0–1) along the path; present when hazard-aware routing was used"
-          },
-          "totalRiskCost": {
-            "type": "number",
-            "description": "Total risk cost; present when hazard-aware routing was used"
-          },
-          "hazardAware": {
-            "type": "boolean",
-            "description": "True when route was computed by the hazard-aware routing service"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "latitude",
-          "longitude"
-        ]
-      },
-      "RouteToAreaResponseDto": {
-        "type": "object",
-        "properties": {
-          "evacuationArea": {
-            "type": "object",
-            "description": "Evacuation area summary"
-          },
-          "geometry": {
-            "type": "object",
-            "description": "Route geometry (LineString)"
-          },
-          "durationSeconds": {
-            "type": "number"
-          },
-          "distanceMeters": {
-            "type": "number"
-          },
-          "avgRisk": {
-            "type": "number",
-            "description": "Average risk when hazard-aware"
-          },
-          "totalRiskCost": {
-            "type": "number",
-            "description": "Total risk cost when hazard-aware"
-          },
-          "hazardAware": {
-            "type": "boolean",
-            "description": "True when hazard-aware routing was used"
-          }
-        },
-        "required": [
-          "evacuationArea"
-        ]
       },
       "AssistantInquiryDto": {
         "type": "object",
@@ -2262,10 +1925,6 @@
         "type": "object",
         "properties": {}
       },
-      "UpdateWarningDto": {
-        "type": "object",
-        "properties": {}
-      },
       "ReviewPinDto": {
         "type": "object",
         "properties": {
@@ -2291,51 +1950,6 @@
       "Object": {
         "type": "object",
         "properties": {}
-      },
-      "VisiblePinDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "latitude": {
-            "type": "number"
-          },
-          "longitude": {
-            "type": "number"
-          },
-          "title": {
-            "type": "string"
-          },
-          "hazardType": {
-            "type": "string",
-            "enum": [
-              "FLOOD",
-              "TYPHOON",
-              "EARTHQUAKE",
-              "AFTERSHOCK"
-            ]
-          },
-          "reviewStatus": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "APPROVED",
-              "REJECTED"
-            ]
-          },
-          "reporterId": {
-            "type": "object",
-            "description": "Set when the pin was reported by the current user"
-          }
-        },
-        "required": [
-          "id",
-          "latitude",
-          "longitude",
-          "title",
-          "hazardType"
-        ]
       },
       "CreatePinDto": {
         "type": "object",

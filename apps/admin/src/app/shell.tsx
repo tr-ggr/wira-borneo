@@ -96,6 +96,11 @@ export function Shell({ children }: { children: ReactNode }) {
   const { user, logout, isLoading } = useAuth();
   
   const isLoginPage = pathname === '/login';
+  const isDashboardPage = pathname === '/';
+  const useWhiteMainContent =
+    isDashboardPage ||
+    pathname?.startsWith('/volunteers') ||
+    pathname?.startsWith('/warnings');
 
   if (isLoginPage) {
     return <main>{children}</main>;
@@ -272,7 +277,11 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </aside>
-        <main className={`main-content${pathname?.startsWith('/volunteers') || pathname?.startsWith('/warnings') ? ' main-content-white' : ''}`}>{children}</main>
+        <main
+          className={`main-content${useWhiteMainContent ? ' main-content-white' : ''}`}
+        >
+          {children}
+        </main>
       </div>
     </>
   );
