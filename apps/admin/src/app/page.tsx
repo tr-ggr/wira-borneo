@@ -389,19 +389,33 @@ export default function HomePage() {
                   </div>
                 </article>
 
-                <article className="relative col-span-12 h-[380px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-8">
+                <article className="relative col-span-12 min-h-[380px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-8 lg:h-[380px]">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#dbeafe,transparent_35%),radial-gradient(circle_at_80%_80%,#fee2e2,transparent_40%),linear-gradient(120deg,#f8fafc_0%,#eef2ff_100%)]" />
                   <div className="relative flex h-full flex-col justify-between p-6">
+                    <div className="ml-auto w-fit rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-xs font-semibold text-slate-700">
+                      <p className="mb-1">Legend</p>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block size-2 rounded-full bg-[#e73c08]" />{' '}
+                        Critical
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block size-2 rounded-full bg-[#193ce6]" />{' '}
+                        Active Response
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block size-2 rounded-full bg-[#ffcc00]" />{' '}
+                        Monitoring
+                      </div>
+                    </div>
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
                         Operations Map Summary
                       </p>
                       <h3 className="mt-2 text-2xl font-black text-slate-900">
-                        Manila Command View
+                        Map Command View
                       </h3>
                       <p className="mt-2 max-w-xl text-sm text-slate-600">
-                        Pulled from /admin/map/overview using current pin
-                        statuses, vulnerable regions, and active help requests.
+
                       </p>
                     </div>
 
@@ -429,22 +443,6 @@ export default function HomePage() {
                         <p className="mt-1 text-2xl font-black text-slate-900">
                           {overview.userLocations.length}
                         </p>
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-6 left-6 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-xs font-semibold text-slate-700">
-                      <p className="mb-1">Legend</p>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block size-2 rounded-full bg-[#e73c08]" />{' '}
-                        Critical
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block size-2 rounded-full bg-[#193ce6]" />{' '}
-                        Active Response
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block size-2 rounded-full bg-[#ffcc00]" />{' '}
-                        Monitoring
                       </div>
                     </div>
                   </div>
