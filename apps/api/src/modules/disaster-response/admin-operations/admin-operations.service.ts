@@ -234,6 +234,39 @@ export class AdminOperationsService {
     });
   }
 
+  async getAssetRegistry() {
+    const users = await this.prisma.user.findMany({
+      where: {
+        assets: { not: null },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        assets: true,
+        volunteerProfile: {
+          select: { status: true },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return users
+      .filter((u) => {
+        const a = u.assets;
+        return Array.isArray(a) && a.length > 0 && a.every((x) => typeof x === 'string');
+      })
+      .map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        createdAt: u.createdAt,
+        assets: u.assets as string[],
+        volunteerStatus: u.volunteerProfile?.status ?? null,
+      }));
+  }
+
   async getApplicationHistory(applicationId: string) {
     return this.prisma.volunteerDecisionLog.findMany({
       where: { volunteerApplicationId: applicationId },

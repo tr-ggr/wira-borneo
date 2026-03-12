@@ -116,7 +116,7 @@ export default function WarningMapSupport({ onTargetChange }: WarningMapSupportP
 
   return (
     <div className="warning-map-support card" style={{ padding: '0', overflow: 'hidden' }}>
-      <div className="map-toolbar-row" style={{ padding: '0.5rem', background: 'var(--wira-ivory-dark)', borderBottom: '1px solid var(--wira-earth-muted)' }}>
+      <div className="map-toolbar-row" style={{ padding: '0.5rem', background: '#ffffff', borderBottom: '1px solid var(--wira-earth-muted)' }}>
         <button 
           className={`btn ${drawMode === 'box' ? 'btn-warning' : 'btn-neutral'}`} 
           onClick={() => setDrawMode('box')}

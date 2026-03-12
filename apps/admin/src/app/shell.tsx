@@ -7,7 +7,7 @@ import { useAuth } from '../lib/auth';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: 'home' as const },
-  { href: '/volunteers', label: 'Volunteers', icon: 'users' as const },
+  { href: '/volunteers', label: 'Resources', icon: 'users' as const },
   { href: '/warnings/new', label: 'Warnings', icon: 'alert' as const },
   { href: '/map', label: 'Map', icon: 'map' as const },
 ] as const;
@@ -131,20 +131,104 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <div className="status-banner" role="status" aria-live="polite">
-        <span className="status-dot" />
-        <span>Manual Warning Mode / Mod Amaran Manual</span>
-      </div>
+      <header className="top-header">
+        <div className="top-header-left">
+          <div className="top-header-logo" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="6.5" />
+              <path d="M12 5v3" />
+              <path d="M12 16v3" />
+              <path d="M5 12h3" />
+              <path d="M16 12h3" />
+            </svg>
+          </div>
+          <div className="top-header-text">
+            <div className="top-header-title">
+              <span>SAGIP </span>
+              <span className="top-header-title-accent">Command Center</span>
+            </div>
+            <p className="top-header-tagline">SAVE. AID. GUIDE. INFORM. PROTECT.</p>
+          </div>
+          <div className="top-header-divider" aria-hidden="true" />
+        </div>
+        <div className="top-header-spacer" />
+        <div className="top-header-right">
+          <button
+            type="button"
+            className="top-header-lang-pill"
+            aria-label="Language: English"
+          >
+            <span className="top-header-lang-icon" aria-hidden="true">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 5h7" />
+                <path d="M7.5 4v6" />
+                <path d="M5 10h5" />
+                <path d="M14 5l5 10" />
+                <path d="M14 15h6" />
+              </svg>
+            </span>
+            <span className="top-header-lang-text">ENGLISH</span>
+          </button>
+
+          <button
+            type="button"
+            className="top-header-notif-btn"
+            aria-label="Notifications"
+          >
+            <span className="top-header-notif-icon" aria-hidden="true">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 16v-5a6 6 0 0 0-12 0v5" />
+                <path d="M5 16h14" />
+                <path d="M10 19a2 2 0 0 0 4 0" />
+              </svg>
+            </span>
+            <span className="top-header-notif-badge" />
+          </button>
+        </div>
+        <div className="top-header-ticker" aria-hidden="true">
+          <span className="top-header-ticker-segment top-header-ticker-red" />
+          <span className="top-header-ticker-segment top-header-ticker-yellow" />
+          <span className="top-header-ticker-segment top-header-ticker-blue" />
+          <span className="top-header-ticker-segment top-header-ticker-red-asean" />
+          <span className="top-header-ticker-segment top-header-ticker-yellow" />
+        </div>
+      </header>
 
       <div className="app-shell">
         <aside className="side-nav">
           <div>
-            <h1 className="brand-title">WIRA Admin</h1>
-            <p className="brand-subtitle">Woven Intelligence for Regional Alertness</p>
-
             <nav>
               {navItems.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== '/' && pathname?.startsWith(item.href + '/'));
                 return (
                   <Link
                     key={item.href}
@@ -188,7 +272,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </aside>
-        <main className="main-content">{children}</main>
+        <main className={`main-content${pathname?.startsWith('/volunteers') || pathname?.startsWith('/warnings') ? ' main-content-white' : ''}`}>{children}</main>
       </div>
     </>
   );

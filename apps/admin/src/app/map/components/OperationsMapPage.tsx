@@ -51,8 +51,8 @@ interface RegionRisk {
 interface PinStatus {
   id: string;
   title: string;
-  hazardType: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
-  status: 'OPEN' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'RESOLVED';
+  hazardType: 'Flood' | 'Typhoon' | 'Earthquake' | 'Aftershock';
+  status: 'Open' | 'Acknowledged' | 'In Progresss' | 'Resolved';
   latitude: number;
   longitude: number;
   region?: string | null;
@@ -206,6 +206,15 @@ function fmt(value: number | string | null | undefined, digits = 1): string {
   }
 
   return String(value);
+}
+
+function labelizeKey(key: string): string {
+  return key
+    .toLowerCase()
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function getVulnerabilityColor(score: number): string {
@@ -584,10 +593,20 @@ export function OperationsMapPage() {
     });
     resizeObserver.observe(targetElement);
 
-    requestAnimationFrame(() => {
+    const scheduleUpdateSize = () => {
+      requestAnimationFrame(() => {
+        mapRef.current?.updateSize();
+        requestAnimationFrame(() => {
+          mapRef.current?.updateSize();
+          setIsMapReady(true);
+        });
+      });
+    };
+    scheduleUpdateSize();
+    // Re-run after layout has settled (nested flex/grid can delay initial size).
+    const timeoutId = window.setTimeout(() => {
       mapRef.current?.updateSize();
-      setIsMapReady(true);
-    });
+    }, 150);
 
     const map = mapRef.current;
     if (!map) return;
@@ -672,6 +691,7 @@ export function OperationsMapPage() {
     });
 
     return () => {
+      window.clearTimeout(timeoutId);
       resizeObserver.disconnect();
       mapRef.current?.setTarget(undefined);
       mapRef.current = null;
@@ -917,13 +937,16 @@ export function OperationsMapPage() {
     }
   }, [viewBuildingProfiles]);
 
+  const hasCriticalRisks = filteredRisks.some((r) => r.severity === 'CRITICAL');
+
   return (
-    <section className="page-shell">
-      <header className="section-header">
-        <p className="eyebrow">OpenLayers Operations Map</p>
-        <h1 className="title">Hazard & Pin Monitoring / Pemantauan Peta</h1>
-        <p className="subtitle">
-          ASEAN-focused operations view with user pins, hazard layers, and weather insight.
+    <section className="map-page-shell">
+      <header className="map-page-header">
+        <h1 className="map-page-title">
+          Hazard & Pin <span className="map-page-title-accent">Monitoring</span>
+        </h1>
+        <p className="map-page-subtitle">
+          ASEAN-focused operations · User pins, hazard layers, weather
         </p>
       </header>
 
@@ -937,165 +960,143 @@ export function OperationsMapPage() {
         </button>
       </div>
 
-      <div className="map-layout map-layout-large">
-        <aside className={`card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
-          <h2 className="card-title">Risk & Intelligence</h2>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={viewBuildingProfiles}
-              onChange={(event) => setViewBuildingProfiles(event.target.checked)}
-            />
-            <span>View Building Profiles (Overlay)</span>
-          </label>
- 
-          {viewBuildingProfiles && (
-            <div className="card-content-stack" style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
-              <p className="small muted">Data fetched dynamically based on map area.</p>
-              <label className="field-label">
-                Country
-                <select
-                  className="field"
-                  value={buildingProfilingCountry}
-                  onChange={(e) => setBuildingProfilingCountry(e.target.value)}
-                >
-                  <option value="brn">Brunei</option>
-                  <option value="idn">Indonesia</option>
-                  <option value="mys">Malaysia</option>
-                  <option value="phl">Philippines</option>
-                  <option value="sgp">Singapore</option>
-                </select>
-              </label>
-              <button
-                className="btn btn-warning"
-                type="button"
-                onClick={applyBuildingProfileFilter}
-                style={{ marginTop: '0.5rem' }}
-              >
-                Apply Filter
-              </button>
-              <p className="small muted">Showing full detail profiles</p>
-            </div>
-          )}
-
-          <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
- 
-          <h2 className="card-title">Hazard Layers</h2>
-          {Object.keys(hazardFilter).map((key) => (
-            <label className="checkbox-row" key={key}>
-              <input
-                type="checkbox"
-                checked={hazardFilter[key]}
-                onChange={(event) =>
-                  setHazardFilter((current) => ({ ...current, [key]: event.target.checked }))
-                }
-              />
-              <span>{key}</span>
-            </label>
-          ))}
-
-          <h2 className="card-title">Pin Status Filters</h2>
-          {Object.keys(pinStatusFilter).map((key) => (
-            <label className="checkbox-row" key={key}>
-              <input
-                type="checkbox"
-                checked={pinStatusFilter[key]}
-                onChange={(event) =>
-                  setPinStatusFilter((current) => ({ ...current, [key]: event.target.checked }))
-                }
-              />
-              <span>{key}</span>
-            </label>
-          ))}
-
-          <h2 className="card-title">User Location Recency</h2>
-          {Object.keys(userFilter).map((key) => (
-            <label className="checkbox-row" key={key}>
-              <input
-                type="checkbox"
-                checked={userFilter[key]}
-                onChange={(event) =>
-                  setUserFilter((current) => ({ ...current, [key]: event.target.checked }))
-                }
-              />
-              <span>{key}</span>
-            </label>
-          ))}
-
-          <div className="map-toolbar-row">
-            <button className="btn btn-neutral" type="button" onClick={fitToData}>
-              Fit To Data
-            </button>
-            <button className="btn btn-neutral" type="button" onClick={refocusAsean}>
-              Recenter ASEAN
-            </button>
-          </div>
-
-          <form onSubmit={onSearchLocation} className="map-search-form">
-            <label className="field-label" htmlFor="map-search">
-              Geocoding Search
+      <div className="map-layout map-layout-large map-layout-command">
+        <div className="map-center-pane card map-card map-card-large">
+          <div className="map-card-top-bar">
+            <form onSubmit={onSearchLocation} className="map-card-search-form">
               <input
                 id="map-search"
-                className="field"
+                className="field map-card-search-input"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Search city or region"
+                placeholder="City or region"
               />
-            </label>
-            <button className="btn btn-warning" type="submit">
-              Find Location
-            </button>
-          </form>
+              <button className="btn btn-warning" type="submit">
+                Find Location
+              </button>
+            </form>
+            {geocodeQuery ? (
+              <div className="selection-list map-search-results">
+                {geocodingQuery.isLoading ? <p className="muted small">Searching...</p> : null}
+                {geocodingQuery.isError ? (
+                  <p className="error-text">Geocoding request failed.</p>
+                ) : null}
+                {geocodingResults.length > 0
+                  ? geocodingResults.map((result, index) => (
+                      <button
+                        key={`${result.name ?? 'location'}-${index}`}
+                        type="button"
+                        className="chip"
+                        onClick={() => jumpToLocation(result)}
+                      >
+                        {(result.name ?? 'Unknown')} {result.country_code ? `(${result.country_code})` : ''}
+                      </button>
+                    ))
+                  : null}
+                {!geocodingQuery.isLoading && geocodingResults.length === 0 ? (
+                  <p className="muted small">No matching locations from Open-Meteo geocoding.</p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
 
-          {geocodeQuery ? (
-            <div className="selection-list map-search-results">
-              {geocodingQuery.isLoading ? <p className="muted small">Searching...</p> : null}
-              {geocodingQuery.isError ? (
-                <p className="error-text">Geocoding request failed.</p>
-              ) : null}
-              {geocodingResults.length > 0
-                ? geocodingResults.map((result, index) => (
-                    <button
-                      key={`${result.name ?? 'location'}-${index}`}
-                      type="button"
-                      className="chip"
-                      onClick={() => jumpToLocation(result)}
-                    >
-                      {(result.name ?? 'Unknown')} {result.country_code ? `(${result.country_code})` : ''}
-                    </button>
-                  ))
-                : null}
-              {!geocodingQuery.isLoading && geocodingResults.length === 0 ? (
-                <p className="muted small">No matching locations from Open-Meteo geocoding.</p>
-              ) : null}
+          <div className="map-card-body">
+            <div className={`map-card-filters card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
+              <div className="filter-sidebar-sections">
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">Risk & Intelligence</h2>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={viewBuildingProfiles}
+                      onChange={(event) => setViewBuildingProfiles(event.target.checked)}
+                    />
+                    <span>View Building Profiles (Overlay)</span>
+                  </label>
+                  {viewBuildingProfiles && (
+                    <div className="card-content-stack" style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                      <p className="small muted">Data fetched dynamically based on map area.</p>
+                      <label className="field-label">
+                        Country
+                        <select
+                          className="field"
+                          value={buildingProfilingCountry}
+                          onChange={(e) => setBuildingProfilingCountry(e.target.value)}
+                        >
+                          <option value="brn">Brunei</option>
+                          <option value="idn">Indonesia</option>
+                          <option value="mys">Malaysia</option>
+                          <option value="phl">Philippines</option>
+                          <option value="sgp">Singapore</option>
+                        </select>
+                      </label>
+                      <button
+                        className="btn btn-warning"
+                        type="button"
+                        onClick={applyBuildingProfileFilter}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        Apply Filter
+                      </button>
+                      <p className="small muted">Showing full detail profiles</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">Hazard Layers</h2>
+                  {Object.keys(hazardFilter).map((key) => (
+                    <label className="checkbox-row" key={key}>
+                      <input
+                        type="checkbox"
+                        checked={hazardFilter[key]}
+                        onChange={(event) =>
+                          setHazardFilter((current) => ({ ...current, [key]: event.target.checked }))
+                        }
+                      />
+                      <span>{labelizeKey(key)}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">Pin Status Filters</h2>
+                  {Object.keys(pinStatusFilter).map((key) => (
+                    <label className="checkbox-row" key={key}>
+                      <input
+                        type="checkbox"
+                        checked={pinStatusFilter[key]}
+                        onChange={(event) =>
+                          setPinStatusFilter((current) => ({ ...current, [key]: event.target.checked }))
+                        }
+                      />
+                      <span>{labelizeKey(key)}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">User Location Recency</h2>
+                  {Object.keys(userFilter).map((key) => (
+                    <label className="checkbox-row" key={key}>
+                      <input
+                        type="checkbox"
+                        checked={userFilter[key]}
+                        onChange={(event) =>
+                          setUserFilter((current) => ({ ...current, [key]: event.target.checked }))
+                        }
+                      />
+                      <span>{labelizeKey(key)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
-          ) : null}
-        </aside>
 
-        <div className="card map-card map-card-large">
-          <div className="map-legend">
-            <span className="legend-item">
-              <span className="legend-dot legend-hazard" /> Hazards
-            </span>
-            <span className="legend-item">
-              <span className="legend-dot legend-pin" /> Ops Pins
-            </span>
-            <span className="legend-item">
-              <span className="legend-dot legend-user" /> User Locations
-            </span>
-            <span className="legend-item">
-              <span className="legend-dot legend-help" /> Help Requests
-            </span>
-          </div>
-          <div className="map-status-row">
-            <span className="chip">Hazards: {filteredRisks.length}</span>
-            <span className="chip">Pins: {filteredPins.length}</span>
-            <span className="chip">Users: {filteredUsers.length}</span>
-            <span className="chip">Help: {filteredHelpRequests.length}</span>
-          </div>
-          {overviewQuery.isLoading ? <p className="muted small">Loading map datasets...</p> : null}
-          {overviewQuery.isError ? <p className="error-text">Failed to load map datasets.</p> : null}
-          <div ref={mapTargetRef} className="map-canvas" />
+            <div className="map-card-map-area">
+              {overviewQuery.isLoading ? <p className="muted small">Loading map datasets...</p> : null}
+              {overviewQuery.isError ? <p className="error-text">Failed to load map datasets.</p> : null}
+              <div ref={mapTargetRef} className="map-canvas" />
           
           <div ref={popupRef} className="map-hover-popup card" style={{ 
             display: hoveredBuilding ? 'block' : 'none',
@@ -1106,7 +1107,6 @@ export function OperationsMapPage() {
             pointerEvents: 'none',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            borderRadius: '8px',
             border: '1px solid #ddd'
           }}>
             {hoveredBuilding && (
@@ -1135,194 +1135,352 @@ export function OperationsMapPage() {
               <p className="small">Map loaded with no overlays. Base map should still be visible.</p>
             </div>
           ) : null}
+
+          <div className="map-layer-toolbar">
+            <div className="map-layer-toolbar-inner">
+              <button
+                type="button"
+                className={`map-layer-btn ${Object.values(hazardFilter).some(Boolean) ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !Object.values(hazardFilter).every(Boolean);
+                  setHazardFilter({
+                    TYPHOON: next,
+                    FLOOD: next,
+                    AFTERSHOCK: next,
+                    EARTHQUAKE: next,
+                  });
+                }}
+              >
+                Hazards
+              </button>
+              <button
+                type="button"
+                className={`map-layer-btn ${Object.values(pinStatusFilter).some(Boolean) ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !Object.values(pinStatusFilter).every(Boolean);
+                  setPinStatusFilter({
+                    OPEN: next,
+                    ACKNOWLEDGED: next,
+                    IN_PROGRESS: next,
+                    RESOLVED: next,
+                  });
+                }}
+              >
+                Ops Pins
+              </button>
+              <button
+                type="button"
+                className={`map-layer-btn ${Object.values(userFilter).some(Boolean) ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !Object.values(userFilter).every(Boolean);
+                  setUserFilter({
+                    RECENT: next,
+                    STALE: next,
+                  });
+                }}
+              >
+                User Locations
+              </button>
+              <button
+                type="button"
+                className={`map-layer-btn ${viewBuildingProfiles ? 'active' : ''}`}
+                onClick={() => setViewBuildingProfiles((current) => !current)}
+              >
+                Building Profiles
+              </button>
+              <button type="button" className="map-layer-btn" onClick={fitToData}>
+                Fit To Data
+              </button>
+              <button type="button" className="map-layer-btn" onClick={refocusAsean}>
+                Recenter ASEAN
+              </button>
+            </div>
+          </div>
+            </div>
+          </div>
         </div>
 
-        <aside className="card sidebar details-sidebar">
-          <h2 className="card-title">Selection Details</h2>
-
-          {selectedPin ? (
-            <>
-              <p className="small muted">Operational Pin</p>
-              <dl className="summary-grid">
-                <dt>Title</dt>
-                <dd>{selectedPin.title}</dd>
-                <dt>Status</dt>
-                <dd>{selectedPin.status}</dd>
-                <dt>Region</dt>
-                <dd>{selectedPin.region ?? 'Unknown'}</dd>
-                <dt>Hazard</dt>
-                <dd>{selectedPin.hazardType}</dd>
-                {selectedPin.reporter ? (
-                  <>
-                    <dt>Reporter</dt>
-                    <dd>{selectedPin.reporter.name}</dd>
-                  </>
-                ) : null}
-                {selectedPin.note ? (
-                  <>
-                    <dt>Note</dt>
-                    <dd className="small">{selectedPin.note}</dd>
-                  </>
-                ) : null}
-                <dt>Updated</dt>
-                <dd>{selectedPin.updatedAt ?? 'N/A'}</dd>
-                {selectedPin.reviewStatus ? (
-                  <>
-                    <dt>Review</dt>
-                    <dd>{selectedPin.reviewStatus}</dd>
-                    {selectedPin.reviewNote ? (
-                      <>
-                        <dt>Review note</dt>
-                        <dd className="small">{selectedPin.reviewNote}</dd>
-                      </>
-                    ) : null}
-                  </>
-                ) : null}
-              </dl>
-              {selectedPin.photoUrl ? (
-                <div className="summary-grid" style={{ marginTop: '0.5rem' }}>
-                  <dt>Photo</dt>
-                  <dd>
-                    <img
-                      src={selectedPin.photoUrl}
-                      alt="Pin attachment"
-                      style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
-                    />
-                  </dd>
-                </div>
-              ) : null}
-              {selectedPin.reviewStatus !== 'APPROVED' && selectedPin.reviewStatus !== 'REJECTED' ? (
-                <div style={{ marginTop: '1rem' }}>
-                  <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>Review pin</h3>
-                  <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <input
-                      type="text"
-                      className="field"
-                      placeholder="Reason (required for reject)"
-                      value={pinReviewReason}
-                      onChange={(e) => setPinReviewReason(e.target.value)}
-                      aria-label="Review reason"
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-neutral"
-                      disabled={reviewPinMutation.isPending}
-                      onClick={() => {
-                        reviewPinMutation.mutate({
-                          id: selectedPin.id,
-                          data: { action: 'APPROVE' },
-                        });
-                      }}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-warning"
-                      disabled={reviewPinMutation.isPending || !pinReviewReason.trim()}
-                      onClick={() => {
-                        reviewPinMutation.mutate({
-                          id: selectedPin.id,
-                          data: { action: 'REJECT', reason: pinReviewReason.trim() },
-                        });
-                      }}
-                    >
-                      Reject
-                    </button>
+        <aside className="map-right-panel">
+          <section className="map-right-section">
+            <div className="map-right-section-header">
+              <h2 className="map-right-section-title">Local Environment</h2>
+              <span className="map-right-section-synced">Synced just now</span>
+            </div>
+            <div className="map-right-section-content">
+              <div className="map-env-cards">
+                <div className="map-env-card">
+                  <div className="map-env-card-value">
+                    {weatherSummary ? `${fmt(weatherSummary.temperature)}°C` : '—'}
                   </div>
-                  {reviewPinMutation.isError ? (
-                    <p className="error-text small" style={{ marginTop: '0.5rem' }}>
-                      Review failed. Please try again.
-                    </p>
-                  ) : null}
+                  <div className="map-env-card-label">Current Temperature</div>
                 </div>
-              ) : null}
-            </>
-          ) : null}
-
-          {selectedUser ? (
-            <>
-              <p className="small muted">User Location</p>
-              <dl className="summary-grid">
-                <dt>User ID</dt>
-                <dd className="mono small">{selectedUser.userId}</dd>
-                <dt>Region</dt>
-                <dd>{selectedUser.region ?? 'Unknown'}</dd>
-                <dt>Coordinates</dt>
-                <dd>
-                  {selectedUser.latitude.toFixed(4)}, {selectedUser.longitude.toFixed(4)}
-                </dd>
-                <dt>Recency</dt>
-              </dl>
-            </>
-          ) : null}
-
-          {selectedHelpRequest ? (
-            <>
-              <p className="small muted">Emergency Help Request</p>
-              <dl className="summary-grid">
-                <dt>Requester</dt>
-                <dd>{selectedHelpRequest.requester.name}</dd>
-                <dt>Hazard</dt>
-                <dd>{selectedHelpRequest.hazardType}</dd>
-                <dt>Urgency</dt>
-                <dd>
-                  <span className={`chip chip-${selectedHelpRequest.urgency.toLowerCase()}`}>
-                    {selectedHelpRequest.urgency}
+                <div className="map-env-card accent">
+                  <div className="map-env-card-value accent">
+                    {weatherSummary ? fmt(weatherSummary.precipitation) : '—'}
+                  </div>
+                  <div className="map-env-card-label">Precipitation (today)</div>
+                </div>
+              </div>
+              <div className="map-parametric-card">
+                <div className="map-parametric-card-header">
+                  <span className="map-parametric-label">Parametric Trigger</span>
+                  <span className="map-parametric-badge">
+                    {hasCriticalRisks ? 'Activated' : 'Monitoring'}
                   </span>
+                </div>
+                <p className="map-parametric-body">
+                  {hasCriticalRisks
+                    ? 'Critical hazard regions detected in current viewport. Prioritize verification and responder assignment.'
+                    : 'No critical hazard regions in current viewport. Continuing passive monitoring of rainfall and river levels.'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="map-needs-section">
+            <div className="map-needs-section-header">
+              <h2 className="map-needs-section-title">Live Verified Needs</h2>
+              <span className="map-needs-live-dot" />
+            </div>
+            <div className="map-needs-list">
+              {filteredHelpRequests.slice(0, 3).map((req) => {
+                const urgencyClass =
+                  req.urgency === 'CRITICAL'
+                    ? 'critical'
+                    : req.urgency === 'HIGH' || req.urgency === 'MEDIUM'
+                      ? 'urgent'
+                      : 'verified';
+                return (
+                  <article
+                    key={req.id}
+                    className={`map-need-card ${urgencyClass}`}
+                  >
+                    <div className="map-need-card-header">
+                      <span className={`map-need-card-badge ${urgencyClass}`}>
+                        {req.urgency.toLowerCase()} · {req.hazardType.toLowerCase()}
+                      </span>
+                      <span className="map-need-card-time">
+                        {new Date(req.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <h3 className="map-need-card-title">
+                      {req.requester.name} — {req.status}
+                    </h3>
+                    <p className="map-need-card-desc">{req.description}</p>
+                    <div className="map-need-card-actions">
+                      <span className="map-need-card-meta">
+                        Lat {req.latitude.toFixed(3)}, Lon {req.longitude.toFixed(3)}
+                      </span>
+                      <button
+                        type="button"
+                        className="map-need-card-btn"
+                        onClick={() => {
+                          setSelectedHelpRequest(req);
+                          setSelectedPin(null);
+                          setSelectedUser(null);
+                          setSelectedCoords([req.longitude, req.latitude]);
+                        }}
+                      >
+                        View on map
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {filteredHelpRequests.length === 0 ? (
+                <p className="muted small">No active verified needs in the current viewport.</p>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="card sidebar details-sidebar">
+            <h2 className="card-title">Selection Details</h2>
+
+            {selectedPin ? (
+              <>
+                <p className="small muted">Operational Pin</p>
+                <dl className="summary-grid">
+                  <dt>Title</dt>
+                  <dd>{selectedPin.title}</dd>
+                  <dt>Status</dt>
+                  <dd>{selectedPin.status}</dd>
+                  <dt>Region</dt>
+                  <dd>{selectedPin.region ?? 'Unknown'}</dd>
+                  <dt>Hazard</dt>
+                  <dd>{selectedPin.hazardType}</dd>
+                  {selectedPin.reporter ? (
+                    <>
+                      <dt>Reporter</dt>
+                      <dd>{selectedPin.reporter.name}</dd>
+                    </>
+                  ) : null}
+                  {selectedPin.note ? (
+                    <>
+                      <dt>Note</dt>
+                      <dd className="small">{selectedPin.note}</dd>
+                    </>
+                  ) : null}
+                  <dt>Updated</dt>
+                  <dd>{selectedPin.updatedAt ?? 'N/A'}</dd>
+                  {selectedPin.reviewStatus ? (
+                    <>
+                      <dt>Review</dt>
+                      <dd>{selectedPin.reviewStatus}</dd>
+                      {selectedPin.reviewNote ? (
+                        <>
+                          <dt>Review note</dt>
+                          <dd className="small">{selectedPin.reviewNote}</dd>
+                        </>
+                      ) : null}
+                    </>
+                  ) : null}
+                </dl>
+                {selectedPin.photoUrl ? (
+                  <div className="summary-grid" style={{ marginTop: '0.5rem' }}>
+                    <dt>Photo</dt>
+                    <dd>
+                      <img
+                        src={selectedPin.photoUrl}
+                        alt="Pin attachment"
+                        style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
+                      />
+                    </dd>
+                  </div>
+                ) : null}
+                {selectedPin.reviewStatus !== 'APPROVED' && selectedPin.reviewStatus !== 'REJECTED' ? (
+                  <div style={{ marginTop: '1rem' }}>
+                    <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>Review pin</h3>
+                    <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        className="field"
+                        placeholder="Reason (required for reject)"
+                        value={pinReviewReason}
+                        onChange={(e) => setPinReviewReason(e.target.value)}
+                        aria-label="Review reason"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-neutral"
+                        disabled={reviewPinMutation.isPending}
+                        onClick={() => {
+                          reviewPinMutation.mutate({
+                            id: selectedPin.id,
+                            data: { action: 'APPROVE' },
+                          });
+                        }}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        disabled={reviewPinMutation.isPending || !pinReviewReason.trim()}
+                        onClick={() => {
+                          reviewPinMutation.mutate({
+                            id: selectedPin.id,
+                            data: { action: 'REJECT', reason: pinReviewReason.trim() },
+                          });
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                    {reviewPinMutation.isError ? (
+                      <p className="error-text small" style={{ marginTop: '0.5rem' }}>
+                        Review failed. Please try again.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+
+            {selectedUser ? (
+              <>
+                <p className="small muted">User Location</p>
+                <dl className="summary-grid">
+                  <dt>User ID</dt>
+                  <dd className="mono small">{selectedUser.userId}</dd>
+                  <dt>Region</dt>
+                  <dd>{selectedUser.region ?? 'Unknown'}</dd>
+                  <dt>Coordinates</dt>
+                  <dd>
+                    {selectedUser.latitude.toFixed(4)}, {selectedUser.longitude.toFixed(4)}
+                  </dd>
+                  <dt>Recency</dt>
+                </dl>
+              </>
+            ) : null}
+
+            {selectedHelpRequest ? (
+              <>
+                <p className="small muted">Emergency Help Request</p>
+                <dl className="summary-grid">
+                  <dt>Requester</dt>
+                  <dd>{selectedHelpRequest.requester.name}</dd>
+                  <dt>Hazard</dt>
+                  <dd>{selectedHelpRequest.hazardType}</dd>
+                  <dt>Urgency</dt>
+                  <dd>
+                    <span className={`chip chip-${selectedHelpRequest.urgency.toLowerCase()}`}>
+                      {selectedHelpRequest.urgency}
+                    </span>
+                  </dd>
+                  <dt>Status</dt>
+                  <dd>{selectedHelpRequest.status}</dd>
+                  <dt>Description</dt>
+                  <dd className="small">{selectedHelpRequest.description}</dd>
+                  <dt>Created</dt>
+                  <dd>{new Date(selectedHelpRequest.createdAt).toLocaleString()}</dd>
+                </dl>
+              </>
+            ) : null}
+
+            {!selectedPin && !selectedUser && !selectedHelpRequest ? (
+              <p className="muted">
+                Select an operations pin, user, or help request to inspect details.
+              </p>
+            ) : null}
+
+            <h2 className="card-title">Open-Meteo Weather</h2>
+            {selectedCoords ? (
+              <p className="small muted">
+                Lat {selectedCoords[1].toFixed(4)}, Lon {selectedCoords[0].toFixed(4)}
+              </p>
+            ) : (
+              <p className="muted small">Select a pin or user location to load weather.</p>
+            )}
+
+            {weatherQuery.isLoading ? <p className="muted">Loading forecast...</p> : null}
+            {weatherQuery.isError ? (
+              <p className="error-text">Unable to load weather forecast for this selection.</p>
+            ) : null}
+
+            {weatherSummary ? (
+              <dl className="summary-grid">
+                <dt>Current Temp</dt>
+                <dd>{fmt(weatherSummary.temperature)} C</dd>
+                <dt>Wind Speed</dt>
+                <dd>{fmt(weatherSummary.windSpeed)} km/h</dd>
+                <dt>Weather Code</dt>
+                <dd>{fmt(weatherSummary.weatherCode, 0)}</dd>
+                <dt>Max (Today)</dt>
+                <dd>
+                  {fmt(weatherSummary.maxTemp)} {weatherSummary.tempUnit}
                 </dd>
-                <dt>Status</dt>
-                <dd>{selectedHelpRequest.status}</dd>
-                <dt>Description</dt>
-                <dd className="small">{selectedHelpRequest.description}</dd>
-                <dt>Created</dt>
-                <dd>{new Date(selectedHelpRequest.createdAt).toLocaleString()}</dd>
+                <dt>Min (Today)</dt>
+                <dd>
+                  {fmt(weatherSummary.minTemp)} {weatherSummary.tempUnit}
+                </dd>
+                <dt>Precipitation</dt>
+                <dd>
+                  {fmt(weatherSummary.precipitation)} {weatherSummary.precipitationUnit}
+                </dd>
               </dl>
-            </>
-          ) : null}
-
-          {!selectedPin && !selectedUser && !selectedHelpRequest ? (
-            <p className="muted">
-              Select an operations pin, user, or help request to inspect details.
-            </p>
-          ) : null}
-
-          <h2 className="card-title">Open-Meteo Weather</h2>
-          {selectedCoords ? (
-            <p className="small muted">
-              Lat {selectedCoords[1].toFixed(4)}, Lon {selectedCoords[0].toFixed(4)}
-            </p>
-          ) : (
-            <p className="muted small">Select a pin or user location to load weather.</p>
-          )}
-
-          {weatherQuery.isLoading ? <p className="muted">Loading forecast...</p> : null}
-          {weatherQuery.isError ? (
-            <p className="error-text">Unable to load weather forecast for this selection.</p>
-          ) : null}
-
-          {weatherSummary ? (
-            <dl className="summary-grid">
-              <dt>Current Temp</dt>
-              <dd>{fmt(weatherSummary.temperature)} C</dd>
-              <dt>Wind Speed</dt>
-              <dd>{fmt(weatherSummary.windSpeed)} km/h</dd>
-              <dt>Weather Code</dt>
-              <dd>{fmt(weatherSummary.weatherCode, 0)}</dd>
-              <dt>Max (Today)</dt>
-              <dd>
-                {fmt(weatherSummary.maxTemp)} {weatherSummary.tempUnit}
-              </dd>
-              <dt>Min (Today)</dt>
-              <dd>
-                {fmt(weatherSummary.minTemp)} {weatherSummary.tempUnit}
-              </dd>
-              <dt>Precipitation</dt>
-              <dd>
-                {fmt(weatherSummary.precipitation)} {weatherSummary.precipitationUnit}
-              </dd>
-            </dl>
-          ) : null}
+            ) : null}
+          </section>
         </aside>
       </div>
 

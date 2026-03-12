@@ -227,6 +227,21 @@ class AdminUserLocationDto {
   updatedAt!: Date;
 }
 
+class AdminAssetRegistryEntryDto {
+  @ApiProperty()
+  id!: string;
+  @ApiProperty()
+  name!: string;
+  @ApiProperty()
+  email!: string;
+  @ApiProperty()
+  createdAt!: Date;
+  @ApiProperty({ type: [String], description: 'List of volunteered assets (e.g. cars, boats)' })
+  assets!: string[];
+  @ApiPropertyOptional({ enum: ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'] })
+  volunteerStatus!: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | null;
+}
+
 class MapOverviewResponseDto {
   @ApiProperty({ type: AdminRiskRegionDto, isArray: true })
   vulnerableRegions!: AdminRiskRegionDto[];
@@ -554,6 +569,12 @@ export class AdminOperationsController {
   @ApiParam({ name: 'id', type: String })
   async getApplicationHistory(@Param('id') applicationId: string) {
     return this.adminService.getApplicationHistory(applicationId);
+  }
+
+  @Get('assets/registry')
+  @ApiOperation({ summary: 'List volunteered assets (users who registered assets for disaster use)' })
+  async getAssetRegistry() {
+    return this.adminService.getAssetRegistry();
   }
 
   @Post('warnings')

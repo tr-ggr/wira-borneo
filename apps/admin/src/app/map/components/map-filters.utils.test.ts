@@ -4,9 +4,9 @@ import { filterPinStatuses, filterRiskLayers } from './map-filters.utils';
 describe('map-filters.utils', () => {
   it('filters hazard layers based on toggle state', () => {
     const input = [
-      { hazardType: 'FLOOD', id: 1 },
-      { hazardType: 'TYPHOON', id: 2 },
-      { hazardType: 'AFTERSHOCK', id: 3 },
+      { hazardType: 'Flood', id: 1 },
+      { hazardType: 'Typhoon', id: 2 },
+      { hazardType: 'Aftershock', id: 3 },
     ];
 
     const output = filterRiskLayers(input, {
@@ -20,9 +20,9 @@ describe('map-filters.utils', () => {
 
   it('filters pins by selected statuses', () => {
     const input = [
-      { status: 'OPEN', id: 'a' },
-      { status: 'BLOCKED', id: 'b' },
-      { status: 'RESOLVED', id: 'c' },
+      { status: 'Open', id: 'a' },
+      { status: 'Blocked', id: 'b' },
+      { status: 'Resolved', id: 'c' },
     ];
 
     const output = filterPinStatuses(input, {
