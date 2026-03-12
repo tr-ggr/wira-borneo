@@ -6,7 +6,7 @@ import { useI18n } from '../../i18n/context';
 
 export type MobileHeaderStatus = {
   label: string;
-  dotColor?: string;
+  dotColor?: 'green' | 'gray';
 };
 
 export type MobileHeaderConfig = {
@@ -35,7 +35,9 @@ export function MobileHeader({
 }: MobileHeaderProps) {
   const { t } = useI18n();
   const statusDotColor =
-    status?.dotColor === 'green' ? 'bg-[#22c55e]' : 'bg-status-safe';
+    status?.dotColor === 'green' ? 'bg-[#22c55e]' : status?.dotColor === 'gray' ? 'bg-status-offline' : 'bg-status-safe';
+  const statusTextColor =
+    status?.dotColor === 'gray' ? 'text-status-offline' : 'text-[#22c55e]';
   const displayTitle = title ?? t('header.titleSagip');
   const titleClassName =
     icon === 'message'
@@ -69,11 +71,7 @@ export function MobileHeader({
                   aria-hidden
                 />
                 <span
-                  className={`font-sagip font-medium text-[10px] leading-tight ${
-                    status.dotColor === 'green'
-                      ? 'text-[#22c55e]'
-                      : 'text-status-safe'
-                  }`}
+                  className={`font-sagip font-medium text-[10px] leading-tight ${statusTextColor}`}
                 >
                   {status.label}
                 </span>

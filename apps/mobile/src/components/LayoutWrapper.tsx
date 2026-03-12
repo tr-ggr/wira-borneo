@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Home, AlertTriangle, MapPin, User, Siren } from 'lucide-react';
 import {
   MobileHeader,

@@ -4,6 +4,7 @@ import { AdminOperationsService } from './admin-operations.service';
 import { PrismaService } from '../../../core/database/database.service';
 import { RiskIntelligenceService } from '../risk-intelligence/risk-intelligence.service';
 import { OpenMeteoService } from '../../../providers/open-meteo/open-meteo.service';
+import { AssistantService } from '../assistant/assistant.service';
 
 describe('AdminOperationsService', () => {
   let service: AdminOperationsService;
@@ -13,6 +14,7 @@ describe('AdminOperationsService', () => {
     volunteerApplication: {
       findUnique: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       findMany: jest.fn(),
       findFirst: jest.fn(),
     },
@@ -27,7 +29,9 @@ describe('AdminOperationsService', () => {
     warningEvent: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findMany: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     warningEventLog: {
       create: jest.fn(),
@@ -42,6 +46,7 @@ describe('AdminOperationsService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RiskIntelligenceService, useValue: {} },
         { provide: OpenMeteoService, useValue: {} },
+        { provide: AssistantService, useValue: { answerInquiry: jest.fn() } },
       ],
     }).compile();
 
@@ -163,6 +168,40 @@ describe('AdminOperationsService', () => {
           status: 'CANCELLED',
         }),
       });
+    });
+  });
+
+  describe('listWarnings', () => {
+    it('should list warnings filtered by status', async () => {
+      mockPrisma.warningEvent.findMany.mockResolvedValue([{ id: 'warning-1' }]);
+
+      await service.listWarnings({ status: 'SENT' });
+
+      expect(mockPrisma.warningEvent.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: 'SENT' },
+          orderBy: { createdAt: 'desc' },
+        }),
+      );
+    });
+  });
+
+  describe('deleteWarning', () => {
+    it('should delete warning when it exists', async () => {
+      mockPrisma.warningEvent.findUnique.mockResolvedValue({ id: 'warning-1' });
+      mockPrisma.warningEvent.delete.mockResolvedValue({ id: 'warning-1' });
+
+      await service.deleteWarning('warning-1');
+
+      expect(mockPrisma.warningEvent.delete).toHaveBeenCalledWith({
+        where: { id: 'warning-1' },
+      });
+    });
+
+    it('should throw when deleting non-existent warning', async () => {
+      mockPrisma.warningEvent.findUnique.mockResolvedValue(null);
+
+      await expect(service.deleteWarning('missing-warning')).rejects.toThrow();
     });
   });
 });

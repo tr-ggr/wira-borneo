@@ -367,6 +367,34 @@ export class AdminOperationsService {
     });
   }
 
+  async listWarnings(options?: {
+    status?: 'DRAFT' | 'SENT' | 'CANCELLED';
+  }) {
+    return this.prisma.warningEvent.findMany({
+      where: {
+        ...(options?.status ? { status: options.status } : {}),
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        targetAreas: {
+          select: {
+            id: true,
+            areaName: true,
+            latitude: true,
+            longitude: true,
+            radiusKm: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async updateWarning(input: {
     warningId: string;
     title?: string;
@@ -447,6 +475,21 @@ export class AdminOperationsService {
     });
   }
 
+  async deleteWarning(warningId: string) {
+    const existing = await this.prisma.warningEvent.findUnique({
+      where: { id: warningId },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Warning not found');
+    }
+
+    return this.prisma.warningEvent.delete({
+      where: { id: warningId },
+    });
+  }
+
   async getVulnerableRegions() {
     return this.riskService.getVulnerableRegions();
   }
@@ -457,6 +500,28 @@ export class AdminOperationsService {
         reporter: { select: { name: true } },
       },
       orderBy: [{ priority: 'desc' }, { updatedAt: 'desc' }],
+    });
+  }
+
+  async getDamageReports() {
+    return this.prisma.damageReport.findMany({
+      include: {
+        reporter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviewedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [{ reviewStatus: 'asc' }, { createdAt: 'desc' }],
     });
   }
 
@@ -485,6 +550,49 @@ export class AdminOperationsService {
         reviewNote: input.reason ?? undefined,
         reviewStatus,
         status,
+      },
+    });
+  }
+
+  async reviewDamageReport(input: {
+    damageReportId: string;
+    reviewerId: string;
+    action: 'APPROVE' | 'REJECT';
+    reason?: string;
+  }) {
+    const report = await this.prisma.damageReport.findUnique({
+      where: { id: input.damageReportId },
+    });
+
+    if (!report) {
+      throw new NotFoundException('Damage report not found.');
+    }
+
+    const reviewStatus = input.action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+
+    return this.prisma.damageReport.update({
+      where: { id: input.damageReportId },
+      data: {
+        reviewedById: input.reviewerId,
+        reviewedAt: new Date(),
+        reviewNote: input.reason ?? undefined,
+        reviewStatus,
+      },
+      include: {
+        reporter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviewedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
   }
@@ -534,9 +642,10 @@ export class AdminOperationsService {
   }
 
   async getMapOverview() {
-    const [vulnerableRegions, pinStatuses, userLocations, helpRequests] = await Promise.all([
+    const [vulnerableRegions, pinStatuses, damageReports, userLocations, helpRequests] = await Promise.all([
       this.getVulnerableRegions(),
       this.getPinStatuses(),
+      this.getDamageReports(),
       this.getUserLocations(),
       this.getHelpRequests(),
     ]);
@@ -544,6 +653,7 @@ export class AdminOperationsService {
     return {
       vulnerableRegions,
       pinStatuses,
+      damageReports,
       userLocations,
       helpRequests,
     };

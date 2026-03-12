@@ -1,0 +1,36 @@
+enum DamageCategory {
+  FLOODED_ROAD
+  COLLAPSED_STRUCTURE
+  DAMAGED_INFRASTRUCTURE
+}
+
+enum DamageReportReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model DamageReport {
+  id                  String                   @id @default(cuid())
+  title               String
+  description         String?
+  damageCategories    DamageCategory[]
+  latitude            Float
+  longitude           Float
+  photoUrl            String
+  photoKey            String
+  confidenceScore     Float
+  confidenceThreshold Float                    @default(0.7)
+  reporterId          String
+  reviewedById        String?
+  reviewStatus        DamageReportReviewStatus @default(PENDING)
+  reviewNote          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  reporter            User                     @relation("DamageReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy          User?                    @relation("DamageReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([reviewStatus, createdAt])
+  @@index([reporterId, createdAt])
+}

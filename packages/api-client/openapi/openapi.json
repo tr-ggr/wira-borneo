@@ -129,6 +129,30 @@
         ]
       }
     },
+    "/api/auth/location": {
+      "patch": {
+        "operationId": "AuthController_updateLocation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLocationPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/risk/forecast": {
       "get": {
         "operationId": "RiskIntelligenceController_getForecast",
@@ -730,62 +754,6 @@
         ]
       }
     },
-    "/api/evacuation/hazard-route": {
-      "get": {
-        "operationId": "EvacuationController_hazardRoute",
-        "parameters": [
-          {
-            "name": "fromLat",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "fromLon",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "toLat",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "toLon",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "rainfall_mm",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Hazard-aware route between two coordinates; uses hazard server with rainfall_mm",
-        "tags": [
-          "evacuation"
-        ]
-      }
-    },
     "/api/evacuation/route": {
       "get": {
         "operationId": "EvacuationController_route",
@@ -1346,6 +1314,49 @@
         "tags": [
           "admin-operations"
         ]
+      },
+      "get": {
+        "operationId": "AdminOperationsController_listWarnings",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Optional warning status filter.",
+            "schema": {
+              "enum": [
+                "DRAFT",
+                "SENT",
+                "CANCELLED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminWarningListItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List warning events for admin management",
+        "tags": [
+          "admin-operations"
+        ]
       }
     },
     "/api/admin/warnings/{id}": {
@@ -1382,6 +1393,33 @@
           }
         ],
         "summary": "Update an existing warning event",
+        "tags": [
+          "admin-operations"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminOperationsController_deleteWarning",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete warning event (false alarm cleanup)",
         "tags": [
           "admin-operations"
         ]
@@ -1456,6 +1494,36 @@
         ]
       }
     },
+    "/api/admin/damage-reports": {
+      "get": {
+        "operationId": "AdminOperationsController_damageReports",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminDamageReportDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List submitted damage reports for admin review",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
     "/api/admin/pins/{id}/review": {
       "post": {
         "operationId": "AdminOperationsController_reviewPin",
@@ -1490,6 +1558,45 @@
           }
         ],
         "summary": "Approve or reject a hazard pin (admin only)",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/admin/damage-reports/{id}/review": {
+      "post": {
+        "operationId": "AdminOperationsController_reviewDamageReport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDamageReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve or reject a submitted damage report (admin only)",
         "tags": [
           "admin-operations"
         ]
@@ -1817,7 +1924,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/CreateAssetDto"
               }
@@ -1928,18 +2035,104 @@
         ]
       }
     },
-    "/api/health-outbreak/dengue/regions": {
+    "/api/damage-reports": {
+      "post": {
+        "operationId": "DamageReportsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDamageReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit a geo-tagged damage report with photo and mocked AI analysis",
+        "tags": [
+          "damage-reports"
+        ]
+      },
       "get": {
-        "operationId": "HealthOutbreakController_getDengueRegions",
+        "operationId": "DamageReportsController_findVisible",
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DamageReportDto"
+                  }
+                }
+              }
+            }
           }
         },
-        "summary": "Get Philippine regions GeoJSON with dengue risk scores per region",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List visible damage reports (approved + own submissions)",
         "tags": [
-          "health-outbreak"
+          "damage-reports"
+        ]
+      }
+    },
+    "/api/damage-reports/{id}": {
+      "get": {
+        "operationId": "DamageReportsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReportDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one damage report with reporter and review details",
+        "tags": [
+          "damage-reports"
         ]
       }
     },
@@ -2282,6 +2475,25 @@
           }
         }
       },
+      "UpdateLocationPayload": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "region": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
       "CreateFamilyDto": {
         "type": "object",
         "properties": {}
@@ -2614,11 +2826,235 @@
         "type": "object",
         "properties": {}
       },
+      "AdminWarningTargetAreaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "areaName": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "radiusKm": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "areaName"
+        ]
+      },
+      "AdminWarningListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MODERATE",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "SENT",
+              "CANCELLED"
+            ]
+          },
+          "startsAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endsAt": {
+            "type": "object"
+          },
+          "createdBy": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "targetAreas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminWarningTargetAreaDto"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "message",
+          "hazardType",
+          "severity",
+          "status",
+          "startsAt",
+          "createdBy",
+          "targetAreas",
+          "createdAt"
+        ]
+      },
       "UpdateWarningDto": {
         "type": "object",
         "properties": {}
       },
+      "AdminDamageReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "damageCategories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "FLOODED_ROAD",
+                "COLLAPSED_STRUCTURE",
+                "DAMAGED_INFRASTRUCTURE"
+              ]
+            }
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "confidenceScore": {
+            "type": "number"
+          },
+          "confidenceThreshold": {
+            "type": "number"
+          },
+          "reviewStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "reviewNote": {
+            "type": "string"
+          },
+          "reviewedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reporter": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          },
+          "reviewedBy": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "damageCategories",
+          "latitude",
+          "longitude",
+          "photoUrl",
+          "confidenceScore",
+          "confidenceThreshold",
+          "reviewStatus",
+          "createdAt",
+          "reporter"
+        ]
+      },
       "ReviewPinDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "APPROVE",
+              "REJECT"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "ReviewDamageReportDto": {
         "type": "object",
         "properties": {
           "action": {
@@ -2737,7 +3173,28 @@
           "description": {
             "type": "string"
           },
-          "photoUrl": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "photo": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateDamageReportDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
             "type": "string"
           },
           "latitude": {
@@ -2745,10 +3202,217 @@
           },
           "longitude": {
             "type": "number"
+          },
+          "damageCategories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "FLOODED_ROAD",
+                "COLLAPSED_STRUCTURE",
+                "DAMAGED_INFRASTRUCTURE"
+              ]
+            }
+          },
+          "photo": {
+            "type": "string",
+            "format": "binary"
           }
         },
         "required": [
-          "name"
+          "title",
+          "latitude",
+          "longitude",
+          "photo"
+        ]
+      },
+      "ReporterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ]
+      },
+      "DamageReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "damageCategories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "FLOODED_ROAD",
+                "COLLAPSED_STRUCTURE",
+                "DAMAGED_INFRASTRUCTURE"
+              ]
+            }
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "confidenceScore": {
+            "type": "number"
+          },
+          "confidenceThreshold": {
+            "type": "number"
+          },
+          "reviewStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reporter": {
+            "$ref": "#/components/schemas/ReporterDto"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "damageCategories",
+          "latitude",
+          "longitude",
+          "photoUrl",
+          "confidenceScore",
+          "confidenceThreshold",
+          "reviewStatus",
+          "createdAt",
+          "reporter"
+        ]
+      },
+      "ReviewedByDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ]
+      },
+      "DamageReportDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "damageCategories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "FLOODED_ROAD",
+                "COLLAPSED_STRUCTURE",
+                "DAMAGED_INFRASTRUCTURE"
+              ]
+            }
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "confidenceScore": {
+            "type": "number"
+          },
+          "confidenceThreshold": {
+            "type": "number"
+          },
+          "reviewStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reporter": {
+            "$ref": "#/components/schemas/ReporterDto"
+          },
+          "reviewNote": {
+            "type": "string"
+          },
+          "reviewedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reviewedBy": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewedByDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "damageCategories",
+          "latitude",
+          "longitude",
+          "photoUrl",
+          "confidenceScore",
+          "confidenceThreshold",
+          "reviewStatus",
+          "createdAt",
+          "reporter"
         ]
       },
       "TrackerShipmentDto": {

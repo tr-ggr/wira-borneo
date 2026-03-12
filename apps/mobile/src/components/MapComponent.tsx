@@ -48,6 +48,25 @@ export interface HazardPin {
   reporterId?: string | null;
 }
 
+export interface DamageReport {
+  id: string;
+  title: string;
+  description?: string;
+  damageCategories: string[];
+  latitude: number;
+  longitude: number;
+  photoUrl: string;
+  confidenceScore: number;
+  confidenceThreshold: number;
+  reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  reporter: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export interface EvacuationSite {
   id: string;
   name: string;
@@ -74,6 +93,7 @@ interface MapComponentProps {
   helpRequests?: HelpRequest[];
   /** Hazard pins visible to user (approved + own); styled by reviewStatus. */
   hazardPins?: HazardPin[];
+  damageReports?: DamageReport[];
   focusedHelpRequestId?: string | null;
   mapFocus?: { latitude: number; longitude: number } | null;
   homeLocation?: { latitude: number; longitude: number } | null;
@@ -175,6 +195,10 @@ function getHomeIconSvg(): string {
 }
 
 /** Risk value to color: green (low), yellow (mid), red (high) – e.g. choropleth. */
+function getDamageReportSvg(fill: string): string {
+  return `<svg width="28" height="34" viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 1C8.20101 1 3.5 5.70101 3.5 11.5C3.5 19.25 14 33 14 33C14 33 24.5 19.25 24.5 11.5C24.5 5.70101 19.799 1 14 1Z" fill="${fill}" stroke="white" stroke-width="2"/><rect x="8.5" y="8" width="11" height="7.5" rx="1.5" fill="white"/><circle cx="11.5" cy="11.75" r="1.25" fill="${fill}"/><path d="M18.5 14.5L15.7 11.7L13.2 14.2L11.8 12.8L8.5 16H19.5C19.5 15.3 19.1 14.8 18.5 14.5Z" fill="${fill}"/></svg>`;
+}
+
 function getRiskColor(risk: number): string {
   if (risk <= 1 / 3) return '#22c55e';
   if (risk <= 2 / 3) return '#eab308';
@@ -208,6 +232,7 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
   vulnerableRegions = [],
   helpRequests = [],
   hazardPins = [],
+  damageReports = [],
   focusedHelpRequestId,
   mapFocus,
   homeLocation,
@@ -229,6 +254,7 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
   const helpLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const hazardLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const selectionLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const damageLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const riskLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const homeLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const evacLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
@@ -245,9 +271,49 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [selectedMapItem, setSelectedMapItem] = useState<
+    | { kind: 'hazard'; pin: HazardPin }
+    | { kind: 'damage'; report: DamageReport }
+    | { kind: 'help'; request: HelpRequest }
+    | null
+  >(null);
   const [userCoords, setUserCoords] = useState<number[] | null>(null);
 
   userCoordsRef.current = userCoords;
+
+  const LOCATION_CACHE_KEY = 'wira-mobile-last-known-location';
+
+  const getCachedLocation = (): { lat: number; lon: number } | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem(LOCATION_CACHE_KEY);
+      if (!cached) return null;
+      const { lat, lon } = JSON.parse(cached);
+      if (
+        typeof lat === 'number' &&
+        typeof lon === 'number' &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lon >= -180 &&
+        lon <= 180
+      ) {
+        return { lat, lon };
+      }
+    } catch (e) {
+      console.warn('Failed to read location cache:', e);
+    }
+    return null;
+  };
+
+  const cacheLocation = (lat: number, lon: number): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({ lat, lon }));
+    } catch (e) {
+      console.warn('Failed to cache location:', e);
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     zoomIn() {
@@ -323,6 +389,10 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
           home,
         ) < AT_HOME_THRESHOLD_M;
         locationOverlay.setPosition(atHome ? undefined : coordinates);
+        const lonLat = toLonLat(coordinates);
+        cacheLocation(lonLat[1], lonLat[0]);
+        setError(null);
+        setInfo(null);
         // Only auto-animate if NOT focused on something specific
         if (!mapFocus) {
           view.animate({ center: coordinates, zoom: 14 });
@@ -332,7 +402,19 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
 
     geolocation.on('error', (error) => {
       console.warn('Geolocation error:', error.message);
-      setError('Could not access device location. Using standard map view.');
+      // Try cache fallback first
+      const cached = getCachedLocation();
+      if (cached) {
+        const coords = fromLonLat([cached.lon, cached.lat]);
+        setUserCoords(coords);
+        locationOverlay.setPosition(coords);
+        view.animate({ center: coords, zoom: 14 });
+        setError(null);
+        setInfo(null);
+      } else {
+        setError(null);
+        setInfo('Using default map view.');
+      }
     });
     
     // Auto-start tracking explicitly asking for permission first
@@ -348,12 +430,29 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
             home,
           ) < AT_HOME_THRESHOLD_M;
           locationOverlay.setPosition(atHome ? undefined : coords);
+          cacheLocation(pos.coords.latitude, pos.coords.longitude);
+          setError(null);
+          setInfo(null);
           view.animate({ center: coords, zoom: 14 });
           geolocation.setTracking(true);
         },
         (err) => {
           console.warn('Geolocation prompt error:', err.message);
-          setError('Location access denied or unavailable. Using standard view.');
+          // Try cache fallback first
+          const cached = getCachedLocation();
+          if (cached) {
+            const coords = fromLonLat([cached.lon, cached.lat]);
+            setUserCoords(coords);
+            locationOverlay.setPosition(coords);
+            view.animate({ center: coords, zoom: 14 });
+            setError(null);
+            setInfo(null);
+            // Don't show any message when cached location is available
+          } else {
+            // No cache available, use default map center with neutral message
+            setError(null);
+            setInfo('Using default map view.');
+          }
         },
         { enableHighAccuracy: true }
       );
@@ -416,6 +515,14 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
     });
     map.addLayer(selectionLayer);
     selectionLayerRef.current = selectionLayer;
+
+    const damageSource = new VectorSource();
+    const damageLayer = new VectorLayer({
+      source: damageSource,
+      zIndex: 9,
+    });
+    map.addLayer(damageLayer);
+    damageLayerRef.current = damageLayer;
 
     // 6. Setup Home Layer
     const homeSource = new VectorSource();
@@ -480,8 +587,32 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
         return;
       }
       const hit = map.forEachFeatureAtPixel(evt.pixel, (f) => f);
+      const damageReport = hit?.get('damageReport') as DamageReport | undefined;
+      if (damageReport) {
+        setSelectedMapItem({ kind: 'damage', report: damageReport });
+        return;
+      }
+
+      const hazardPin = hit?.get('hazardPin') as HazardPin | undefined;
+      if (hazardPin) {
+        setSelectedMapItem({ kind: 'hazard', pin: hazardPin });
+        return;
+      }
+
+      const helpRequest = hit?.get('helpRequest') as HelpRequest | undefined;
+      if (helpRequest) {
+        setSelectedMapItem({ kind: 'help', request: helpRequest });
+        return;
+      }
+
       const evac = hit?.get('evac') as EvacuationSite | undefined;
-      if (evac && onEvacClickRef.current) onEvacClickRef.current(evac);
+      if (evac && onEvacClickRef.current) {
+        setSelectedMapItem(null);
+        onEvacClickRef.current(evac);
+        return;
+      }
+
+      setSelectedMapItem(null);
     });
 
     // 8. Setup Route Layer (OSRM – fastest)
@@ -635,6 +766,7 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
       const feature = new Feature({
         geometry: point,
       });
+      feature.set('helpRequest', req);
 
       const color = req.urgency === 'CRITICAL' ? '#DC2626' : '#EAB308';
       
@@ -671,6 +803,7 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
     const features = list.map((pin) => {
       const point = new Point(fromLonLat([pin.longitude, pin.latitude]));
       const feature = new Feature({ geometry: point });
+      feature.set('hazardPin', pin);
 
       const fill =
         pin.reviewStatus === 'REJECTED'
@@ -715,6 +848,42 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
     );
     source.addFeature(feature);
   }, [selectedPoint]);
+
+  // Update Damage Reports Layer
+  useEffect(() => {
+    if (!damageLayerRef.current) return;
+    const source = damageLayerRef.current.getSource();
+    if (!source) return;
+
+    source.clear();
+
+    const features = damageReports.map((report) => {
+      const point = new Point(fromLonLat([report.longitude, report.latitude]));
+      const feature = new Feature({ geometry: point });
+      feature.set('damageReport', report);
+
+      const fill =
+        report.reviewStatus === 'REJECTED'
+          ? '#6B7280'
+          : report.reviewStatus === 'PENDING'
+            ? '#F59E0B'
+            : '#0F766E';
+
+      feature.setStyle(
+        new Style({
+          image: new Icon({
+            src: `data:image/svg+xml;utf8,${encodeURIComponent(getDamageReportSvg(fill))}`,
+            scale: 1,
+            anchor: [0.5, 1],
+          }),
+        }),
+      );
+
+      return feature;
+    });
+
+    source.addFeatures(features);
+  }, [damageReports]);
 
   // Update Hazard Risk Points Layer (red with opacity by risk level)
   useEffect(() => {
@@ -886,6 +1055,107 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
                 {error}
             </div>
         )}
+        {info && (
+            <div className="absolute top-2 left-2 right-2 bg-gray-600/90 text-white text-xs p-2 rounded-lg backdrop-blur-sm shadow-lg border border-gray-500">
+                {info}
+            </div>
+        )}
+        {selectedMapItem ? (
+          <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-wira-teal/20 bg-white/95 p-4 shadow-xl backdrop-blur-sm">
+            {selectedMapItem.kind === 'damage' ? (
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-display font-bold text-wira-earth">{selectedMapItem.report.title}</p>
+                    <p className="text-xs text-wira-earth/60">
+                      Submitted by {selectedMapItem.report.reporter.name}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMapItem(null)}
+                    className="text-xs font-bold uppercase tracking-wide text-wira-earth/50"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {selectedMapItem.report.damageCategories.map((category) => (
+                    <span
+                      key={category}
+                      className="rounded-full bg-wira-ivory-dark px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-wira-earth/70"
+                    >
+                      {category.replaceAll('_', ' ')}
+                    </span>
+                  ))}
+                </div>
+
+                {selectedMapItem.report.description ? (
+                  <p className="text-xs text-wira-earth/75">{selectedMapItem.report.description}</p>
+                ) : null}
+
+                <div className="grid grid-cols-2 gap-3 text-xs text-wira-earth/70">
+                  <div>
+                    Confidence {Math.round(selectedMapItem.report.confidenceScore * 100)}%
+                  </div>
+                  <div>
+                    Threshold {Math.round(selectedMapItem.report.confidenceThreshold * 100)}%
+                  </div>
+                </div>
+
+                <div className="text-xs text-wira-earth/70">
+                  Status: {selectedMapItem.report.reviewStatus}
+                </div>
+
+                <img
+                  src={selectedMapItem.report.photoUrl}
+                  alt={selectedMapItem.report.title}
+                  className="h-32 w-full rounded-xl object-cover"
+                />
+              </div>
+            ) : selectedMapItem.kind === 'hazard' ? (
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-display font-bold text-wira-earth">
+                      {selectedMapItem.pin.title ?? 'Hazard pin'}
+                    </p>
+                    <p className="text-xs text-wira-earth/60">
+                      {selectedMapItem.pin.hazardType ?? 'Unknown hazard'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMapItem(null)}
+                    className="text-xs font-bold uppercase tracking-wide text-wira-earth/50"
+                  >
+                    Close
+                  </button>
+                </div>
+                <p className="text-xs text-wira-earth/70">Review: {selectedMapItem.pin.reviewStatus ?? 'APPROVED'}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-display font-bold text-wira-earth">Help request</p>
+                    <p className="text-xs text-wira-earth/60">{selectedMapItem.request.hazardType}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMapItem(null)}
+                    className="text-xs font-bold uppercase tracking-wide text-wira-earth/50"
+                  >
+                    Close
+                  </button>
+                </div>
+                <p className="text-xs text-wira-earth/75">{selectedMapItem.request.id}</p>
+                <p className="text-xs text-wira-earth/70">Urgency: {selectedMapItem.request.urgency}</p>
+              </div>
+            )}
+          </div>
+        ) : null}
     </div>
   );
 });

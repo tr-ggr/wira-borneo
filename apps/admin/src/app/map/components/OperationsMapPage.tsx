@@ -2,6 +2,7 @@
 
 import {
   useAdminOperationsControllerMapOverview,
+  useAdminOperationsControllerReviewDamageReport,
   useAdminOperationsControllerReviewPin,
   useAdminOperationsControllerWeatherForecast,
   useAdminOperationsControllerWeatherGeocoding,
@@ -65,6 +66,24 @@ interface PinStatus {
   updatedAt?: string;
 }
 
+interface DamageReportItem {
+  id: string;
+  title: string;
+  description?: string | null;
+  damageCategories: Array<'FLOODED_ROAD' | 'COLLAPSED_STRUCTURE' | 'DAMAGED_INFRASTRUCTURE'>;
+  latitude: number;
+  longitude: number;
+  photoUrl: string;
+  confidenceScore: number;
+  confidenceThreshold: number;
+  reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewNote?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  reporter: { id: string; name: string; email: string };
+  reviewedBy?: { id: string; name: string; email: string } | null;
+}
+
 interface UserLocation {
   id: string;
   userId: string;
@@ -90,6 +109,7 @@ interface UserHelpRequest {
 interface MapOverviewPayload {
   vulnerableRegions: RegionRisk[];
   pinStatuses: PinStatus[];
+  damageReports: DamageReportItem[];
   userLocations: UserLocation[];
   helpRequests: UserHelpRequest[];
 }
@@ -126,6 +146,10 @@ function toPins(raw: unknown): PinStatus[] {
   return Array.isArray(raw) ? (raw as PinStatus[]) : [];
 }
 
+function toDamageReports(raw: unknown): DamageReportItem[] {
+  return Array.isArray(raw) ? (raw as DamageReportItem[]) : [];
+}
+
 function toUsers(raw: unknown): UserLocation[] {
   return Array.isArray(raw) ? (raw as UserLocation[]) : [];
 }
@@ -139,6 +163,7 @@ function toMapOverview(raw: unknown): MapOverviewPayload {
     return {
       vulnerableRegions: [],
       pinStatuses: [],
+      damageReports: [],
       userLocations: [],
       helpRequests: [],
     };
@@ -148,6 +173,7 @@ function toMapOverview(raw: unknown): MapOverviewPayload {
   return {
     vulnerableRegions: toRisks(input.vulnerableRegions),
     pinStatuses: toPins(input.pinStatuses),
+    damageReports: toDamageReports(input.damageReports),
     userLocations: toUsers(input.userLocations),
     helpRequests: toHelpRequests(input.helpRequests),
   };
@@ -234,11 +260,13 @@ export function OperationsMapPage() {
   const mapViewRef = useRef<View | null>(null);
   const hazardSourceRef = useRef(new VectorSource());
   const pinSourceRef = useRef(new VectorSource());
+  const damageSourceRef = useRef(new VectorSource());
   const userSourceRef = useRef(new VectorSource());
   const helpSourceRef = useRef(new VectorSource());
   const clusteringSourceRef = useRef(new VectorSource());
   const aseanExtentRef = useRef(toAseanExtentProjection());
   const filteredPinsRef = useRef<PinStatus[]>([]);
+  const damageReportsRef = useRef<DamageReportItem[]>([]);
   const filteredUsersRef = useRef<UserLocation[]>([]);
   const filteredHelpRequestsRef = useRef<UserHelpRequest[]>([]);
   const popupRef = useRef<HTMLDivElement | null>(null);
@@ -269,6 +297,7 @@ export function OperationsMapPage() {
     CRITICAL: true,
   });
   const [selectedPin, setSelectedPin] = useState<PinStatus | null>(null);
+  const [selectedDamageReport, setSelectedDamageReport] = useState<DamageReportItem | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserLocation | null>(null);
   const [selectedHelpRequest, setSelectedHelpRequest] = useState<UserHelpRequest | null>(null);
   const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(null);
@@ -292,6 +321,16 @@ export function OperationsMapPage() {
       onSuccess: () => {
         overviewQuery.refetch();
         setSelectedPin(null);
+        setPinReviewReason('');
+      },
+    },
+  });
+
+  const reviewDamageReportMutation = useAdminOperationsControllerReviewDamageReport({
+    mutation: {
+      onSuccess: () => {
+        overviewQuery.refetch();
+        setSelectedDamageReport(null);
         setPinReviewReason('');
       },
     },
@@ -340,6 +379,7 @@ export function OperationsMapPage() {
 
   const risks = overviewQuery.data?.vulnerableRegions ?? [];
   const pins = overviewQuery.data?.pinStatuses ?? [];
+  const damageReports = overviewQuery.data?.damageReports ?? [];
   const users = overviewQuery.data?.userLocations ?? [];
   const helpRequests = overviewQuery.data?.helpRequests ?? [];
 
@@ -368,6 +408,10 @@ export function OperationsMapPage() {
   useEffect(() => {
     filteredPinsRef.current = filteredPins;
   }, [filteredPins]);
+
+  useEffect(() => {
+    damageReportsRef.current = damageReports;
+  }, [damageReports]);
 
   useEffect(() => {
     filteredUsersRef.current = filteredUsers;
@@ -429,6 +473,10 @@ export function OperationsMapPage() {
 
     filteredPins.forEach((pin) => {
       points.push([pin.longitude, pin.latitude]);
+    });
+
+    damageReports.forEach((report) => {
+      points.push([report.longitude, report.latitude]);
     });
 
     filteredUsers.forEach((user) => {
@@ -514,6 +562,7 @@ export function OperationsMapPage() {
 
     const hazardLayer = new VectorLayer({ source: hazardSourceRef.current });
     const pinLayer = new VectorLayer({ source: pinSourceRef.current });
+    const damageLayer = new VectorLayer({ source: damageSourceRef.current });
     const userLayer = new VectorLayer({ source: userSourceRef.current });
     const helpLayer = new VectorLayer({ source: helpSourceRef.current });
 
@@ -580,6 +629,7 @@ export function OperationsMapPage() {
         clusteringLayer,
         hazardLayer,
         pinLayer,
+        damageLayer,
         userLayer,
         helpLayer,
       ],
@@ -617,7 +667,7 @@ export function OperationsMapPage() {
 
       const clickedFeature = clickedFeatures.find((feature) => {
         const featureType = String(feature.get('featureType'));
-        return featureType === 'pin' || featureType === 'user' || featureType === 'help';
+        return featureType === 'pin' || featureType === 'damage' || featureType === 'user' || featureType === 'help';
       });
 
       if (!clickedFeature) {
@@ -630,10 +680,24 @@ export function OperationsMapPage() {
         const pinId = String(clickedFeature.get('pinId'));
         const pin = filteredPinsRef.current.find((item) => item.id === pinId) ?? null;
         setSelectedPin(pin);
+        setSelectedDamageReport(null);
         setSelectedUser(null);
         setSelectedHelpRequest(null);
         if (pin) {
           setSelectedCoords([pin.longitude, pin.latitude]);
+        }
+        return;
+      }
+
+      if (featureType === 'damage') {
+        const damageReportId = String(clickedFeature.get('damageReportId'));
+        const report = damageReportsRef.current.find((item) => item.id === damageReportId) ?? null;
+        setSelectedDamageReport(report);
+        setSelectedPin(null);
+        setSelectedUser(null);
+        setSelectedHelpRequest(null);
+        if (report) {
+          setSelectedCoords([report.longitude, report.latitude]);
         }
         return;
       }
@@ -643,6 +707,7 @@ export function OperationsMapPage() {
         const user = filteredUsersRef.current.find((item) => item.id === userLocationId) ?? null;
         setSelectedUser(user);
         setSelectedPin(null);
+        setSelectedDamageReport(null);
         setSelectedHelpRequest(null);
         if (user) {
           setSelectedCoords([user.longitude, user.latitude]);
@@ -656,6 +721,7 @@ export function OperationsMapPage() {
           filteredHelpRequestsRef.current.find((item) => item.id === helpRequestId) ?? null;
         setSelectedHelpRequest(helpRequest);
         setSelectedPin(null);
+        setSelectedDamageReport(null);
         setSelectedUser(null);
         if (helpRequest) {
           setSelectedCoords([helpRequest.longitude, helpRequest.latitude]);
@@ -728,7 +794,10 @@ export function OperationsMapPage() {
   }, []);
 
   const hasAnyMapData =
-    filteredRisks.length > 0 || filteredPins.length > 0 || filteredUsers.length > 0;
+    filteredRisks.length > 0 ||
+    filteredPins.length > 0 ||
+    damageReports.length > 0 ||
+    filteredUsers.length > 0;
 
 
   useEffect(() => {
@@ -787,6 +856,43 @@ export function OperationsMapPage() {
       source.addFeature(feature);
     });
   }, [filteredPins]);
+
+  useEffect(() => {
+    const source = damageSourceRef.current;
+    source.clear();
+
+    damageReports.forEach((report) => {
+      const feature = new Feature({
+        geometry: new Point(fromLonLat([report.longitude, report.latitude])),
+        featureType: 'damage',
+        damageReportId: report.id,
+      });
+
+      feature.setStyle(
+        new Style({
+          image: new CircleStyle({
+            radius: 9,
+            fill: new Fill({
+              color:
+                report.reviewStatus === 'REJECTED'
+                  ? '#6B7280'
+                  : report.reviewStatus === 'APPROVED'
+                    ? '#0F766E'
+                    : '#F59E0B',
+            }),
+            stroke: new Stroke({ color: '#F5F0E8', width: 2 }),
+          }),
+          text: new Text({
+            text: 'D',
+            fill: new Fill({ color: '#ffffff' }),
+            font: 'bold 11px sans-serif',
+          }),
+        }),
+      );
+
+      source.addFeature(feature);
+    });
+  }, [damageReports]);
 
   useEffect(() => {
     const source = userSourceRef.current;
@@ -1225,6 +1331,64 @@ export function OperationsMapPage() {
         </div>
 
         <aside className="card sidebar details-sidebar">
+          <section className="map-needs-section">
+            <div className="map-needs-section-header">
+              <h2 className="map-needs-section-title">{t('map.liveVerifiedNeeds')}</h2>
+              <span className="map-needs-live-dot" />
+            </div>
+            <div className="map-needs-list">
+              {filteredHelpRequests.slice(0, 3).map((req) => {
+                const urgencyClass =
+                  req.urgency === 'CRITICAL'
+                    ? 'critical'
+                    : req.urgency === 'HIGH' || req.urgency === 'MEDIUM'
+                      ? 'urgent'
+                      : 'verified';
+                return (
+                  <article
+                    key={req.id}
+                    className={`map-need-card ${urgencyClass}`}
+                  >
+                    <div className="map-need-card-header">
+                      <span className={`map-need-card-badge ${urgencyClass}`}>
+                        {req.urgency.toLowerCase()} · {req.hazardType.toLowerCase()}
+                      </span>
+                      <span className="map-need-card-time">
+                        {new Date(req.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <h3 className="map-need-card-title">
+                      {req.requester.name} — {req.status}
+                    </h3>
+                    <p className="map-need-card-desc">{req.description}</p>
+                    <div className="map-need-card-actions">
+                      <span className="map-need-card-meta">
+                        Lat {req.latitude.toFixed(3)}, Lon {req.longitude.toFixed(3)}
+                      </span>
+                      <button
+                        type="button"
+                        className="map-need-card-btn"
+                        onClick={() => {
+                          setSelectedHelpRequest(req);
+                          setSelectedPin(null);
+                          setSelectedDamageReport(null);
+                          setSelectedUser(null);
+                          setSelectedCoords([req.longitude, req.latitude]);
+                        }}
+                      >
+                        {t('map.viewOnMap')}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {filteredHelpRequests.length === 0 ? (
+                <p className="muted small">{t('map.noActiveVerifiedNeeds')}</p>
+              ) : null}
+            </div>
+          </section>
+
           <h2 className="card-title">{t('map.selectionDetails')}</h2>
 
           {selectedPin ? (

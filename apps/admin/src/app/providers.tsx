@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { AuthProvider } from '../lib/auth';
 import { I18nProvider } from '../i18n/context';
 import { LocaleLangSync } from '../components/LocaleLangSync';
+import { ToastProvider } from './components/Toast';
 
 export function Providers({ children }: { children: ReactNode }) {
   const queryClient = useMemo(() => new QueryClient(), []);
@@ -21,7 +22,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthProvider>
         <I18nProvider>
           <LocaleLangSync />
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </I18nProvider>
       </AuthProvider>
     </QueryClientProvider>

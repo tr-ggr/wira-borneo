@@ -6,12 +6,14 @@ import { HealthOutbreakModule } from './modules/health-outbreak/health-outbreak.
 import { RoutingModule } from './modules/routing/routing.module';
 import { TrackerModule } from './modules/tracker/tracker.module';
 import { OpenMeteoModule } from './providers/open-meteo/open-meteo.module';
+import { SupabaseModule } from './providers/supabase/supabase.module';
 
 @Module({
   imports: [
     DatabaseModule,
     AuthModule,
     OpenMeteoModule,
+    SupabaseModule,
     DisasterResponseModule,
     HealthOutbreakModule,
     RoutingModule,

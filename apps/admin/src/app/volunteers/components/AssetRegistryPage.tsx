@@ -297,6 +297,20 @@ export function AssetRegistryPage() {
                                   {entry.description || 'No description provided.'}
                                 </p>
                               </div>
+                              <div>
+                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Asset Photo</h4>
+                                {entry.photoUrl ? (
+                                  <img
+                                    src={entry.photoUrl}
+                                    alt={`${entry.name} photo`}
+                                    className="h-44 w-full rounded-xl border border-slate-100 object-cover bg-white"
+                                  />
+                                ) : (
+                                  <div className="h-44 w-full rounded-xl border border-dashed border-slate-200 bg-white text-xs font-semibold tracking-wide text-slate-400 flex items-center justify-center">
+                                    No Photo Uploaded
+                                  </div>
+                                )}
+                              </div>
                               <div className="flex items-center gap-6">
                                 <div>
                                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Registered</h4>

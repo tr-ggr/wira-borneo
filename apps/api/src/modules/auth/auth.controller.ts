@@ -18,6 +18,7 @@ import {
   SignInResult,
   SignUpPayload,
   SignUpResult,
+  UpdateLocationPayload,
   UpdateProfilePayload,
 } from './auth.types';
 
@@ -77,6 +78,16 @@ export class AuthController {
     @Headers() headers: IncomingHttpHeaders,
   ) {
     return this.authService.updateProfile(payload, headers);
+  }
+
+  @Patch('location')
+  @ApiBody({ type: UpdateLocationPayload })
+  @ApiResponse({ status: 200 })
+  async updateLocation(
+    @Body() payload: UpdateLocationPayload,
+    @Headers() headers: IncomingHttpHeaders,
+  ) {
+    return this.authService.updateLocation(payload, headers);
   }
 
   private bridgeCookies(fetchResponse: Response, expressResponse: ExpressResponse) {

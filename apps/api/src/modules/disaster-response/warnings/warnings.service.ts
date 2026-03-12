@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/database.service';
-import { withinRadiusKm } from '../shared/geo.util';
+import { withinRadiusKm, isInsideGeoJsonPolygon } from '../shared/geo.util';
 
 @Injectable()
 export class WarningsService {
@@ -34,17 +34,28 @@ export class WarningsService {
 
     return warnings.filter((warning) =>
       warning.targetAreas.some((area) => {
-        if (area.latitude == null || area.longitude == null || area.radiusKm == null) {
-          return true;
+        // Check polygon-based targeting first
+        if (area.polygonGeoJson) {
+          return isInsideGeoJsonPolygon(
+            location.latitude,
+            location.longitude,
+            area.polygonGeoJson,
+          );
         }
 
-        return withinRadiusKm({
-          fromLat: location.latitude,
-          fromLng: location.longitude,
-          toLat: area.latitude,
-          toLng: area.longitude,
-          radiusKm: area.radiusKm,
-        });
+        // Fall back to radius-based targeting
+        if (area.latitude != null && area.longitude != null && area.radiusKm != null) {
+          return withinRadiusKm({
+            fromLat: location.latitude,
+            fromLng: location.longitude,
+            toLat: area.latitude,
+            toLng: area.longitude,
+            radiusKm: area.radiusKm,
+          });
+        }
+
+        // If neither polygon nor radius is specified, treat as broadcast (return true)
+        return true;
       }),
     );
   }
@@ -95,17 +106,28 @@ export class WarningsService {
         }
 
         return warning.targetAreas.some((area) => {
-          if (area.latitude == null || area.longitude == null || area.radiusKm == null) {
-            return true;
+          // Check polygon-based targeting first
+          if (area.polygonGeoJson) {
+            return isInsideGeoJsonPolygon(
+              location.latitude,
+              location.longitude,
+              area.polygonGeoJson,
+            );
           }
 
-          return withinRadiusKm({
-            fromLat: location.latitude,
-            fromLng: location.longitude,
-            toLat: area.latitude,
-            toLng: area.longitude,
-            radiusKm: area.radiusKm,
-          });
+          // Fall back to radius-based targeting
+          if (area.latitude != null && area.longitude != null && area.radiusKm != null) {
+            return withinRadiusKm({
+              fromLat: location.latitude,
+              fromLng: location.longitude,
+              toLat: area.latitude,
+              toLng: area.longitude,
+              radiusKm: area.radiusKm,
+            });
+          }
+
+          // If neither polygon nor radius is specified, treat as broadcast (return true)
+          return true;
         });
       }),
     );

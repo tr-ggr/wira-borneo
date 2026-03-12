@@ -24,10 +24,12 @@ import {
   useHelpRequestsControllerAssignments,
   useHelpRequestsControllerClaim,
   useHelpRequestsControllerUpdateStatus,
+   useDamageReportsControllerFindVisible,
 } from '@wira-borneo/api-client';
 import HelpRequestForm from '../help/HelpRequestForm';
 import HelpRequestTimeline from '../help/HelpRequestTimeline';
 import HazardPinForm from '../pin/HazardPinForm';
+import DamageReportForm from '../damage-report/DamageReportForm';
 
 export default function HelpDashboard({
   onNavigateToRequest,
@@ -35,9 +37,6 @@ export default function HelpDashboard({
   onToggleShowAllPins,
   formLocation,
   setFormLocation,
-  pickLocationFor,
-  setPickLocationFor,
-  onNavigateToMap,
 }: { 
   onNavigateToRequest: (id: string, loc: { latitude: number, longitude: number }) => void;
   showAllPins: boolean;
@@ -45,16 +44,18 @@ export default function HelpDashboard({
   formLocation: { latitude: number; longitude: number } | null;
   setFormLocation: (loc: { latitude: number; longitude: number } | null) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<'request' | 'volunteer'>('request');
+   const [activeTab, setActiveTab] = useState<'request' | 'damage' | 'volunteer'>('request');
   const [volunteerSubTab, setVolunteerSubTab] = useState<'available' | 'assigned'>('available');
   const [showForm, setShowForm] = useState(false);
   const [showHazardPinForm, setShowHazardPinForm] = useState(false);
+   const [showDamageReportForm, setShowDamageReportForm] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   const { data: volunteerStatus, refetch: refetchVolunteerStatus } = useVolunteersControllerGetStatus();
   const { data: myRequests, refetch: refetchRequests } = useHelpRequestsControllerMe();
   const { data: openRequests, refetch: refetchOpen } = useHelpRequestsControllerListOpen();
   const { data: myAssignments, refetch: refetchAssignments } = useHelpRequestsControllerAssignments();
+   const { data: damageReports, refetch: refetchDamageReports } = useDamageReportsControllerFindVisible();
 
   const { mutate: applyAsVolunteer, isPending: isApplying } = useVolunteersControllerApply();
   const { mutate: claimRequest, isPending: isClaiming } = useHelpRequestsControllerClaim();
@@ -78,6 +79,11 @@ export default function HelpDashboard({
   const handleHazardPinSuccess = () => {
     setShowHazardPinForm(false);
   };
+
+   const handleDamageReportSuccess = () => {
+      setShowDamageReportForm(false);
+      refetchDamageReports();
+   };
 
   const handleApply = () => {
     applyAsVolunteer({ data: {} as any }, {
@@ -125,13 +131,19 @@ export default function HelpDashboard({
           
           <div className="flex bg-wira-ivory-dark rounded-xl p-1">
             <button 
-              onClick={() => { setActiveTab('request'); setShowForm(false); setShowHazardPinForm(false); setSelectedRequest(null); }}
+                     onClick={() => { setActiveTab('request'); setShowForm(false); setShowHazardPinForm(false); setShowDamageReportForm(false); setSelectedRequest(null); }}
               className={`flex-1 py-2 text-xs font-body font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'request' ? 'bg-white text-wira-teal shadow-sm' : 'text-wira-earth/50'}`}
             >
               Request Help
             </button>
             <button 
-              onClick={() => { setActiveTab('volunteer'); setShowForm(false); setShowHazardPinForm(false); setSelectedRequest(null); }}
+                     onClick={() => { setActiveTab('damage'); setShowForm(false); setShowHazardPinForm(false); setShowDamageReportForm(false); setSelectedRequest(null); }}
+                     className={`flex-1 py-2 text-xs font-body font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'damage' ? 'bg-white text-wira-teal shadow-sm' : 'text-wira-earth/50'}`}
+                  >
+                     Report Damage
+                  </button>
+                  <button 
+                     onClick={() => { setActiveTab('volunteer'); setShowForm(false); setShowHazardPinForm(false); setShowDamageReportForm(false); setSelectedRequest(null); }}
               className={`flex-1 py-2 text-xs font-body font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'volunteer' ? 'bg-white text-wira-teal shadow-sm' : 'text-wira-earth/50'}`}
             >
               Volunteer
@@ -289,6 +301,110 @@ export default function HelpDashboard({
              </>
            )}
         </div>
+         ) : activeTab === 'damage' ? (
+            <div className="space-y-6 animate-slide-up">
+               {showDamageReportForm ? (
+                  <div className="space-y-4">
+                     <button
+                        type="button"
+                        onClick={() => setShowDamageReportForm(false)}
+                        className="form-back-link flex items-center gap-2"
+                     >
+                        ← Back to Dashboard
+                     </button>
+                     <div className="wira-card border-wira-teal/10 p-6">
+                        <h3 className="mb-6 text-xl font-display font-bold wira-card-title">Submit damage report</h3>
+                        <DamageReportForm
+                           location={formLocation}
+                           onLocationChange={(loc) => setFormLocation(loc)}
+                           onSuccess={handleDamageReportSuccess}
+                        />
+                     </div>
+                  </div>
+               ) : (
+                  <>
+                     <div className="wira-card space-y-4 border-wira-gold/20 bg-wira-gold/5 p-6">
+                        <div className="h-12 w-12 rounded-2xl bg-wira-gold/10 flex items-center justify-center">
+                           <AlertCircle className="h-6 w-6 text-wira-gold" />
+                        </div>
+                        <div className="space-y-1">
+                           <h3 className="text-lg font-display font-bold wira-card-title">Map post-disaster damage</h3>
+                           <p className="text-xs font-body wira-card-body">
+                              Submit geo-tagged photos of flooded roads, collapsed structures, or damaged infrastructure. The MVP uses mocked AI confidence scoring and auto-approves high-confidence reports.
+                           </p>
+                        </div>
+                        <button
+                           type="button"
+                           onClick={() => setShowDamageReportForm(true)}
+                           className="wira-btn-primary"
+                        >
+                           Start Damage Report
+                        </button>
+                     </div>
+
+                     <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                           <h4 className="text-xs font-display font-bold uppercase tracking-widest text-wira-earth/40">
+                              Recent damage reports
+                           </h4>
+                           <span className="text-[10px] font-body text-wira-earth/50">
+                              Approved reports and your own submissions
+                           </span>
+                        </div>
+
+                        {asArray(damageReports).length === 0 ? (
+                           <div className="wira-card p-4 text-sm text-wira-earth/60">
+                              No damage reports yet. Submit the first one to populate the live damage map.
+                           </div>
+                        ) : (
+                           <div className="space-y-3">
+                              {asArray(damageReports).slice(0, 5).map((report: any) => (
+                                 <div key={report.id} className="wira-card p-4 space-y-3">
+                                    <div className="flex items-start justify-between gap-4">
+                                       <div>
+                                          <p className="text-sm font-display font-bold text-wira-earth">{report.title}</p>
+                                          <p className="text-[11px] font-body text-wira-earth/60">
+                                             By {report.reporter?.name ?? 'Unknown resident'}
+                                          </p>
+                                       </div>
+                                       <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                                          report.reviewStatus === 'APPROVED'
+                                             ? 'bg-status-safe/10 text-status-safe'
+                                             : report.reviewStatus === 'REJECTED'
+                                                ? 'bg-status-critical/10 text-status-critical'
+                                                : 'bg-wira-gold/10 text-wira-gold'
+                                       }`}>
+                                          {report.reviewStatus}
+                                       </span>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2">
+                                       {(report.damageCategories ?? []).map((category: string) => (
+                                          <span
+                                             key={category}
+                                             className="rounded-full bg-wira-ivory-dark px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-wira-earth/70"
+                                          >
+                                             {category.replaceAll('_', ' ')}
+                                          </span>
+                                       ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-xs text-wira-earth/60">
+                                       <span>
+                                          Confidence {Math.round((report.confidenceScore ?? 0) * 100)}% / threshold {Math.round((report.confidenceThreshold ?? 0.7) * 100)}%
+                                       </span>
+                                       <span>
+                                          {report.latitude?.toFixed?.(3)}, {report.longitude?.toFixed?.(3)}
+                                       </span>
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        )}
+                     </div>
+                  </>
+               )}
+            </div>
       ) : (
         <div className="space-y-6 animate-slide-up">
            {!isApprovedVolunteer ? (

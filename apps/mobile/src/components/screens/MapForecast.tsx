@@ -3,9 +3,11 @@
 import React, { useRef } from 'react';
 
 import {
+  useAuthControllerUpdateLocation,
   useRiskIntelligenceControllerGetForecast,
   useRiskIntelligenceControllerGetVulnerableRegions,
   useHelpRequestsControllerListOpen,
+  useDamageReportsControllerFindVisible,
   usePinsControllerFindVisible,
   useVolunteersControllerGetStatus,
   useRoutingControllerGetRoute,
@@ -29,6 +31,15 @@ function weatherCodeToKey(code: number): string {
 }
 
 export type RouteOrigin = 'current' | 'home';
+
+function hasValidCoordinates(latitude: unknown, longitude: unknown): latitude is number {
+  return (
+    typeof latitude === 'number' &&
+    typeof longitude === 'number' &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude)
+  );
+}
 
 export default function MapForecast({
   focusedHelpRequestId,
@@ -64,14 +75,21 @@ export default function MapForecast({
   const [routeOrigin, setRouteOrigin] = React.useState<RouteOrigin>('current');
   const [selectedLocationForWeather, setSelectedLocationForWeather] = React.useState<{ latitude: number; longitude: number } | null>(null);
   const [actionButtonsExpanded, setActionButtonsExpanded] = React.useState(false);
+  const updateLocationSnapshot = useAuthControllerUpdateLocation();
 
   React.useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition((pos) => {
-        setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        const { latitude, longitude } = pos.coords;
+        if (!hasValidCoordinates(latitude, longitude)) {
+          return;
+        }
+
+        setUserLocation({ latitude, longitude });
+        updateLocationSnapshot.mutate({ data: { latitude, longitude } });
       });
     }
-  }, []);
+  }, [updateLocationSnapshot]);
 
   const activeLoc = mapFocus || userLocation || { latitude: 1.5533, longitude: 110.3592 };
 
@@ -90,6 +108,7 @@ export default function MapForecast({
   const { data: vulnerableRegions } = useRiskIntelligenceControllerGetVulnerableRegions();
   const { data: openRequests } = useHelpRequestsControllerListOpen();
   const { data: hazardPins } = usePinsControllerFindVisible();
+  const { data: damageReports } = useDamageReportsControllerFindVisible();
   const { data: volunteerStatus } = useVolunteersControllerGetStatus();
   const status = volunteerStatus as { profile?: { baseLatitude?: number; baseLongitude?: number } } | null | undefined;
   const profile = status?.profile;
@@ -163,6 +182,7 @@ export default function MapForecast({
   const [evacTypeFilter, setEvacTypeFilter] = React.useState<string | 'ALL'>('ALL');
   const [showVulnerableRegions, setShowVulnerableRegions] = React.useState(true);
   const [showHazardPins, setShowHazardPins] = React.useState(true);
+  const [showDamageReports, setShowDamageReports] = React.useState(true);
 
   const filteredEvacuationSites =
     evacTypeFilter === 'ALL'
@@ -174,6 +194,8 @@ export default function MapForecast({
   const filteredVulnerableRegions = showVulnerableRegions ? (vulnerableRegions as any) : [];
   const filteredHazardPins =
     showHazardPins && Array.isArray(hazardPins) ? (hazardPins as any) : [];
+  const filteredDamageReports =
+    showDamageReports && Array.isArray(damageReports) ? (damageReports as any) : [];
 
   return (
     <div className="flex flex-col flex-1 min-h-0 animate-fade-in">
@@ -213,6 +235,14 @@ export default function MapForecast({
               <label className="inline-flex items-center gap-1 cursor-pointer">
                 <input type="checkbox" checked={showHazardPins} onChange={(e) => setShowHazardPins(e.target.checked)} className="h-3.5 w-3.5 rounded border-2 border-sagip-slate accent-wira-teal focus:ring-wira-teal/30" />
                 <span>{t('map.hazardPins')}</span>
+              </label>
+              <label className="inline-flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" checked={showDamageReports} onChange={(e) => setShowDamageReports(e.target.checked)} className="h-3.5 w-3.5 rounded border-2 border-sagip-slate accent-wira-teal focus:ring-wira-teal/30" />
+                <span>{t('map.damageReports')}</span>
+              </label>
+              <label className="inline-flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" checked={showRiskLayer} onChange={(e) => setShowRiskLayer(e.target.checked)} className="h-3.5 w-3.5 rounded border-2 border-sagip-slate accent-wira-teal focus:ring-wira-teal/30" />
+                <span>{t('map.riskLayer')}</span>
               </label>
             </div>
           </div>
@@ -291,6 +321,7 @@ export default function MapForecast({
           vulnerableRegions={filteredVulnerableRegions} 
           helpRequests={showAllPins ? (openRequests as any) : []}
           hazardPins={filteredHazardPins}
+          damageReports={filteredDamageReports}
           focusedHelpRequestId={focusedHelpRequestId}
           mapFocus={mapFocus}
           homeLocation={homeLocation}

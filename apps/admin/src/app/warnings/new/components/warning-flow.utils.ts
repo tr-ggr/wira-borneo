@@ -33,12 +33,22 @@ export function warningSummary(input: {
   message: string;
   areaName: string;
   radiusKm?: number;
+  drawMode?: 'pin' | 'box' | 'polygon';
+  hasPolygon?: boolean;
   evacuationCount: number;
 }) {
+  let targetText = input.areaName;
+
+  if (input.drawMode === 'pin' || (!input.drawMode && input.radiusKm)) {
+    targetText = `${input.areaName} (${input.radiusKm ?? 0} km radius)`;
+  } else if (input.hasPolygon) {
+    targetText = `${input.areaName} (Custom ${input.drawMode === 'box' ? 'box' : 'polygon'})`;
+  }
+
   return {
     heading: input.title,
     body: input.message,
-    target: `${input.areaName} (${input.radiusKm ?? 0} km)`,
+    target: targetText,
     evacuationCount: input.evacuationCount,
   };
 }

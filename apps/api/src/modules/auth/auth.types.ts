@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { AgeGroup } from '../../generated/prisma/enums';
 
 export class AuthenticatedUser {
@@ -46,6 +46,21 @@ export class UpdateProfilePayload {
   @IsOptional()
   @IsBoolean()
   isPWD?: boolean | null;
+}
+
+export class UpdateLocationPayload {
+  @ApiProperty()
+  @IsNumber()
+  latitude!: number;
+
+  @ApiProperty()
+  @IsNumber()
+  longitude!: number;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  region?: string | null;
 }
 
 export class AuthSession {

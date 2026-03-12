@@ -4,22 +4,36 @@ import {
   useAdminOperationsControllerCreateWarning,
   useAdminOperationsControllerGetPromptSuggestion,
 } from '@wira-borneo/api-client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../../../../i18n/context';
 import {
   canProceedToConfirmation,
   warningFlowReducer,
   warningSummary,
 } from './warning-flow.utils';
-import WarningMapSupport from './WarningMapSupport';
+import WarningMapSupport, { type WarningCoordinatePoint } from './WarningMapSupport';
 import {
   getLastWarningLocation,
   isLocationEmpty,
   saveLastWarningLocation,
 } from './location-prediction.utils';
+import { useToast } from '../../../components/Toast';
 
 type HazardType = 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
 type SeverityLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+type DrawMode = 'pin' | 'box' | 'polygon';
+
+function formatCoordinate(value: number): string {
+  return value.toFixed(6);
+}
+
+function coordinateLabel(drawMode: DrawMode, index: number, total: number): string {
+  if (drawMode === 'box' && total === 4) {
+    return ['Point 1', 'Point 2', 'Point 3', 'Point 4'][index] ?? `Point ${index + 1}`;
+  }
+
+  return `Pin ${index + 1}`;
+}
 
 const defaultTarget = {
   areaName: '',
@@ -39,15 +53,20 @@ export function ManualWarningPage() {
   const [startsAt, setStartsAt] = useState(new Date().toISOString().slice(0, 16));
   const [endsAt, setEndsAt] = useState('');
   const [target, setTarget] = useState(defaultTarget);
+  const [drawMode, setDrawMode] = useState<DrawMode>('pin');
+  const [targetCoordinates, setTargetCoordinates] = useState<WarningCoordinatePoint[]>([]);
 
   const promptMutation = useAdminOperationsControllerGetPromptSuggestion();
   const createWarningMutation = useAdminOperationsControllerCreateWarning();
+  const { showToast } = useToast();
 
-  useMemo(() => {
+  useEffect(() => {
     const saved = getLastWarningLocation();
-    if (saved && isLocationEmpty(target)) {
-      setTarget(saved);
+    if (!saved) {
+      return;
     }
+
+    setTarget((current) => (isLocationEmpty(current) ? saved : current));
   }, []);
 
   const payload = useMemo(
@@ -67,7 +86,8 @@ export function ManualWarningPage() {
           areaName: target.areaName,
           latitude: target.latitude ? Number(target.latitude) : undefined,
           longitude: target.longitude ? Number(target.longitude) : undefined,
-          radiusKm: target.radiusKm ? Number(target.radiusKm) : undefined,
+          // Only include radiusKm for pin mode; for box/polygon, use polygonGeoJson
+          radiusKm: drawMode === 'pin' && target.radiusKm ? Number(target.radiusKm) : undefined,
           polygonGeoJson: target.polygonGeoJson || undefined,
         },
       ],
@@ -86,6 +106,7 @@ export function ManualWarningPage() {
       target.longitude,
       target.radiusKm,
       target.polygonGeoJson,
+      drawMode,
     ],
   );
 
@@ -93,9 +114,16 @@ export function ManualWarningPage() {
     title: payload.title,
     message: payload.message,
     areaName: payload.targets[0].areaName,
-    radiusKm: payload.targets[0].radiusKm,
+    radiusKm: drawMode === 'pin' ? payload.targets[0].radiusKm : undefined,
+    drawMode: drawMode,
+    hasPolygon: Boolean(payload.targets[0].polygonGeoJson),
     evacuationCount: payload.evacuationAreaIds.length,
   });
+
+  const coordinateCountLabel =
+    drawMode === 'box'
+      ? `4 corners`
+      : `${targetCoordinates.length} ${targetCoordinates.length === 1 ? 'pin' : 'pins'}`;
 
   return (
     <section className="page-shell">
@@ -320,6 +348,10 @@ export function ManualWarningPage() {
                       setMessage('');
                       saveLastWarningLocation(target);
                       setTarget(defaultTarget);
+                      showToast('Warning sent successfully.', 'success');
+                    },
+                    onError: () => {
+                      showToast('Failed to send warning.', 'error');
                     },
                   },
                 );
@@ -339,22 +371,6 @@ export function ManualWarningPage() {
         .warning-page {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .warning-modal-shell {
-          border-radius: 12px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          overflow: hidden;
-          background: #ffffff;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .warning-modal-header {
-          background: #0f172a;
-          border-bottom: 4px solid var(--status-critical);
-          padding: 16px;
           color: #e5e7eb;
         }
 
@@ -576,6 +592,32 @@ export function ManualWarningPage() {
 
         .warning-map-success {
           margin-top: 0.5rem;
+        }
+
+        .warning-shape-info {
+          grid-column: 1 / -1;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .coordinate-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 0.75rem;
+        }
+
+        .coordinate-card {
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          background: #ffffff;
+          padding: 0.75rem;
+        }
+
+        .coordinate-card-label {
+          margin: 0 0 0.4rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
         }
 
         .warning-map-footer {

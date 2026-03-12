@@ -9,6 +9,7 @@ import {
   type SignInPayload,
   type SignUpResult,
   type SignUpPayload,
+  type UpdateLocationPayload,
   type UpdateProfilePayload,
 } from './auth.types';
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
@@ -245,6 +246,28 @@ export class AuthService {
     });
 
     return this.toAuthenticatedUser(updatedUser);
+  }
+
+  async updateLocation(payload: UpdateLocationPayload, headers: IncomingHttpHeaders) {
+    const session = await this.getSession(headers);
+    if (!session) {
+      throw new UnauthorizedException('Not authenticated');
+    }
+
+    return this.prisma.userLocationSnapshot.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        latitude: payload.latitude,
+        longitude: payload.longitude,
+        region: payload.region ?? null,
+      },
+      update: {
+        latitude: payload.latitude,
+        longitude: payload.longitude,
+        region: payload.region ?? null,
+      },
+    });
   }
 
   private toAuthenticatedUser(user: {

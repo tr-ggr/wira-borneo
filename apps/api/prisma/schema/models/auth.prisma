@@ -22,6 +22,8 @@ model User {
   helpRequestEvents          HelpRequestEvent[]           @relation("HelpRequestEventActor")
   mapPinsReported            MapPinStatus[]              @relation("MapPinReporter")
   mapPinsReviewed            MapPinStatus[]               @relation("MapPinReviewer")
+  damageReportsSubmitted     DamageReport[]               @relation("DamageReportReporter")
+  damageReportsReviewed      DamageReport[]               @relation("DamageReportReviewer")
   locationSnapshot           UserLocationSnapshot?
   evacuationRouteSuggestions EvacuationRouteSuggestion[]
 
