@@ -1,20 +1,40 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../../core/database/database.service';
+import { SupabaseService } from '../../../providers/supabase/supabase.service';
 
 @Injectable()
 export class AssetsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
-  async createAsset(userId: string, input: {
+  async createAsset(
+    userId: string,
+    input: {
     name: string;
     description?: string;
-    photoUrl?: string;
     latitude?: number;
     longitude?: number;
-  }) {
+    },
+    photo?: Express.Multer.File,
+  ) {
+    let photoUrl: string | undefined;
+
+    if (photo) {
+      const sanitizedFileName = photo.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `assets/${randomUUID()}-${sanitizedFileName}`;
+
+      photoUrl = await this.supabaseService.uploadFile(filePath, photo.buffer, {
+        contentType: photo.mimetype,
+      });
+    }
+
     return this.prisma.asset.create({
       data: {
         ...input,
+        photoUrl,
         userId,
         status: 'PENDING',
       },

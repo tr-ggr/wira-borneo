@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AssetsService } from './assets.service';
 import { AssetsController } from './assets.controller';
+import { SupabaseModule } from '../../../providers/supabase/supabase.module';
 
 @Module({
+  imports: [SupabaseModule],
   providers: [AssetsService],
   controllers: [AssetsController],
   exports: [AssetsService],

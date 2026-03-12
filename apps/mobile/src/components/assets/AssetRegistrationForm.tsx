@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { 
   Car, 
   Truck, 
@@ -29,12 +29,15 @@ interface AssetRegistrationFormProps {
 export function AssetRegistrationForm({ onClose, onSuccess }: AssetRegistrationFormProps) {
   const { data: session } = useAuthControllerGetSession();
   const queryClient = useQueryClient();
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<AssetCategory>('vehicle');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
   const createAsset = useAssetsControllerCreateAsset({
     mutation: {
@@ -60,6 +63,26 @@ export function AssetRegistrationForm({ onClose, onSuccess }: AssetRegistrationF
     );
   };
 
+  const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0] ?? null;
+    setPhotoFile(selected);
+
+    if (!selected) {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+      setPhotoPreviewUrl(null);
+      return;
+    }
+
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+
+    const objectUrl = URL.createObjectURL(selected);
+    setPhotoPreviewUrl(objectUrl);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!session?.user?.id) return;
@@ -71,6 +94,7 @@ export function AssetRegistrationForm({ onClose, onSuccess }: AssetRegistrationF
         description: `[${category.toUpperCase()}] ${description}`,
         latitude: latitude ?? undefined,
         longitude: longitude ?? undefined,
+        photo: photoFile ?? undefined,
       },
     });
   };
@@ -183,16 +207,34 @@ export function AssetRegistrationForm({ onClose, onSuccess }: AssetRegistrationF
             </button>
             <button
               type="button"
-              className="p-4 rounded-xl bg-sagip-border/20 text-sagip-muted hover:bg-sagip-border/30 transition-all opacity-50 cursor-not-allowed"
-              title="Photo upload coming soon"
+              className={`p-4 rounded-xl transition-all ${photoFile ? 'bg-asean-blue/10 text-asean-blue border border-asean-blue/30' : 'bg-sagip-border/20 text-sagip-muted hover:bg-sagip-border/30'}`}
+              title={photoFile ? photoFile.name : 'Attach asset photo'}
+              onClick={() => photoInputRef.current?.click()}
             >
               <Camera size={20} />
             </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
           </div>
           {latitude && (
             <p className="text-[10px] font-mono text-sagip-muted text-center pt-1">
               {latitude.toFixed(6)}, {longitude?.toFixed(6)}
             </p>
+          )}
+          {photoPreviewUrl && (
+            <div className="rounded-xl border border-sagip-border bg-white p-2">
+              <img
+                src={photoPreviewUrl}
+                alt="Selected asset"
+                className="h-36 w-full rounded-lg object-cover"
+              />
+            </div>
           )}
         </section>
 
@@ -210,10 +252,10 @@ export function AssetRegistrationForm({ onClose, onSuccess }: AssetRegistrationF
             )}
           </button>
           
-          {createAsset.error && (
+          {createAsset.isError && (
             <div className="mt-4 p-4 rounded-lg bg-status-critical/10 text-status-critical flex items-start gap-2 text-sm animate-in fade-in slide-in-from-top-1">
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
-              <p>Generation failed: {createAsset.error.message}</p>
+              <p>Registration failed: {createAsset.error instanceof Error ? createAsset.error.message : 'Unknown error'}</p>
             </div>
           )}
         </div>
