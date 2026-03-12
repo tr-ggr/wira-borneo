@@ -79,7 +79,6 @@ export function ManualWarningPage() {
       target.longitude,
       target.radiusKm,
       target.polygonGeoJson,
-      selectedEvacuationAreas,
     ],
   );
 
