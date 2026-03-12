@@ -51,8 +51,8 @@ interface RegionRisk {
 interface PinStatus {
   id: string;
   title: string;
-  hazardType: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
-  status: 'OPEN' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'RESOLVED';
+  hazardType: 'Flood' | 'Typhoon' | 'Earthquake' | 'Aftershock';
+  status: 'Open' | 'Acknowledged' | 'In Progresss' | 'Resolved';
   latitude: number;
   longitude: number;
   region?: string | null;
@@ -206,6 +206,15 @@ function fmt(value: number | string | null | undefined, digits = 1): string {
   }
 
   return String(value);
+}
+
+function labelizeKey(key: string): string {
+  return key
+    .toLowerCase()
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function getVulnerabilityColor(score: number): string {
@@ -584,10 +593,20 @@ export function OperationsMapPage() {
     });
     resizeObserver.observe(targetElement);
 
-    requestAnimationFrame(() => {
+    const scheduleUpdateSize = () => {
+      requestAnimationFrame(() => {
+        mapRef.current?.updateSize();
+        requestAnimationFrame(() => {
+          mapRef.current?.updateSize();
+          setIsMapReady(true);
+        });
+      });
+    };
+    scheduleUpdateSize();
+    // Re-run after layout has settled (nested flex/grid can delay initial size).
+    const timeoutId = window.setTimeout(() => {
       mapRef.current?.updateSize();
-      setIsMapReady(true);
-    });
+    }, 150);
 
     const map = mapRef.current;
     if (!map) return;
@@ -672,6 +691,7 @@ export function OperationsMapPage() {
     });
 
     return () => {
+      window.clearTimeout(timeoutId);
       resizeObserver.disconnect();
       mapRef.current?.setTarget(undefined);
       mapRef.current = null;
@@ -917,6 +937,8 @@ export function OperationsMapPage() {
     }
   }, [viewBuildingProfiles]);
 
+  const hasCriticalRisks = filteredRisks.some((r) => r.severity === 'CRITICAL');
+
   return (
     <section className="page-shell">
       <header className="section-header">
@@ -977,7 +999,7 @@ export function OperationsMapPage() {
           )}
 
           <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
- 
+
           <h2 className="card-title">{t('map.hazardLayers')}</h2>
           {Object.keys(hazardFilter).map((key) => (
             <label className="checkbox-row" key={key}>
@@ -1032,9 +1054,10 @@ export function OperationsMapPage() {
           <form onSubmit={onSearchLocation} className="map-search-form">
             <label className="field-label" htmlFor="map-search">
               {t('map.geocodingSearch')}
+            </label>
               <input
                 id="map-search"
-                className="field"
+                className="field map-card-search-input"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder={t('map.searchPlaceholder')}
@@ -1101,7 +1124,6 @@ export function OperationsMapPage() {
             </p>
           ) : null}
           <div ref={mapTargetRef} className="map-canvas" />
-          
           <div ref={popupRef} className="map-hover-popup card" style={{ 
             display: hoveredBuilding ? 'block' : 'none',
             position: 'absolute',
@@ -1111,7 +1133,6 @@ export function OperationsMapPage() {
             pointerEvents: 'none',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            borderRadius: '8px',
             border: '1px solid #ddd'
           }}>
             {hoveredBuilding && (
@@ -1140,6 +1161,67 @@ export function OperationsMapPage() {
               <p className="small">{t('map.noOverlays')}</p>
             </div>
           ) : null}
+
+          <div className="map-layer-toolbar">
+            <div className="map-layer-toolbar-inner">
+              <button
+                type="button"
+                className={`map-layer-btn ${Object.values(hazardFilter).some(Boolean) ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !Object.values(hazardFilter).every(Boolean);
+                  setHazardFilter({
+                    TYPHOON: next,
+                    FLOOD: next,
+                    AFTERSHOCK: next,
+                    EARTHQUAKE: next,
+                  });
+                }}
+              >
+                Hazards
+              </button>
+              <button
+                type="button"
+                className={`map-layer-btn ${Object.values(pinStatusFilter).some(Boolean) ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !Object.values(pinStatusFilter).every(Boolean);
+                  setPinStatusFilter({
+                    OPEN: next,
+                    ACKNOWLEDGED: next,
+                    IN_PROGRESS: next,
+                    RESOLVED: next,
+                  });
+                }}
+              >
+                Ops Pins
+              </button>
+              <button
+                type="button"
+                className={`map-layer-btn ${Object.values(userFilter).some(Boolean) ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !Object.values(userFilter).every(Boolean);
+                  setUserFilter({
+                    RECENT: next,
+                    STALE: next,
+                  });
+                }}
+              >
+                User Locations
+              </button>
+              <button
+                type="button"
+                className={`map-layer-btn ${viewBuildingProfiles ? 'active' : ''}`}
+                onClick={() => setViewBuildingProfiles((current) => !current)}
+              >
+                Building Profiles
+              </button>
+              <button type="button" className="map-layer-btn" onClick={fitToData}>
+                Fit To Data
+              </button>
+              <button type="button" className="map-layer-btn" onClick={refocusAsean}>
+                Recenter ASEAN
+              </button>
+            </div>
+          </div>
         </div>
 
         <aside className="card sidebar details-sidebar">

@@ -6,7 +6,6 @@ import {
   HandHeart, 
   AlertCircle, 
   HelpCircle, 
-  Plus, 
   MapPin, 
   History, 
   ChevronRight, 
@@ -36,8 +35,11 @@ export default function HelpDashboard({
   onToggleShowAllPins,
   formLocation,
   setFormLocation,
-}: {
-  onNavigateToRequest: (id: string, loc: { latitude: number; longitude: number }) => void;
+  pickLocationFor,
+  setPickLocationFor,
+  onNavigateToMap,
+}: { 
+  onNavigateToRequest: (id: string, loc: { latitude: number, longitude: number }) => void;
   showAllPins: boolean;
   onToggleShowAllPins: (show: boolean) => void;
   formLocation: { latitude: number; longitude: number } | null;
@@ -119,15 +121,6 @@ export default function HelpDashboard({
               <h1 className="text-2xl font-display font-bold wira-card-title">Help Center</h1>
               <HelpCircle size={20} className="text-wira-gold" />
             </div>
-            
-            {!showForm && !showHazardPinForm && !selectedRequest && activeTab === 'request' && (
-               <button 
-                 onClick={() => setShowForm(true)}
-                 className="h-10 w-10 rounded-full bg-wira-teal text-white flex items-center justify-center shadow-lg shadow-wira-teal/20"
-               >
-                 <Plus size={20} />
-               </button>
-            )}
           </div>
           
           <div className="flex bg-wira-ivory-dark rounded-xl p-1">

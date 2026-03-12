@@ -185,7 +185,8 @@ def create_app() -> Flask:
             question=question,
             hazard_type=context.get("hazardType"),
             location=context.get("location"),
-            demographics=context.get("demographics")
+            demographics=context.get("demographics"),
+            user_id=context.get("userId")
         )
 
         try:

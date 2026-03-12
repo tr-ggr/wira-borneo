@@ -50,6 +50,7 @@ export class AssistantInternalController {
         householdComposition: true,
         emergencySkills: true,
         assets: true,
+        assetRecords: { select: { name: true } },
       },
     });
 
@@ -84,6 +85,12 @@ export class AssistantInternalController {
       if (!isPresent(demographics.householdComposition))
         missingFields.push('householdComposition');
       if (!isPresent(demographics.emergencySkills)) missingFields.push('emergencySkills');
+      
+      const legacyAssets = Array.isArray(demographics.assets) ? (demographics.assets as string[]) : [];
+      const recordAssets = (user?.assetRecords ?? []).map((r) => r.name);
+      const allAssets = Array.from(new Set([...legacyAssets, ...recordAssets]));
+      demographics.assets = allAssets;
+
       if (!isPresent(demographics.assets)) missingFields.push('assets');
     }
 

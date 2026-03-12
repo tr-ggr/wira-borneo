@@ -10,6 +10,7 @@ import {
   OpenMeteoForecastParams,
   OpenMeteoGeocodingParams,
 } from '../../../providers/open-meteo/open-meteo.types';
+import { AssistantService } from '../assistant/assistant.service';
 
 @Injectable()
 export class AdminOperationsService {
@@ -17,7 +18,8 @@ export class AdminOperationsService {
     private readonly prisma: PrismaService,
     private readonly riskService: RiskIntelligenceService,
     private readonly openMeteoService: OpenMeteoService,
-  ) {}
+    private readonly assistantService: AssistantService,
+  ) { }
 
   async listVolunteerApplications(options: {
     status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
@@ -232,6 +234,65 @@ export class AdminOperationsService {
     });
   }
 
+  async getAssetRegistry() {
+    const assets = await this.prisma.asset.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+            volunteerProfile: {
+              select: { status: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return assets.map((a) => ({
+      id: a.id,
+      name: a.name,
+      description: a.description,
+      status: a.status,
+      photoUrl: a.photoUrl,
+      latitude: a.latitude,
+      longitude: a.longitude,
+      ownerId: a.user.id,
+      ownerName: a.user.name,
+      ownerEmail: a.user.email,
+      ownerCreatedAt: a.user.createdAt,
+      volunteerStatus: a.user.volunteerProfile?.status ?? null,
+      createdAt: a.createdAt,
+    }));
+  }
+
+  async reviewAsset(input: {
+    assetId: string;
+    reviewerId: string;
+    action: 'APPROVE' | 'REJECT';
+    reason?: string;
+  }) {
+    const asset = await this.prisma.asset.findUnique({
+      where: { id: input.assetId },
+    });
+
+    if (!asset) {
+      throw new NotFoundException('Asset not found.');
+    }
+
+    const nextStatus = input.action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+
+    return this.prisma.asset.update({
+      where: { id: input.assetId },
+      data: {
+        status: nextStatus,
+      },
+    });
+  }
+
   async getApplicationHistory(applicationId: string) {
     return this.prisma.volunteerDecisionLog.findMany({
       where: { volunteerApplicationId: applicationId },
@@ -428,15 +489,23 @@ export class AdminOperationsService {
     });
   }
 
-  getWarningPromptSuggestion(input: {
+  async getWarningPromptSuggestion(input: {
     hazardType: string;
     areaOrRegion: string;
     radiusKm?: number;
   }) {
     const radius = input.radiusKm ? ` within ${input.radiusKm}km` : '';
+    const question = `Generate a localized emergency notification message for a ${input.hazardType.toLowerCase()} warning targeting ${input.areaOrRegion}${radius}. Write the notification in the local language or dialect appropriate for this region. Include nearest evacuation guidance, expected impact, and immediate safety actions. Return only the notification text, no JSON wrapping.`;
+
+    const assistantResponse = await this.assistantService.answerInquiry({
+      userId: 'system-admin',
+      question,
+      location: input.areaOrRegion,
+      hazardType: input.hazardType,
+    });
 
     return {
-      prompt: `Issue a ${input.hazardType.toLowerCase()} warning for ${input.areaOrRegion}${radius}. Include nearest evacuation areas, expected impact window, and immediate safety actions.`,
+      prompt: assistantResponse.answer,
       reminder:
         'Review and send manually to avoid false alarms. Warning dispatch is never automatic.',
     };

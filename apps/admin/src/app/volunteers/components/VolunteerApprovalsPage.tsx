@@ -8,7 +8,7 @@ import {
   useAdminOperationsControllerReactivateVolunteer,
   useAdminOperationsControllerGetApplicationHistory,
 } from '@wira-borneo/api-client';
-import { useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useI18n } from '../../../i18n/context';
 import { ActionModal } from './ActionModal';
 
@@ -26,7 +26,10 @@ interface VolunteerApplication {
   };
 }
 
-const statusFilters: Array<VolunteerApplication['status']> = [
+type VolunteerStatusFilter = 'ALL' | VolunteerApplication['status'];
+
+const statusFilters: Array<VolunteerStatusFilter> = [
+  'ALL',
   'PENDING',
   'APPROVED',
   'REJECTED',
@@ -40,16 +43,44 @@ function toApplications(raw: unknown): VolunteerApplication[] {
   return raw as VolunteerApplication[];
 }
 
+function getInitials(name: string | undefined): string {
+  if (!name?.trim()) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2);
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function exportApplicationsToCsv(applications: VolunteerApplication[]) {
+  const headers = ['Name', 'Email', 'Status', 'Notes', 'Submitted'];
+  const rows = applications.map((a) => [
+    a.user?.name ?? 'Unknown',
+    a.user?.email ?? '',
+    a.status,
+    a.notes ?? '',
+    new Date(a.createdAt).toISOString(),
+  ]);
+  const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `volunteer-applications-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function VolunteerApprovalsPage() {
   const { t } = useI18n();
-  const [status, setStatus] = useState<VolunteerApplication['status']>('PENDING');
+  const [status, setStatus] = useState<VolunteerStatusFilter>('PENDING');
   const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showHistoryId, setShowHistoryId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
-  // Modal State
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     application?: VolunteerApplication;
@@ -59,10 +90,10 @@ export function VolunteerApprovalsPage() {
   });
 
   const applicationsQuery = useAdminOperationsControllerListVolunteerApplications(
-    { status, sortBy, sortOrder },
+    { status: status === 'ALL' ? undefined : status, sortBy, sortOrder },
     {
       query: {
-        select: (response: any) => toApplications(response?.data ?? response),
+        select: (response: unknown) => toApplications((response as { data?: unknown })?.data ?? response),
       },
     },
   );
@@ -82,11 +113,41 @@ export function VolunteerApprovalsPage() {
 
   const applications = applicationsQuery.data ?? [];
 
-  const handleSelect = (id: string) => {
+  useEffect(() => {
+    // Selection only makes sense for the visible pending set
+    setSelectedIds([]);
+    setRejectionReason('');
+    setShowHistoryId(null);
+  }, [status]);
+
+  const filteredApplications = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return applications;
+    return applications.filter((a) => {
+      const name = a.user?.name ?? '';
+      const email = a.user?.email ?? '';
+      const id = a.id ?? '';
+      return (
+        name.toLowerCase().includes(q) ||
+        email.toLowerCase().includes(q) ||
+        id.toLowerCase().includes(q) ||
+        id.slice(-6).toLowerCase().includes(q)
+      );
+    });
+  }, [applications, search]);
+
+  const handleSelect = useCallback((id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
-  };
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (status !== 'PENDING') return;
+    const pending = filteredApplications.filter((a) => a.status === 'PENDING');
+    const allSelected = pending.every((a) => selectedIds.includes(a.id));
+    setSelectedIds(allSelected ? [] : pending.map((a) => a.id));
+  }, [status, filteredApplications, selectedIds]);
 
   const handleBulkReview = (nextStatus: 'APPROVED' | 'REJECTED') => {
     if (nextStatus === 'REJECTED' && !rejectionReason) {
@@ -136,6 +197,17 @@ export function VolunteerApprovalsPage() {
     setModalConfig({ isOpen: false });
   };
 
+  const handleExportCsv = () => {
+    exportApplicationsToCsv(filteredApplications);
+  };
+
+  const statusLabel = status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase();
+  const footerText = applicationsQuery.isLoading
+    ? 'Loading…'
+    : status === 'ALL'
+      ? `Showing ${filteredApplications.length} applicant${filteredApplications.length === 1 ? '' : 's'}`
+      : `Showing ${filteredApplications.length} of ${filteredApplications.length} ${statusLabel} applicant${filteredApplications.length === 1 ? '' : 's'}`;
+
   return (
     <section className="page-shell">
       <header className="section-header">
@@ -157,7 +229,6 @@ export function VolunteerApprovalsPage() {
             </button>
           ))}
         </div>
-        
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
           <select
             className="input small"
@@ -212,14 +283,12 @@ export function VolunteerApprovalsPage() {
         <p className="error-text">{t('volunteers.loadError')}</p>
       ) : null}
 
-      <div className="grid-list">
-        {applications.map((application) => {
-          const isPending = application.status === 'PENDING';
-          const isApproved = application.status === 'APPROVED';
-          const isSuspended = application.status === 'SUSPENDED';
-          const isSelected = selectedIds.includes(application.id);
-
-          return (
+      {!applicationsQuery.isLoading && !applicationsQuery.error && filteredApplications.map((application) => {
+        const isPending = application.status === 'PENDING';
+        const isApproved = application.status === 'APPROVED';
+        const isSuspended = application.status === 'SUSPENDED';
+        const isSelected = selectedIds.includes(application.id);
+        return (
             <article key={application.id} className={`card volunteer-card ${isSelected ? 'selected' : ''}`}>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 {isPending && (
@@ -344,9 +413,8 @@ export function VolunteerApprovalsPage() {
                 </div>
               )}
             </article>
-          );
-        })}
-      </div>
+        );
+      })}
 
       <ActionModal
         isOpen={modalConfig.isOpen}

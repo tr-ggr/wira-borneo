@@ -3,7 +3,6 @@
 import {
   useAdminOperationsControllerCreateWarning,
   useAdminOperationsControllerGetPromptSuggestion,
-  useEvacuationControllerAreas,
 } from '@wira-borneo/api-client';
 import { useMemo, useState } from 'react';
 import { useI18n } from '../../../../i18n/context';
@@ -13,15 +12,14 @@ import {
   warningSummary,
 } from './warning-flow.utils';
 import WarningMapSupport from './WarningMapSupport';
+import {
+  getLastWarningLocation,
+  isLocationEmpty,
+  saveLastWarningLocation,
+} from './location-prediction.utils';
 
 type HazardType = 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
 type SeverityLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
-
-interface EvacuationArea {
-  id: string;
-  name: string;
-  region?: string | null;
-}
 
 const defaultTarget = {
   areaName: '',
@@ -30,13 +28,6 @@ const defaultTarget = {
   radiusKm: '5',
   polygonGeoJson: '',
 };
-
-function toAreas(raw: unknown): EvacuationArea[] {
-  if (!Array.isArray(raw)) {
-    return [];
-  }
-  return raw as EvacuationArea[];
-}
 
 export function ManualWarningPage() {
   const { t } = useI18n();
@@ -48,13 +39,16 @@ export function ManualWarningPage() {
   const [startsAt, setStartsAt] = useState(new Date().toISOString().slice(0, 16));
   const [endsAt, setEndsAt] = useState('');
   const [target, setTarget] = useState(defaultTarget);
-  const [selectedEvacuationAreas, setSelectedEvacuationAreas] = useState<string[]>([]);
 
-  useEvacuationControllerAreas({
-    query: { select: (response: unknown) => toAreas(response) },
-  });
   const promptMutation = useAdminOperationsControllerGetPromptSuggestion();
   const createWarningMutation = useAdminOperationsControllerCreateWarning();
+
+  useMemo(() => {
+    const saved = getLastWarningLocation();
+    if (saved && isLocationEmpty(target)) {
+      setTarget(saved);
+    }
+  }, []);
 
   const payload = useMemo(
     () => ({
@@ -65,8 +59,8 @@ export function ManualWarningPage() {
       startsAt: new Date(startsAt).toISOString(),
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
       suggestedPrompt: (() => {
-        const d = promptMutation.data as unknown as { data?: { prompt?: string } } | undefined;
-        return d?.data ? String(d.data.prompt ?? '') : undefined;
+        const d = promptMutation.data as unknown as { prompt?: string } | undefined;
+        return d?.prompt ? String(d.prompt) : undefined;
       })(),
       targets: [
         {
@@ -77,7 +71,7 @@ export function ManualWarningPage() {
           polygonGeoJson: target.polygonGeoJson || undefined,
         },
       ],
-      evacuationAreaIds: selectedEvacuationAreas,
+      evacuationAreaIds: [] as string[],
     }),
     [
       title,
@@ -92,7 +86,6 @@ export function ManualWarningPage() {
       target.longitude,
       target.radiusKm,
       target.polygonGeoJson,
-      selectedEvacuationAreas,
     ],
   );
 
@@ -271,7 +264,6 @@ export function ManualWarningPage() {
                 </p>
               )}
             </div>
-
           </article>
 
           <article className="card">
@@ -307,7 +299,7 @@ export function ManualWarningPage() {
             <dt>{t('warnings.summaryEvacuationAreas')}</dt>
             <dd>{summary.evacuationCount}</dd>
           </dl>
-          <div className="action-row">
+          <div className="action-row warning-confirm-actions">
             <button
               type="button"
               className="btn btn-neutral"
@@ -326,8 +318,8 @@ export function ManualWarningPage() {
                       setStep((current) => warningFlowReducer(current, { type: 'SENT' }));
                       setTitle('');
                       setMessage('');
+                      saveLastWarningLocation(target);
                       setTarget(defaultTarget);
-                      setSelectedEvacuationAreas([]);
                     },
                   },
                 );
@@ -342,6 +334,347 @@ export function ManualWarningPage() {
           ) : null}
         </article>
       )}
+
+      <style jsx>{`
+        .warning-page {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .warning-modal-shell {
+          border-radius: 12px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+          background: #ffffff;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .warning-modal-header {
+          background: #0f172a;
+          border-bottom: 4px solid var(--status-critical);
+          padding: 16px;
+          color: #e5e7eb;
+        }
+
+        .warning-modal-header-left {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+        }
+
+        .warning-modal-ribbon {
+          display: inline-flex;
+          align-items: stretch;
+          border-right: 1px solid #334155;
+          padding-right: 16px;
+        }
+
+        .ribbon-block {
+          width: 12px;
+          height: 32px;
+        }
+
+        .ribbon-blue {
+          background: #00368e;
+        }
+
+        .ribbon-gold {
+          background: #facc15;
+        }
+
+        .ribbon-red {
+          background: var(--status-critical);
+        }
+
+        .warning-modal-title {
+          margin: 0;
+          font-size: 18px;
+          letter-spacing: -0.02em;
+          color: #f9fafb;
+        }
+
+        .warning-modal-step {
+          margin: 4px 0 0;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          color: #94a3b8;
+        }
+
+        .warning-modal-body {
+          display: grid;
+          grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
+          gap: 1.5rem;
+          padding: 24px 24px 20px;
+          background: #f8fafc;
+        }
+
+        .warning-column {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .warning-section-header {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .step-pill {
+          width: 32px;
+          height: 32px;
+          border-radius: 9999px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 14px;
+        }
+
+        .step-pill-primary {
+          background: var(--status-critical);
+          color: #ffffff;
+        }
+
+        .step-pill-secondary {
+          background: #1e293b;
+          color: #ffffff;
+        }
+
+        .warning-field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .hazard-toggle-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 4px;
+        }
+
+        .hazard-chip {
+          border-radius: 6px;
+          border: 2px solid #e2e8f0;
+          background: #ffffff;
+          padding: 8px 16px;
+          font-size: 12px;
+          text-transform: uppercase;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .hazard-chip-active {
+          background: #fef2f2;
+          border-color: var(--status-critical);
+          color: var(--status-critical);
+        }
+
+        .warning-message-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.75rem;
+          margin-top: 0.25rem;
+        }
+
+        .field-label-heading {
+          font-size: 14px;
+          font-weight: 600;
+          margin: 0 0 4px;
+        }
+
+        .suggest-prompt-chip {
+          border-radius: 9999px;
+          border: 1px solid #bfdbfe;
+          background: #eff6ff;
+          padding: 4px 10px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #2563eb;
+          cursor: pointer;
+          min-height: 0;
+        }
+
+        .warning-message-input {
+          resize: vertical;
+        }
+
+        .character-helper {
+          text-align: right;
+        }
+
+        .warning-severity-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+        }
+
+        .severity-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .severity-chip {
+          border-radius: 9999px;
+          border: 1px solid #cbd5e1;
+          padding: 6px 14px;
+          font-size: 12px;
+          text-transform: uppercase;
+          background: #ffffff;
+          cursor: pointer;
+        }
+
+        .severity-chip-active {
+          background: #1d4ed8;
+          color: #ffffff;
+          border-color: #1d4ed8;
+        }
+
+        .warning-target-column {
+          background: #f8fafc;
+        }
+
+        .warning-latlng-row {
+          align-items: flex-end;
+        }
+
+        .radius-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 4px;
+          align-items: center;
+        }
+
+        .radius-unit {
+          padding-right: 4px;
+        }
+
+        .warning-map-shell {
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+          background: #ffffff;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .warning-map-header {
+          padding: 8px 10px;
+          border-bottom: 1px solid #e2e8f0;
+          background: rgba(248, 250, 252, 0.9);
+        }
+
+        .warning-map-body {
+          padding: 10px;
+        }
+
+        .warning-map-success {
+          margin-top: 0.5rem;
+        }
+
+        .warning-map-footer {
+          padding: 8px 10px 10px;
+          border-top: 1px solid #e2e8f0;
+          background: #eff6ff;
+        }
+
+        .warning-map-population {
+          color: #1d4ed8;
+          font-weight: 700;
+        }
+
+        .warning-modal-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px;
+          border-top: 1px solid #e2e8f0;
+          background: #f8fafc;
+        }
+
+        .footer-stage-indicator {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          color: #94a3b8;
+        }
+
+        .footer-stage-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 9999px;
+          background: var(--status-critical);
+          box-shadow: 0 0 0 2px #ffffff;
+        }
+
+        .footer-actions {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+
+        .footer-primary {
+          min-width: 260px;
+          text-transform: none;
+        }
+
+        .warning-confirm-card {
+          max-width: 800px;
+        }
+
+        .warning-summary {
+          margin-top: 1rem;
+        }
+
+        .warning-confirm-actions {
+          margin-top: 1.25rem;
+          justify-content: flex-end;
+        }
+
+        @media (max-width: 1024px) {
+          .warning-modal-body {
+            grid-template-columns: minmax(0, 1fr);
+          }
+
+          .warning-target-column {
+            order: 2;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .warning-modal-shell {
+            border-radius: 10px;
+          }
+
+          .warning-modal-body {
+            padding: 16px 12px 12px;
+          }
+
+          .warning-modal-footer {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+
+          .footer-actions {
+            width: 100%;
+            flex-direction: column-reverse;
+          }
+
+          .footer-primary {
+            width: 100%;
+          }
+        }
+      `}</style>
     </section>
   );
 }

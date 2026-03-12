@@ -1,0 +1,22 @@
+enum AssetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Asset {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  status      AssetStatus @default(PENDING)
+  photoUrl    String?
+  latitude    Float?
+  longitude   Float?
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}

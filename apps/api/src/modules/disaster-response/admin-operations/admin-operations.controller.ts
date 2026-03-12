@@ -17,6 +17,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
   ApiTags,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import type {
   OpenMeteoForecastDailyVariable,
@@ -45,6 +46,13 @@ class BulkReviewVolunteerDto {
 }
 
 class SuspendReactivateVolunteerDto {
+  reason?: string;
+}
+
+class ReviewAssetDto {
+  @ApiProperty({ enum: ['APPROVE', 'REJECT'] })
+  action!: 'APPROVE' | 'REJECT';
+  @ApiPropertyOptional()
   reason?: string;
 }
 
@@ -235,6 +243,35 @@ class AdminUserLocationDto {
   region?: string;
   @ApiProperty()
   updatedAt!: Date;
+}
+
+class AdminAssetRegistryEntryDto {
+  @ApiProperty()
+  id!: string;
+  @ApiProperty()
+  name!: string;
+  @ApiPropertyOptional()
+  description?: string;
+  @ApiProperty({ enum: ['PENDING', 'APPROVED', 'REJECTED'] })
+  status!: 'PENDING' | 'APPROVED' | 'REJECTED';
+  @ApiPropertyOptional()
+  photoUrl?: string;
+  @ApiPropertyOptional()
+  latitude?: number;
+  @ApiPropertyOptional()
+  longitude?: number;
+  @ApiProperty()
+  ownerId!: string;
+  @ApiProperty()
+  ownerName!: string;
+  @ApiProperty()
+  ownerEmail!: string;
+  @ApiProperty()
+  ownerCreatedAt!: Date;
+  @ApiPropertyOptional({ enum: ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'] })
+  volunteerStatus!: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | null;
+  @ApiProperty()
+  createdAt!: Date;
 }
 
 class MapOverviewResponseDto {
@@ -517,7 +554,7 @@ function parseCsv<T extends string>(value?: string): T[] | undefined {
 @UseGuards(AuthSessionGuard, AdminRoleGuard)
 @Controller('admin')
 export class AdminOperationsController {
-  constructor(private readonly adminService: AdminOperationsService) {}
+  constructor(private readonly adminService: AdminOperationsService) { }
 
   @Get('volunteers/applications')
   @ApiOperation({ summary: 'List volunteer applications for admin review' })
@@ -598,6 +635,33 @@ export class AdminOperationsController {
   @ApiParam({ name: 'id', type: String })
   async getApplicationHistory(@Param('id') applicationId: string) {
     return this.adminService.getApplicationHistory(applicationId);
+  }
+
+  @Get('assets/registry')
+  @ApiOperation({ summary: 'List volunteered assets (users who registered assets for disaster use)' })
+  @ApiOkResponse({ type: [AdminAssetRegistryEntryDto] })
+  async getAssetRegistry() {
+    return this.adminService.getAssetRegistry();
+  }
+
+  @Post('assets/:id/review')
+  @ApiOperation({ summary: 'Approve or reject a volunteered asset' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiBody({ type: ReviewAssetDto })
+  async reviewAsset(
+    @Param('id') assetId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: ReviewAssetDto,
+  ) {
+    if (!['APPROVE', 'REJECT'].includes(body.action)) {
+      throw new BadRequestException('action must be APPROVE or REJECT');
+    }
+    return this.adminService.reviewAsset({
+      assetId,
+      reviewerId: session.user.id,
+      action: body.action,
+      reason: body.reason,
+    });
   }
 
   @Post('warnings')
@@ -694,7 +758,7 @@ export class AdminOperationsController {
   @Post('warnings/prompt-suggestion')
   @ApiOperation({ summary: 'Get suggested warning prompt template' })
   @ApiBody({ type: WarningPromptSuggestionDto })
-  getPromptSuggestion(@Body() body: WarningPromptSuggestionDto) {
+  async getPromptSuggestion(@Body() body: WarningPromptSuggestionDto) {
     assertWarningPromptSuggestionDto(body);
     return this.adminService.getWarningPromptSuggestion(body);
   }

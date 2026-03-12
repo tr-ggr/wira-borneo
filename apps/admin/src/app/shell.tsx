@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useI18n } from '../i18n/context';
 import type { Locale } from '../i18n/locales';
@@ -22,6 +22,11 @@ export function Shell({ children }: { children: ReactNode }) {
   const [langOpen, setLangOpen] = useState(false);
 
   const isLoginPage = pathname === '/login';
+  const isDashboardPage = pathname === '/';
+  const useWhiteMainContent =
+    isDashboardPage ||
+    pathname?.startsWith('/volunteers') ||
+    pathname?.startsWith('/warnings');
 
   if (isLoginPage) {
     return <main>{children}</main>;
@@ -140,24 +145,12 @@ export function Shell({ children }: { children: ReactNode }) {
             </button>
           </nav>
         </aside>
-        <main className="main-content">{children}</main>
+        <main
+          className={`main-content${useWhiteMainContent ? ' main-content-white' : ''}`}
+        >
+          {children}
+        </main>
       </div>
-
-      <style jsx>{`
-        .user-profile {
-          margin-bottom: 1.5rem;
-          padding: 1rem;
-          background: rgba(13, 79, 79, 0.05);
-          border-radius: 8px;
-        }
-        .nav-link-active {
-          background: rgba(13, 79, 92, 0.1);
-          color: var(--wira-teal);
-        }
-        .mb-6 {
-          margin-bottom: 1.5rem;
-        }
-      `}</style>
     </>
   );
 }
