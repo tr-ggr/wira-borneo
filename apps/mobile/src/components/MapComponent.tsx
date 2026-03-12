@@ -137,17 +137,34 @@ function getEvacIconSvg(type: string | null | undefined): string {
   }
 }
 
-/** Teardrop pin SVG with stroke for visibility on map; fill color for status. */
-function getHazardPinSvg(fill: string): string {
-  const stroke = '#ffffff';
-  return `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C5.5 2 0 7.5 0 14c0 8 12 18 12 18s12-10 12-18C24 7.5 18.5 2 12 2zm0 10a4 4 0 100-8 4 4 0 000 8z" fill="${fill}" stroke="${stroke}" stroke-width="1.25"/></svg>`;
+/** Hazard pin: red equilateral warning triangle with bold white exclamation mark. Anchor [0.5,1] = tip on point. */
+function getHazardPinSvg(_fill: string): string {
+  const red = '#DC2626';
+  const white = '#ffffff';
+  // Equilateral triangle: tip at (14,28), base at y≈3.75 so sides are equal; viewBox 0 0 28 28
+  const triangle = 'M14 28L0 3.75L28 3.75Z';
+  // Exclamation: bold vertical bar + circle dot (path so ! is not slim)
+  const exclamationBar = 'M14 8v9';
+  return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="${triangle}" fill="${red}" stroke="${white}" stroke-width="1.5"/>
+  <path d="${exclamationBar}" stroke="${white}" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="14" cy="21.5" r="1.75" fill="${white}"/>
+</svg>`;
 }
 
-/** Teardrop pin for selected point (weather / tap); teal with white stroke. */
+/** Selection pin (weather-at-selected-point): wider teardrop with stroke and center dot. */
 function getSelectionPinSvg(): string {
   const fill = '#0D9488';
-  const stroke = 'white';
-  return `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C5.5 2 0 7.5 0 14c0 8 12 18 12 18s12-10 12-18C24 7.5 18.5 2 12 2zm0 10a4 4 0 100-8 4 4 0 000 8z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/></svg>`;
+  const stroke = '#ffffff';
+  const strokeWidth = 2;
+  // Wider teardrop: tip at (12,32); body bulges to x=2..22 so pin is less slim; anchor [0.5,1]
+  const teardrop =
+    'M12 32C5 26 2 18 2 11C2 4 6.5 2 12 2C17.5 2 22 4 22 11C22 18 19 26 12 32Z';
+  return `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs><filter id="pinShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.25"/></filter></defs>
+  <path d="${teardrop}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" filter="url(#pinShadow)"/>
+  <circle cx="12" cy="10.5" r="3" fill="${stroke}" stroke="${stroke}" stroke-width="1"/>
+</svg>`;
 }
 
 /** House icon for volunteer home location (teal, distinct from pins). Tight viewBox so anchor [0.5,1] places bottom on map point. */
@@ -812,7 +829,7 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
             <circle cx="16" cy="12" r="4" fill="white"/>
           </svg>
         `)}`,
-        anchor: [0.5, 0],
+        anchor: [0.5, 1],
       })
     }));
     source.addFeature(pin);
@@ -854,12 +871,12 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
           className="absolute px-2 py-1 text-xs font-body text-wira-earth bg-white/95 border border-wira-teal/30 rounded shadow-lg pointer-events-none whitespace-nowrap"
           style={{ display: 'none' }}
         />
-        {/* You are here: teardrop pin overlay */}
+        {/* You are here: pulsing person marker (bottom-center = feet on map point) */}
         <div ref={userLocationRef} className={`absolute pointer-events-none ${!userCoords ? 'hidden' : ''}`}>
-          <div className="relative flex items-center justify-center drop-shadow-md">
-            <svg width="32" height="42" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C5.5 2 0 7.5 0 14c0 8 12 18 12 18s12-10 12-18C24 7.5 18.5 2 12 2zm0 10a4 4 0 100-8 4 4 0 000 8z" fill="#0D9488" stroke="white" strokeWidth="1.5"/>
-              <circle cx="12" cy="12" r="3" fill="white" opacity="0.95"/>
+          <div className="relative flex flex-col items-center drop-shadow-md animate-pulse-slow">
+            <svg width="28" height="36" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10" aria-hidden>
+              <circle cx="12" cy="8" r="5" fill="#2563eb" stroke="white" strokeWidth="1.5"/>
+              <path d="M4 32V20c0-4.4 3.6-8 8-8s8 3.6 8 8v12" fill="#2563eb" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </div>
         </div>

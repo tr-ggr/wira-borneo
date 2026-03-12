@@ -55,10 +55,13 @@ export default function Profile() {
   const router = useRouter();
   const [settingHome, setSettingHome] = useState(false);
   const [safeMode, setSafeMode] = useState(false);
-  const [regionalLanguage, setRegionalLanguage] = useState<RegionalLanguageOption>('ENg');
+  const [regionalLanguage, setRegionalLanguage] =
+    useState<RegionalLanguageOption>('ENg');
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [isKinLoading, setIsKinLoading] = useState(true);
-  const [kinContacts] = useState<Array<{ id: string; name: string; avatar?: string }>>(() => [
+  const [kinContacts] = useState<
+    Array<{ id: string; name: string; avatar?: string }>
+  >(() => [
     { id: 'kin-1', name: 'Jane D.' },
     { id: 'kin-2', name: 'John K.' },
   ]);
@@ -74,19 +77,26 @@ export default function Profile() {
   const updateProfile = useAuthControllerUpdateProfile({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getAuthControllerGetSessionQueryKey() });
+        queryClient.invalidateQueries({
+          queryKey: getAuthControllerGetSessionQueryKey(),
+        });
       },
     },
   });
 
-  const handleDemographicChange = (field: string, value: string | boolean | null) => {
+  const handleDemographicChange = (
+    field: string,
+    value: string | boolean | null,
+  ) => {
     updateProfile.mutate({ data: { [field]: value } });
   };
 
   const signOut = useAuthControllerSignOut({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getAuthControllerGetSessionQueryKey() });
+        queryClient.invalidateQueries({
+          queryKey: getAuthControllerGetSessionQueryKey(),
+        });
         router.push('/');
         router.refresh();
       },
@@ -96,16 +106,27 @@ export default function Profile() {
   const setHome = useVolunteersControllerSetHome({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getVolunteersControllerGetStatusQueryKey() });
+        queryClient.invalidateQueries({
+          queryKey: getVolunteersControllerGetStatusQueryKey(),
+        });
       },
     },
   });
 
-  const status = volunteerStatus as {
-    profile?: { id?: string; baseLatitude?: number; baseLongitude?: number; status?: string };
-  } | null | undefined;
+  const status = volunteerStatus as
+    | {
+        profile?: {
+          id?: string;
+          baseLatitude?: number;
+          baseLongitude?: number;
+          status?: string;
+        };
+      }
+    | null
+    | undefined;
   const profile = status?.profile;
-  const hasHome = profile?.baseLatitude != null && profile?.baseLongitude != null;
+  const hasHome =
+    profile?.baseLatitude != null && profile?.baseLongitude != null;
   const isCommunityResponder = profile?.status === 'APPROVED';
 
   const handleSetHome = () => {
@@ -124,7 +145,7 @@ export default function Profile() {
         setSettingHome(false);
       },
       () => setSettingHome(false),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
   };
 
@@ -138,7 +159,9 @@ export default function Profile() {
       name: user?.name,
       exportedAt: new Date().toISOString(),
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -161,15 +184,20 @@ export default function Profile() {
   }, [displayId, user?.name]);
 
   return (
-    <div className="animate-fade-in pb-10 -mx-4" role="main" aria-label="Profile">
+    <div
+      className="animate-fade-in pb-10 -mx-4"
+      role="main"
+      aria-label="Profile"
+    >
       {/* Dark blue hero with cover area */}
-      <section className="relative bg-asean-blue rounded-t-2xl pt-10 pb-12 px-4 flex flex-col items-center gap-5 overflow-hidden">
+      <section className="relative bg-asean-blue pt-10 pb-12 px-4 flex flex-col items-center gap-5 overflow-hidden">
         {/* Cover layer: gradient from darker blue to asean-blue */}
         <div
           className="absolute inset-0 pointer-events-none"
           aria-hidden
           style={{
-            background: 'linear-gradient(180deg, rgba(0, 30, 70, 0.95) 0%, transparent 45%, #00368e 100%)',
+            background:
+              'linear-gradient(180deg, rgba(0, 30, 70, 0.95) 0%, transparent 45%, #00368e 100%)',
           }}
         />
         <div className="relative flex flex-col items-center gap-5 w-full">
@@ -205,7 +233,10 @@ export default function Profile() {
               {user?.name || t('profile.wiraUser')}
             </h1>
             <p className="text-white/90 font-sagip text-xs uppercase tracking-widest">
-              {isCommunityResponder ? t('profile.communityResponder') : t('profile.volunteer')} • {t('profile.regionPlaceholder')}
+              {isCommunityResponder
+                ? t('profile.communityResponder')
+                : t('profile.volunteer')}{' '}
+              • {t('profile.regionPlaceholder')}
             </p>
           </div>
           <button
@@ -220,30 +251,48 @@ export default function Profile() {
 
       <div className="px-4 space-y-4 mt-4">
         {/* Stats row */}
-        <section className="grid grid-cols-2 gap-3" aria-label="User statistics">
+        <section
+          className="grid grid-cols-2 gap-3"
+          aria-label="User statistics"
+        >
           <div className="wira-card p-4 rounded-xl">
             <p className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">
               {t('profile.reportsFiled')}
             </p>
-            <p className="text-2xl font-sagip font-bold text-asean-blue mt-1">{REPORTS_FILED}</p>
-            <p className="text-xs font-sagip text-status-safe">{REPORTS_TREND}</p>
+            <p className="text-2xl font-sagip font-bold text-asean-blue mt-1">
+              {REPORTS_FILED}
+            </p>
+            <p className="text-xs font-sagip text-status-safe">
+              {REPORTS_TREND}
+            </p>
           </div>
           <div className="wira-card p-4 rounded-xl">
             <p className="font-sagip font-bold text-[10px] uppercase tracking-wider text-sagip-muted">
               {t('profile.aidVerified')}
             </p>
-            <p className="text-2xl font-sagip font-bold text-status-critical mt-1">{AID_VERIFIED}</p>
-            <p className="text-xs font-sagip text-sagip-muted">{t('profile.cases')}</p>
+            <p className="text-2xl font-sagip font-bold text-status-critical mt-1">
+              {AID_VERIFIED}
+            </p>
+            <p className="text-xs font-sagip text-sagip-muted">
+              {t('profile.cases')}
+            </p>
           </div>
         </section>
 
         {/* Emergency Digital Identity */}
-        <section className="wira-card p-4 space-y-4" aria-labelledby="emergency-id-heading">
+        <section
+          className="wira-card p-4 space-y-4"
+          aria-labelledby="emergency-id-heading"
+        >
           <h2
             id="emergency-id-heading"
             className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading flex items-center gap-2"
           >
-            <Lock size={18} className="text-sagip-heading shrink-0" aria-hidden />
+            <Lock
+              size={18}
+              className="text-sagip-heading shrink-0"
+              aria-hidden
+            />
             {t('profile.emergencyDigitalIdentity')}
           </h2>
           <div className="flex flex-col items-center gap-2">
@@ -258,11 +307,15 @@ export default function Profile() {
                 />
               ) : (
                 <div className="w-full h-full rounded bg-sagip-border/50 animate-pulse flex items-center justify-center">
-                  <span className="font-mono text-[10px] text-sagip-muted">QR</span>
+                  <span className="font-mono text-[10px] text-sagip-muted">
+                    QR
+                  </span>
                 </div>
               )}
             </div>
-            <p className="font-sagip text-sm text-sagip-muted">ID: {displayId}</p>
+            <p className="font-sagip text-sm text-sagip-muted">
+              ID: {displayId}
+            </p>
           </div>
           <div className="grid grid-cols-1 gap-2">
             <button
@@ -278,16 +331,23 @@ export default function Profile() {
               onClick={handleSetHome}
               disabled={settingHome || setHome.isPending}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-status-safe/20 text-status-safe font-sagip font-bold text-sm hover:bg-status-safe/30 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-status-safe/30"
-              aria-label={hasHome ? t('profile.ariaUpdateHome') : t('profile.ariaSetHome')}
+              aria-label={
+                hasHome ? t('profile.ariaUpdateHome') : t('profile.ariaSetHome')
+              }
             >
               <MapPin size={18} aria-hidden />
-              {settingHome || setHome.isPending ? t('profile.setting') : t('profile.updateCurrentLocation')}
+              {settingHome || setHome.isPending
+                ? t('profile.setting')
+                : t('profile.updateCurrentLocation')}
             </button>
           </div>
         </section>
 
         {/* Control Center */}
-        <section className="wira-card p-4 space-y-4" aria-labelledby="control-center-heading">
+        <section
+          className="wira-card p-4 space-y-4"
+          aria-labelledby="control-center-heading"
+        >
           <h2
             id="control-center-heading"
             className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading"
@@ -304,12 +364,16 @@ export default function Profile() {
                   <p className="font-sagip font-bold text-sm text-sagip-heading">
                     {t('profile.regionalLanguage')}
                   </p>
-                  <p className="font-sagip text-[10px] text-sagip-muted">{t('profile.mcatlEnabled')}</p>
+                  <p className="font-sagip text-[10px] text-sagip-muted">
+                    {t('profile.mcatlEnabled')}
+                  </p>
                 </div>
               </div>
               <select
                 value={regionalLanguage}
-                onChange={(e) => setRegionalLanguage(e.target.value as RegionalLanguageOption)}
+                onChange={(e) =>
+                  setRegionalLanguage(e.target.value as RegionalLanguageOption)
+                }
                 className="font-sagip text-sm text-sagip-heading bg-sagip-border/50 border border-sagip-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-asean-blue/30"
                 aria-label={t('profile.ariaRegionalLanguage')}
               >
@@ -323,8 +387,12 @@ export default function Profile() {
                   <Shield size={20} className="text-asean-blue" aria-hidden />
                 </div>
                 <div>
-                  <p className="font-sagip font-bold text-sm text-sagip-heading">{t('profile.safeMode')}</p>
-                  <p className="font-sagip text-[10px] text-sagip-muted">{t('profile.autoReportIdle')}</p>
+                  <p className="font-sagip font-bold text-sm text-sagip-heading">
+                    {t('profile.safeMode')}
+                  </p>
+                  <p className="font-sagip text-[10px] text-sagip-muted">
+                    {t('profile.autoReportIdle')}
+                  </p>
                 </div>
               </div>
               <button
@@ -345,14 +413,28 @@ export default function Profile() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-sagip font-bold text-sm text-sagip-heading">{t('profile.kinContacts')}</p>
+                <p className="font-sagip font-bold text-sm text-sagip-heading">
+                  {t('profile.kinContacts')}
+                </p>
                 {isKinLoading ? (
-                  <div className="flex -space-x-2 mt-1.5" aria-busy="true" aria-label={t('profile.loadingKin')}>
-                    <div className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white animate-pulse" aria-hidden />
-                    <div className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white animate-pulse" aria-hidden />
+                  <div
+                    className="flex -space-x-2 mt-1.5"
+                    aria-busy="true"
+                    aria-label={t('profile.loadingKin')}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white animate-pulse"
+                      aria-hidden
+                    />
+                    <div
+                      className="w-8 h-8 rounded-full bg-sagip-border border-2 border-white animate-pulse"
+                      aria-hidden
+                    />
                   </div>
                 ) : kinContacts.length === 0 ? (
-                  <p className="font-sagip text-xs text-sagip-muted mt-1.5">{t('profile.noKinYet')}</p>
+                  <p className="font-sagip text-xs text-sagip-muted mt-1.5">
+                    {t('profile.noKinYet')}
+                  </p>
                 ) : (
                   <div className="flex -space-x-2 mt-1.5">
                     {kinContacts.map((contact) => (
@@ -390,8 +472,12 @@ export default function Profile() {
                   <Wrench size={20} className="text-asean-yellow" aria-hidden />
                 </div>
                 <div>
-                  <p className="font-sagip font-bold text-sm text-sagip-heading">Response Assets</p>
-                  <p className="font-sagip text-[10px] text-sagip-muted">VOLUNTEERED EQUIPMENT</p>
+                  <p className="font-sagip font-bold text-sm text-sagip-heading">
+                    Response Assets
+                  </p>
+                  <p className="font-sagip text-[10px] text-sagip-muted">
+                    VOLUNTEERED EQUIPMENT
+                  </p>
                 </div>
               </div>
               <button
@@ -407,13 +493,20 @@ export default function Profile() {
         </section>
 
         {/* My Registered Assets */}
-        <section className="wira-card p-4 space-y-4" aria-labelledby="my-assets-heading">
+        <section
+          className="wira-card p-4 space-y-4"
+          aria-labelledby="my-assets-heading"
+        >
           <div className="flex items-center justify-between">
             <h2
               id="my-assets-heading"
               className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading flex items-center gap-2"
             >
-              <Package size={18} className="text-asean-blue shrink-0" aria-hidden />
+              <Package
+                size={18}
+                className="text-asean-blue shrink-0"
+                aria-hidden
+              />
               My Registered Assets
             </h2>
           </div>
@@ -455,12 +548,16 @@ export default function Profile() {
               </select>
             </label>
             <label className="flex items-center justify-between p-3 rounded-xl bg-sagip-border/50 border border-sagip-border active:scale-[0.98] transition-all cursor-pointer">
-              <span className="text-sm font-sagip font-medium text-sagip-heading">{t('profile.pregnant')}</span>
+              <span className="text-sm font-sagip font-medium text-sagip-heading">
+                {t('profile.pregnant')}
+              </span>
               <input
                 type="checkbox"
-                className="w-5 h-5 rounded text-asean-blue focus:ring-asean-blue/30 border-sagip-border"
+                className="w-5 h-5 rounded border-2 border-sagip-slate text-asean-blue accent-asean-blue focus:ring-asean-blue/30"
                 checked={user?.pregnantStatus ?? false}
-                onChange={(e) => handleDemographicChange('pregnantStatus', e.target.checked)}
+                onChange={(e) =>
+                  handleDemographicChange('pregnantStatus', e.target.checked)
+                }
                 disabled={updateProfile.isPending}
                 aria-label={t('profile.ariaPregnant')}
               />
@@ -471,9 +568,11 @@ export default function Profile() {
               </span>
               <input
                 type="checkbox"
-                className="w-5 h-5 rounded text-asean-blue focus:ring-asean-blue/30 border-sagip-border"
+                className="w-5 h-5 rounded border-2 border-sagip-slate text-asean-blue accent-asean-blue focus:ring-asean-blue/30"
                 checked={user?.isPWD ?? false}
-                onChange={(e) => handleDemographicChange('isPWD', e.target.checked)}
+                onChange={(e) =>
+                  handleDemographicChange('isPWD', e.target.checked)
+                }
                 disabled={updateProfile.isPending}
                 aria-label={t('profile.ariaPwd')}
               />
@@ -483,21 +582,35 @@ export default function Profile() {
 
         {/* Volunteer Home (when profile exists) */}
         {profile && (
-          <section className="wira-card p-4 space-y-3" aria-labelledby="volunteer-home-heading">
+          <section
+            className="wira-card p-4 space-y-3"
+            aria-labelledby="volunteer-home-heading"
+          >
             <h2
               id="volunteer-home-heading"
               className="font-sagip font-bold text-sm uppercase tracking-widest text-sagip-heading flex items-center gap-2"
             >
-              <MapPin size={20} className="text-asean-blue shrink-0" aria-hidden />
+              <MapPin
+                size={20}
+                className="text-asean-blue shrink-0"
+                aria-hidden
+              />
               {t('profile.volunteerHome')}
             </h2>
             {hasHome ? (
               <p className="text-xs font-sagip text-sagip-muted flex items-center gap-1.5">
-                <MapPin size={14} className="text-asean-blue shrink-0" aria-hidden />
-                {t('profile.setAt')} {profile.baseLatitude?.toFixed(5)}, {profile.baseLongitude?.toFixed(5)}
+                <MapPin
+                  size={14}
+                  className="text-asean-blue shrink-0"
+                  aria-hidden
+                />
+                {t('profile.setAt')} {profile.baseLatitude?.toFixed(5)},{' '}
+                {profile.baseLongitude?.toFixed(5)}
               </p>
             ) : (
-              <p className="text-xs font-sagip text-sagip-muted">{t('profile.notSet')}</p>
+              <p className="text-xs font-sagip text-sagip-muted">
+                {t('profile.notSet')}
+              </p>
             )}
           </section>
         )}

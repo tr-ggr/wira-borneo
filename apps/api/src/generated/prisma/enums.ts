@@ -9,6 +9,15 @@
 * 🟢 You can import this file directly.
 */
 
+export const AssetStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type AssetStatus = (typeof AssetStatus)[keyof typeof AssetStatus]
+
+
 export const HousingType = {
   LONGHOUSE: 'LONGHOUSE',
   DETACHED: 'DETACHED',

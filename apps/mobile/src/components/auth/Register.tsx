@@ -104,7 +104,7 @@ export default function Register({ onToggleLogin }: { onToggleLogin: () => void 
             <span className="text-sm font-body text-wira-earth">Pregnant</span>
             <input 
               type="checkbox" 
-              className="w-5 h-5 rounded text-wira-teal focus:ring-wira-teal border-gray-300"
+              className="w-5 h-5 rounded border-2 border-sagip-slate text-wira-teal accent-wira-teal focus:ring-wira-teal/30"
               checked={pregnantStatus}
               onChange={(e) => setPregnantStatus(e.target.checked)}
             />
@@ -114,7 +114,7 @@ export default function Register({ onToggleLogin }: { onToggleLogin: () => void 
             <span className="text-sm font-body text-wira-earth">Person with Disability (PWD)</span>
             <input 
               type="checkbox" 
-              className="w-5 h-5 rounded text-wira-teal focus:ring-wira-teal border-gray-300"
+              className="w-5 h-5 rounded border-2 border-sagip-slate text-wira-teal accent-wira-teal focus:ring-wira-teal/30"
               checked={isPWD}
               onChange={(e) => setIsPWD(e.target.checked)}
             />

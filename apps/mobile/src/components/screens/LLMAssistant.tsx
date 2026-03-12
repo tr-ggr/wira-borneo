@@ -100,13 +100,13 @@ export default function LLMAssistant({ onOpenMap }: LLMAssistantProps) {
         {/* Greeting */}
         <div className="flex flex-col gap-2 items-center py-4 shrink-0">
           <p className="font-sagip font-medium text-[#64748b] text-xs tracking-widest uppercase text-center">
-            Karon nga adlaw
+            {t('assistant.today')}
           </p>
           <h2 className="font-sagip font-bold text-sagip-heading text-xl text-center leading-7">
-            Maayong adlaw!
+            {t('assistant.greeting')}
           </h2>
           <p className="font-sagip font-normal text-sagip-muted text-sm text-center leading-5 max-w-[260px]">
-            Unsaon nako pagtabang nimo karon sa imong kaluwasan?
+            {t('assistant.helpPrompt')}
           </p>
         </div>
 
@@ -276,7 +276,7 @@ export default function LLMAssistant({ onOpenMap }: LLMAssistantProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={inquire.isPending}
-              placeholder="I-type imong pangutana..."
+              placeholder={t('assistant.placeholder')}
               className="w-full bg-white rounded-full pl-5 pr-12 py-3 text-sm font-sagip text-sagip-heading placeholder:text-slate-400 outline-none border border-[#f1f5f9]"
             />
             <button

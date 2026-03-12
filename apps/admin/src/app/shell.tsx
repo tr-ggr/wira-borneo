@@ -73,6 +73,14 @@ export function Shell({ children }: { children: ReactNode }) {
 
       <div className="app-shell">
         <aside className="side-nav">
+          <div className="mb-4 flex justify-center">
+            <img
+              src="/logo.svg"
+              alt=""
+              aria-hidden
+              className="h-12 w-auto max-w-[160px] object-contain"
+            />
+          </div>
           <h1 className="brand-title">{t('shell.brandTitle')}</h1>
           <p className="brand-subtitle">{t('shell.brandSubtitle')}</p>
 

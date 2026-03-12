@@ -207,11 +207,11 @@ export default function MapForecast({
             </div>
             <div className="flex flex-wrap gap-3 mt-2 pt-2 border-t border-wira-teal/10 text-[10px] font-body text-wira-earth/70">
               <label className="inline-flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" checked={showVulnerableRegions} onChange={(e) => setShowVulnerableRegions(e.target.checked)} className="h-3 w-3 rounded border-wira-ivory-dark" />
+                <input type="checkbox" checked={showVulnerableRegions} onChange={(e) => setShowVulnerableRegions(e.target.checked)} className="h-3.5 w-3.5 rounded border-2 border-sagip-slate accent-wira-teal focus:ring-wira-teal/30" />
                 <span>{t('map.riskAreas')}</span>
               </label>
               <label className="inline-flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" checked={showHazardPins} onChange={(e) => setShowHazardPins(e.target.checked)} className="h-3 w-3 rounded border-wira-ivory-dark" />
+                <input type="checkbox" checked={showHazardPins} onChange={(e) => setShowHazardPins(e.target.checked)} className="h-3.5 w-3.5 rounded border-2 border-sagip-slate accent-wira-teal focus:ring-wira-teal/30" />
                 <span>{t('map.hazardPins')}</span>
               </label>
             </div>

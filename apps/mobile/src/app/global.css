@@ -139,6 +139,11 @@
     padding-bottom: calc(var(--bottom-nav-height) + 1rem);
   }
 
+  /* Map screens: reserve exactly nav height so map fills to top of nav (no gap) */
+  .mobile-nav-safe-map {
+    padding-bottom: var(--bottom-nav-height);
+  }
+
   /* T'nalak divider (red / yellow / blue stripe) */
   .tnalak-stripe {
     height: 4px;
@@ -166,8 +171,8 @@
     box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px 24px;
+    justify-content: space-around;
+    padding: 8px;
     z-index: 50;
     overflow: visible;
   }

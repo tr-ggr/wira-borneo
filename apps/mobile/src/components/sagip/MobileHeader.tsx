@@ -4,9 +4,6 @@ import { Globe, Menu, MessageSquare, Shield } from 'lucide-react';
 import { TnalakDivider } from './TnalakDivider';
 import { useI18n } from '../../i18n/context';
 
-const logoPath =
-  'M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 2.18l7 3.5v7.82c0 4.52-2.98 8.69-7 9.93-4.02-1.24-7-5.41-7-9.93V7.68l7-3.5z';
-
 export type MobileHeaderStatus = {
   label: string;
   dotColor?: string;
@@ -37,7 +34,8 @@ export function MobileHeader({
   onLanguageClick,
 }: MobileHeaderProps) {
   const { t } = useI18n();
-  const statusDotColor = status?.dotColor === 'green' ? 'bg-[#22c55e]' : 'bg-status-safe';
+  const statusDotColor =
+    status?.dotColor === 'green' ? 'bg-[#22c55e]' : 'bg-status-safe';
   const displayTitle = title ?? t('header.titleSagip');
   const titleClassName =
     icon === 'message'
@@ -54,17 +52,15 @@ export function MobileHeader({
                 <MessageSquare className="size-5" />
               </div>
             ) : (
-              <svg
-                viewBox="0 0 24 24"
-                className="size-[22.5px] text-asean-blue"
-                fill="currentColor"
+              <img
+                src="/logo.svg"
+                alt=""
                 aria-hidden
-              >
-                <path d={logoPath} />
-              </svg>
+                className="size-10 object-contain"
+              />
             )}
           </div>
-          <div className="ml-7 flex flex-col px-3 pt-1.5 min-w-0">
+          <div className="flex flex-col min-w-0">
             <h1 className={titleClassName}>{displayTitle}</h1>
             {status && (
               <div className="flex items-center gap-1 mt-0.5">
@@ -74,7 +70,9 @@ export function MobileHeader({
                 />
                 <span
                   className={`font-sagip font-medium text-[10px] leading-tight ${
-                    status.dotColor === 'green' ? 'text-[#22c55e]' : 'text-status-safe'
+                    status.dotColor === 'green'
+                      ? 'text-[#22c55e]'
+                      : 'text-status-safe'
                   }`}
                 >
                   {status.label}
@@ -83,36 +81,36 @@ export function MobileHeader({
             )}
           </div>
         </div>
-      <div className="flex items-center gap-2.5">
-        {showSecurePill && (
-          <div className="bg-status-safe/10 border border-status-safe/20 flex items-center gap-1.5 pl-3 pr-3 py-1.5 rounded-full shrink-0">
-            <Shield className="size-3.5 text-status-safe shrink-0" />
-            <span className="font-sagip font-bold text-status-safe text-xs tracking-wide uppercase">
-              {t('header.secure')}
+        <div className="flex items-center gap-2.5">
+          {showSecurePill && (
+            <div className="bg-status-safe/10 border border-status-safe/20 flex items-center gap-1.5 pl-3 pr-3 py-1.5 rounded-full shrink-0">
+              <Shield className="size-3.5 text-status-safe shrink-0" />
+              <span className="font-sagip font-bold text-status-safe text-xs tracking-wide uppercase">
+                {t('header.secure')}
+              </span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={onLanguageClick}
+            className="bg-asean-blue/20 border border-asean-blue flex items-center px-3 py-1 rounded-full shadow-sm shrink-0 hover:bg-asean-blue/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-blue focus-visible:ring-offset-2"
+          >
+            <Globe className="size-4 text-asean-blue shrink-0" />
+            <span className="font-sagip font-bold text-asean-blue text-xs tracking-wide uppercase ml-1.5">
+              {languageLabel}
             </span>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={onLanguageClick}
-          className="bg-asean-blue/20 border border-asean-blue flex items-center px-3 py-1 rounded-full shadow-sm shrink-0 hover:bg-asean-blue/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-blue focus-visible:ring-offset-2"
-        >
-          <Globe className="size-4 text-asean-blue shrink-0" />
-          <span className="font-sagip font-bold text-asean-blue text-xs tracking-wide uppercase ml-1.5">
-            {languageLabel}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={onMenuClick}
-          className="p-2 rounded-md text-asean-blue hover:bg-asean-blue/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-blue focus-visible:ring-offset-2"
-          aria-label={t('common.menu')}
-        >
-          <Menu className="size-5" />
-        </button>
-      </div>
-    </header>
-    {showDivider && <TnalakDivider />}
+          </button>
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="p-2 rounded-md text-asean-blue hover:bg-asean-blue/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-blue focus-visible:ring-offset-2"
+            aria-label={t('common.menu')}
+          >
+            <Menu className="size-5" />
+          </button>
+        </div>
+      </header>
+      {showDivider && <TnalakDivider />}
     </>
   );
 }

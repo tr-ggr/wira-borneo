@@ -45,6 +45,7 @@ module.exports = {
         'asean-yellow': '#ffff00',
         'sagip-heading': '#0f172a',
         'sagip-muted': '#475569',
+        'sagip-slate': '#64748b',
         'sagip-border': '#e2e8f0',
         'dm': {
           'background':   '#0A1214',

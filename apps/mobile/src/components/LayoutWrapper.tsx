@@ -61,7 +61,7 @@ export default function LayoutWrapper({
   const configMap = buildHeaderConfig(t);
   const headerConfig =
     configMap[currentPath] ?? (isMapScreen ? configMap['/map'] : configMap.__default);
-  const headerLangLocale = isAssistant ? 'ceb' : locale;
+  const headerLangLocale = locale;
   const headerLanguageLabel = `${getLocaleFlagEmoji(headerLangLocale)} ${getLocaleDisplayLabel(headerLangLocale)}`;
 
   return (
@@ -73,7 +73,7 @@ export default function LayoutWrapper({
         onLanguageClick={() => setLanguageOpen(true)}
       />
 
-      <main className={`flex-1 flex flex-col min-h-0 min-w-0 overflow-x-hidden ${showNav ? 'mobile-nav-safe' : 'pb-4'} ${isHome || isAssistant ? '' : isMapScreen ? 'px-0' : 'px-4'} pt-0 ${isAssistant ? 'overflow-hidden min-h-0' : isMapScreen ? 'overflow-hidden' : 'overflow-y-auto'} w-full ${isMapScreen ? 'max-w-none' : 'max-w-md mx-auto'} scroll-smooth`}>
+      <main className={`flex-1 flex flex-col min-h-0 min-w-0 overflow-x-hidden ${showNav ? (isMapScreen ? 'mobile-nav-safe-map' : 'mobile-nav-safe') : 'pb-4'} ${isHome || isAssistant ? '' : isMapScreen ? 'px-0' : 'px-4'} pt-0 ${isAssistant ? 'overflow-hidden min-h-0' : isMapScreen ? 'overflow-hidden' : 'overflow-y-auto'} w-full ${isMapScreen ? 'max-w-none' : 'max-w-md mx-auto'} scroll-smooth`}>
         {children}
       </main>
 
