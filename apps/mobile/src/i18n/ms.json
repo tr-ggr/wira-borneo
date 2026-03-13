@@ -249,5 +249,6 @@
   "map.routeFromCurrent": "Laluan dari lokasi semasa",
   "map.current": "Semasa",
   "map.home": "Rumah",
-  "map.evacuationSite": "Tapak pemindahan"
+  "map.evacuationSite": "Tapak pemindahan",
+  "map.evacuationCenters": "Pusat pemindahan"
 }

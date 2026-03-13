@@ -249,5 +249,6 @@
   "map.routeFromCurrent": "தற்போதைய இடத்திலிருந்து வழி",
   "map.current": "தற்போதைய",
   "map.home": "முகப்பு",
-  "map.evacuationSite": "வெளியேற்ற தளம்"
+  "map.evacuationSite": "வெளியேற்ற தளம்",
+  "map.evacuationCenters": "வெளியேற்ற மையங்கள்"
 }

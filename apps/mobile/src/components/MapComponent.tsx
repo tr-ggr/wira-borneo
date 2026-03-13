@@ -103,6 +103,8 @@ interface MapComponentProps {
   routeGeometry?: [number, number][] | null;
   /** Hazard-aware (safest) route geometry; drawn in a different color from OSRM route. */
   hazardRouteGeometry?: [number, number][] | null;
+  /** When true, never draw the yellow OSRM/fallback line; only show hazard (green) route when hazardRouteGeometry is set. Used by flood simulation. */
+  hazardRouteOnly?: boolean;
   routeEta?: { durationSeconds: number; distanceMeters: number } | null;
   /** Risk points from hazard server for map layer; color by risk, hover for details. */
   hazardRiskPoints?: HazardRiskPoint[];
@@ -286,6 +288,7 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
   onEvacClick,
   routeGeometry,
   hazardRouteGeometry,
+  hazardRouteOnly = false,
   hazardRiskPoints = [],
   onMapClick,
   selectedPoint = null,
@@ -767,11 +770,11 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
     map.addLayer(routeLayer);
     routeLayerRef.current = routeLayer;
 
-    // 9. Setup Hazard Route Layer (safest – different color)
+    // 9. Setup Hazard Route Layer (safest – green; above route layer so it is visible)
     const hazardRouteSource = new VectorSource();
     const hazardRouteLayer = new VectorLayer({
       source: hazardRouteSource,
-      zIndex: 8,
+      zIndex: 10,
       style: [
         new Style({
           stroke: new Stroke({
@@ -1141,7 +1144,9 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
       return;
     }
 
-    if (!useHazardPath) {
+    // When hazardRouteOnly (e.g. flood simulation), never draw yellow fallback line; only hazard layer draws green when data is available
+    const drawFallbackLine = !useHazardPath && !hazardRouteOnly;
+    if (drawFallbackLine) {
       const line = new Feature({
         geometry: new LineString(routeCoords),
       });
@@ -1175,7 +1180,7 @@ const MapComponent = forwardRef<MapComponentHandle, MapComponentProps>(function 
         maxZoom: 16,
       });
     }
-  }, [mapFocus, userCoords, routeGeometry, hazardRouteGeometry]);
+  }, [mapFocus, userCoords, routeGeometry, hazardRouteGeometry, hazardRouteOnly]);
 
   // Update Hazard Route Layer (safest – green)
   useEffect(() => {

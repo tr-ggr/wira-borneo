@@ -249,5 +249,6 @@
   "map.routeFromCurrent": "Tuyến từ vị trí hiện tại",
   "map.current": "Hiện tại",
   "map.home": "Trang chủ",
-  "map.evacuationSite": "Điểm sơ tán"
+  "map.evacuationSite": "Điểm sơ tán",
+  "map.evacuationCenters": "Trung tâm sơ tán"
 }

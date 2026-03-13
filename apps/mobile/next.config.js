@@ -19,6 +19,8 @@ const nextConfig = {
       },
     ],
   },
+
+  devIndicators: false
 };
 
 const plugins = [

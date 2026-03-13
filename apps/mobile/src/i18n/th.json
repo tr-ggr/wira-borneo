@@ -249,5 +249,6 @@
   "map.routeFromCurrent": "เส้นทางจากตำแหน่งปัจจุบัน",
   "map.current": "ปัจจุบัน",
   "map.home": "หน้าแรก",
-  "map.evacuationSite": "จุดอพยพ"
+  "map.evacuationSite": "จุดอพยพ",
+  "map.evacuationCenters": "ศูนย์อพยพ"
 }

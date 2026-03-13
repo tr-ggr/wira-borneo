@@ -1,5 +1,7 @@
 # Tracker App - Setup Complete ✅
 
+For full workspace setup (Supabase, all env, all services), see the root [README.md](README.md).
+
 ## What Was Done
 
 Successfully converted the humanitarian aid tracker from static HTML to a full-stack Next.js application with blockchain integration and real database-backed data.

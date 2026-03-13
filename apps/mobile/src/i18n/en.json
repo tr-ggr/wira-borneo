@@ -249,5 +249,6 @@
   "map.routeFromCurrent": "Route from current location",
   "map.current": "Current",
   "map.home": "Home",
-  "map.evacuationSite": "Evacuation site"
+  "map.evacuationSite": "Evacuation site",
+  "map.evacuationCenters": "Evacuation centers"
 }

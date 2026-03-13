@@ -249,5 +249,6 @@
   "map.routeFromCurrent": "Rute dari lokasi saat ini",
   "map.current": "Saat ini",
   "map.home": "Beranda",
-  "map.evacuationSite": "Lokasi evakuasi"
+  "map.evacuationSite": "Lokasi evakuasi",
+  "map.evacuationCenters": "Pusat evakuasi"
 }
