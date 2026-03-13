@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   useEvacuationControllerAreas,
   getEvacuationControllerHazardRouteQueryOptions,
@@ -20,6 +20,9 @@ const FLOOD_LEVEL_MAX_M = 2;
 const FLOOD_LEVEL_STEP_M = 0.1;
 /** 1 m flood level ≈ 100 mm rainfall for API */
 const FLOOD_M_TO_RAINFALL_MM = 100;
+
+/** Fallback origin when geolocation is unavailable; center of hazard graph region (Mandaue City, Cebu). */
+const FALLBACK_ORIGIN = { latitude: 10.3234, longitude: 123.9225 };
 
 export default function FloodSimulation({
   onNavigateToMap,
@@ -43,18 +46,30 @@ export default function FloodSimulation({
     'ALL',
   );
 
+  // Request user location: use options so we get a result or failure in reasonable time
+  // (no timeout = can hang on mobile). Also sync from MapComponent via onUserPosition
+  // when the map gets a fix (e.g. from its own geolocation or cache).
   React.useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          });
-        },
-        () => {},
-      );
-    }
+    if (!('geolocation' in navigator)) return;
+    const opts: PositionOptions = {
+      timeout: 15_000,
+      maximumAge: 60_000,
+      enableHighAccuracy: false,
+    };
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+      },
+      () => {
+        // Permission denied, timeout, or position unavailable; leave userLocation null
+        // so routeFrom falls back to FALLBACK_ORIGIN. Map may still get position and
+        // call onUserPosition later.
+      },
+      opts,
+    );
   }, []);
 
   const rainfallMm = Math.round(floodLevelM * FLOOD_M_TO_RAINFALL_MM);
@@ -113,10 +128,10 @@ export default function FloodSimulation({
         )
     : [];
 
-  /** Fallback when no geolocation: center on hazard graph region (Mandaue City, Cebu) so route requests stay inside graph. */
-  const routeFrom = userLocation;
+  /** Use fallback origin when geolocation unavailable so route can still be requested when user taps a point. */
+  const routeFrom = userLocation ?? FALLBACK_ORIGIN;
   const hazardRouteParams =
-    selectedPoint && routeFrom
+    selectedPoint
       ? {
           fromLat: routeFrom.latitude,
           fromLon: routeFrom.longitude,
@@ -135,9 +150,18 @@ export default function FloodSimulation({
         toLon: 0,
         rainfall_mm: 0,
       },
-      { query: { enabled: !!hazardRouteParams } },
+      {
+        query: {
+          enabled: !!hazardRouteParams,
+          placeholderData: keepPreviousData,
+        },
+      },
     );
-  const { data: hazardRouteResponse } = useQuery(hazardRouteQueryOptions);
+  const {
+    data: hazardRouteResponse,
+    isLoading: isHazardRouteLoading,
+    isError: isHazardRouteError,
+  } = useQuery(hazardRouteQueryOptions);
 
   const responseBody =
     hazardRouteResponse != null &&
@@ -358,7 +382,7 @@ export default function FloodSimulation({
           <MapComponent
             ref={mapRef}
             fillContainer
-            weatherLocation={centerLoc}
+            weatherLocation={centerLoc ?? undefined}
             vulnerableRegions={[]}
             helpRequests={[]}
             hazardPins={[]}
@@ -368,6 +392,9 @@ export default function FloodSimulation({
             hazardRouteOnly
             hazardRiskPoints={hazardRiskPoints}
             routeEta={routeEta}
+            onUserPosition={(lat, lon) =>
+              setUserLocation({ latitude: lat, longitude: lon })
+            }
             onMapClick={(lat, lon) =>
               setSelectedPoint({ latitude: lat, longitude: lon })
             }
@@ -434,10 +461,22 @@ export default function FloodSimulation({
                   {selectedPoint.latitude.toFixed(4)},{' '}
                   {selectedPoint.longitude.toFixed(4)}
                 </p>
-                {routeEta && (
+                {isHazardRouteLoading && (
+                  <p className="text-xs font-body text-wira-earth/70 mt-0.5">
+                    Calculating route…
+                  </p>
+                )}
+                {!isHazardRouteLoading && routeEta && (
                   <p className="text-xs font-body text-wira-teal font-medium mt-0.5">
                     ETA ~{Math.round(routeEta.durationSeconds / 60)} min ·{' '}
                     {(routeEta.distanceMeters / 1000).toFixed(1)} km
+                  </p>
+                )}
+                {!isHazardRouteLoading &&
+                  !routeEta &&
+                  (isHazardRouteError || !hazardRouteGeometry) && (
+                  <p className="text-xs font-body text-orange-600 mt-0.5">
+                    Route unavailable or outside coverage
                   </p>
                 )}
               </div>
