@@ -8,6 +8,7 @@ import { useAuth } from '../lib/auth';
 const navItems = [
   { href: '/', label: 'Dashboard', icon: 'home' as const },
   { href: '/volunteers', label: 'Resources', icon: 'users' as const },
+  { href: '/help-requests', label: 'Help Requests', icon: 'pin' as const },
   { href: '/damage-reports', label: 'Damage Reports', icon: 'damage' as const },
   { href: '/warnings', label: 'Warnings', icon: 'alert' as const },
   { href: '/map', label: 'Map', icon: 'map' as const },
@@ -106,6 +107,23 @@ function NavIcon({ type }: { type: (typeof navItems)[number]['icon'] }) {
           <path d="M15 6.5v13.5" />
         </svg>
       );
+    case 'pin':
+      return (
+        <svg
+          aria-hidden="true"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M14 3v6l4 4-2 2-4-4H6l-3 3v-4l3-3V3z" />
+          <path d="m9 15-6 6" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -119,6 +137,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const isDashboardPage = pathname === '/';
   const useWhiteMainContent =
     isDashboardPage ||
+    pathname?.startsWith('/help-requests') ||
     pathname?.startsWith('/volunteers') ||
     pathname?.startsWith('/warnings');
 

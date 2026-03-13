@@ -36,6 +36,17 @@ describe('AdminOperationsService', () => {
     warningEventLog: {
       create: jest.fn(),
     },
+    helpRequest: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+    helpAssignment: {
+      update: jest.fn(),
+    },
+    helpRequestEvent: {
+      create: jest.fn(),
+    },
     $transaction: jest.fn((cb) => cb(mockPrisma)),
   };
 
@@ -202,6 +213,77 @@ describe('AdminOperationsService', () => {
       mockPrisma.warningEvent.findUnique.mockResolvedValue(null);
 
       await expect(service.deleteWarning('missing-warning')).rejects.toThrow();
+    });
+  });
+
+  describe('updateHelpRequestStatusByAdmin', () => {
+    it('should throw when note is missing', async () => {
+      await expect(
+        service.updateHelpRequestStatusByAdmin({
+          helpRequestId: 'req-1',
+          actorId: 'admin-1',
+          nextStatus: 'RESOLVED',
+          note: '  ',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update help request status and create an event log', async () => {
+      mockPrisma.helpRequest.findUnique.mockResolvedValue({
+        id: 'req-1',
+        status: 'CLAIMED',
+        assignments: [{ id: 'assign-1' }],
+      });
+      mockPrisma.helpRequest.update.mockResolvedValue({
+        id: 'req-1',
+        status: 'RESOLVED',
+      });
+      mockPrisma.helpRequest.findUnique.mockResolvedValueOnce({
+        id: 'req-1',
+        status: 'CLAIMED',
+        assignments: [{ id: 'assign-1' }],
+      });
+      mockPrisma.helpRequest.findUnique.mockResolvedValueOnce({
+        id: 'req-1',
+        status: 'RESOLVED',
+      });
+
+      await service.updateHelpRequestStatusByAdmin({
+        helpRequestId: 'req-1',
+        actorId: 'admin-1',
+        nextStatus: 'RESOLVED',
+        note: 'Resolved after field verification',
+      });
+
+      expect(mockPrisma.helpAssignment.update).toHaveBeenCalledWith({
+        where: { id: 'assign-1' },
+        data: { status: 'COMPLETED' },
+      });
+      expect(mockPrisma.helpRequestEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          helpRequestId: 'req-1',
+          actorId: 'admin-1',
+          previousStatus: 'CLAIMED',
+          nextStatus: 'RESOLVED',
+        }),
+      });
+    });
+
+    it('should reject terminal help requests', async () => {
+      mockPrisma.helpRequest.findUnique.mockResolvedValue({
+        id: 'req-1',
+        status: 'RESOLVED',
+        assignments: [],
+      });
+
+      await expect(
+        service.updateHelpRequestStatusByAdmin({
+          helpRequestId: 'req-1',
+          actorId: 'admin-1',
+          nextStatus: 'CANCELLED',
+          note: 'Administrative cancellation',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

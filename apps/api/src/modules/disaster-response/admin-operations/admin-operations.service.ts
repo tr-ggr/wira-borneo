@@ -641,6 +641,165 @@ export class AdminOperationsService {
     });
   }
 
+  async listHelpRequestsForAdmin() {
+    const helpRequests = await this.prisma.helpRequest.findMany({
+      include: {
+        requester: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        assignments: {
+          include: {
+            volunteer: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: { assignedAt: 'desc' },
+        },
+        events: {
+          include: {
+            actor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return helpRequests.map((request) => ({
+      ...request,
+      latestAssignment: request.assignments[0] ?? null,
+    }));
+  }
+
+  async updateHelpRequestStatusByAdmin(input: {
+    helpRequestId: string;
+    actorId: string;
+    nextStatus: 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED';
+    note: string;
+  }) {
+    const note = input.note.trim();
+    if (!note) {
+      throw new BadRequestException('note is required.');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const request = await tx.helpRequest.findUnique({
+        where: { id: input.helpRequestId },
+        include: {
+          assignments: {
+            orderBy: { assignedAt: 'desc' },
+            take: 1,
+          },
+        },
+      });
+
+      if (!request) {
+        throw new NotFoundException('Help request not found.');
+      }
+
+      if (request.status === 'RESOLVED' || request.status === 'CANCELLED') {
+        throw new BadRequestException(
+          'Cannot update a terminal help request.',
+        );
+      }
+
+      if (
+        request.status !== 'OPEN' &&
+        request.status !== 'CLAIMED' &&
+        request.status !== 'IN_PROGRESS'
+      ) {
+        throw new BadRequestException(
+          'Only active help requests can be updated.',
+        );
+      }
+
+      if (request.status === input.nextStatus) {
+        throw new BadRequestException('Help request is already in that status.');
+      }
+
+      const updatedRequest = await tx.helpRequest.update({
+        where: { id: input.helpRequestId },
+        data: { status: input.nextStatus },
+      });
+
+      const latestAssignment = request.assignments[0];
+      if (latestAssignment) {
+        const nextAssignmentStatus =
+          input.nextStatus === 'IN_PROGRESS'
+            ? 'ON_SITE'
+            : input.nextStatus === 'RESOLVED'
+              ? 'COMPLETED'
+              : 'CANCELLED';
+
+        await tx.helpAssignment.update({
+          where: { id: latestAssignment.id },
+          data: { status: nextAssignmentStatus },
+        });
+      }
+
+      await tx.helpRequestEvent.create({
+        data: {
+          helpRequestId: input.helpRequestId,
+          actorId: input.actorId,
+          previousStatus: request.status,
+          nextStatus: input.nextStatus,
+          note,
+        },
+      });
+
+      return tx.helpRequest.findUnique({
+        where: { id: updatedRequest.id },
+        include: {
+          requester: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          assignments: {
+            include: {
+              volunteer: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+            orderBy: { assignedAt: 'desc' },
+          },
+          events: {
+            include: {
+              actor: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      });
+    });
+  }
+
   async getMapOverview() {
     const [vulnerableRegions, pinStatuses, damageReports, userLocations, helpRequests] = await Promise.all([
       this.getVulnerableRegions(),

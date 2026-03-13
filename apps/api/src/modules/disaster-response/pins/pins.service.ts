@@ -1,9 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/database.service';
+import { PinTriageService } from './pin-triage.service';
+
+const AUTO_APPROVAL_THRESHOLD = 0.85;
+
+function mapUrgencyToPriority(urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): number {
+  switch (urgency) {
+    case 'LOW':
+      return 1;
+    case 'MEDIUM':
+      return 2;
+    case 'HIGH':
+      return 3;
+    case 'CRITICAL':
+      return 4;
+  }
+}
 
 @Injectable()
 export class PinsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pinTriageService: PinTriageService,
+  ) {}
 
   async create(input: {
     reporterId: string;
@@ -15,6 +34,23 @@ export class PinsService {
     photoUrl?: string;
     photoKey?: string;
   }) {
+    const triage = await this.pinTriageService.triage({
+      hazardType: input.hazardType,
+      title: input.title,
+      note: input.note,
+    });
+
+    const reviewStatus =
+      triage && triage.urgencyConfidence >= AUTO_APPROVAL_THRESHOLD ? 'APPROVED' : 'PENDING';
+    const priority = triage ? mapUrgencyToPriority(triage.predictedUrgency) : 1;
+    const reviewNote = triage
+      ? `[AUTO_TRIAGE] ${JSON.stringify({
+          predicted_urgency: triage.predictedUrgency,
+          urgency_confidence: triage.urgencyConfidence,
+          summary: triage.summary,
+        })}`
+      : undefined;
+
     return this.prisma.mapPinStatus.create({
       data: {
         reporterId: input.reporterId,
@@ -26,7 +62,9 @@ export class PinsService {
         photoUrl: input.photoUrl ?? undefined,
         photoKey: input.photoKey ?? undefined,
         status: 'OPEN',
-        reviewStatus: 'PENDING',
+        reviewStatus,
+        reviewNote,
+        priority,
       },
     });
   }

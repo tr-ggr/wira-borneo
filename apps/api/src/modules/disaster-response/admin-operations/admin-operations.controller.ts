@@ -171,6 +171,109 @@ class AdminHelpRequestDto {
   requester!: { name: string };
 }
 
+class AdminHelpRequestActorDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty()
+  email!: string;
+}
+
+class AdminHelpAssignmentDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  status!: 'CLAIMED' | 'EN_ROUTE' | 'ON_SITE' | 'COMPLETED' | 'CANCELLED';
+
+  @ApiProperty()
+  assignedAt!: Date;
+
+  @ApiProperty({ type: AdminHelpRequestActorDto })
+  volunteer!: AdminHelpRequestActorDto;
+}
+
+class AdminHelpRequestEventDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiPropertyOptional()
+  previousStatus?: 'OPEN' | 'CLAIMED' | 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED' | null;
+
+  @ApiProperty()
+  nextStatus!: 'OPEN' | 'CLAIMED' | 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED';
+
+  @ApiPropertyOptional()
+  note?: string | null;
+
+  @ApiProperty()
+  createdAt!: Date;
+
+  @ApiPropertyOptional({ type: AdminHelpRequestActorDto, nullable: true })
+  actor?: AdminHelpRequestActorDto | null;
+}
+
+class AdminHelpRequestQueueItemDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  requesterId!: string;
+
+  @ApiPropertyOptional()
+  familyId?: string | null;
+
+  @ApiProperty({ enum: ['FLOOD', 'TYPHOON', 'EARTHQUAKE', 'AFTERSHOCK'] })
+  hazardType!: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
+
+  @ApiProperty({ enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] })
+  urgency!: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+  @ApiProperty({ enum: ['OPEN', 'CLAIMED', 'IN_PROGRESS', 'RESOLVED', 'CANCELLED'] })
+  status!: 'OPEN' | 'CLAIMED' | 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED';
+
+  @ApiProperty()
+  description!: string;
+
+  @ApiProperty()
+  latitude!: number;
+
+  @ApiProperty()
+  longitude!: number;
+
+  @ApiPropertyOptional()
+  sosExpiresAt?: Date | null;
+
+  @ApiProperty()
+  createdAt!: Date;
+
+  @ApiProperty()
+  updatedAt!: Date;
+
+  @ApiProperty({ type: AdminHelpRequestActorDto })
+  requester!: AdminHelpRequestActorDto;
+
+  @ApiProperty({ type: [AdminHelpAssignmentDto] })
+  assignments!: AdminHelpAssignmentDto[];
+
+  @ApiProperty({ type: [AdminHelpRequestEventDto] })
+  events!: AdminHelpRequestEventDto[];
+
+  @ApiPropertyOptional({ type: AdminHelpAssignmentDto, nullable: true })
+  latestAssignment?: AdminHelpAssignmentDto | null;
+}
+
+class UpdateAdminHelpRequestStatusDto {
+  @ApiProperty({ enum: ['IN_PROGRESS', 'RESOLVED', 'CANCELLED'] })
+  nextStatus!: 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED';
+
+  @ApiProperty()
+  note!: string;
+}
+
 class AdminRiskRegionDto {
   @ApiProperty()
   id!: string;
@@ -603,6 +706,11 @@ function assertWarningPromptSuggestionDto(
 
 const PIN_REVIEW_ACTIONS = ['APPROVE', 'REJECT'] as const;
 const DAMAGE_REPORT_REVIEW_ACTIONS = ['APPROVE', 'REJECT'] as const;
+const ADMIN_HELP_REQUEST_STATUS_ACTIONS = [
+  'IN_PROGRESS',
+  'RESOLVED',
+  'CANCELLED',
+] as const;
 
 function assertReviewPinDto(input: ReviewPinDto): void {
   if (!input || typeof input !== 'object') {
@@ -647,6 +755,28 @@ function assertReviewDamageReportDto(input: ReviewDamageReportDto): void {
 
   if (input.reason != null && typeof input.reason !== 'string') {
     throw new BadRequestException('reason must be a string.');
+  }
+}
+
+function assertUpdateAdminHelpRequestStatusDto(
+  input: UpdateAdminHelpRequestStatusDto,
+): void {
+  if (!input || typeof input !== 'object') {
+    throw new BadRequestException('Request body is required.');
+  }
+
+  if (
+    !ADMIN_HELP_REQUEST_STATUS_ACTIONS.includes(
+      input.nextStatus as (typeof ADMIN_HELP_REQUEST_STATUS_ACTIONS)[number],
+    )
+  ) {
+    throw new BadRequestException(
+      'nextStatus must be one of: IN_PROGRESS, RESOLVED, CANCELLED.',
+    );
+  }
+
+  if (typeof input.note !== 'string' || !input.note.trim()) {
+    throw new BadRequestException('note is required.');
   }
 }
 
@@ -971,6 +1101,33 @@ export class AdminOperationsController {
       reviewerId: session.user.id,
       action: body.action,
       reason: body.reason,
+    });
+  }
+
+  @Get('help-requests')
+  @ApiOperation({ summary: 'List all user help requests for admin operations' })
+  @ApiOkResponse({ type: [AdminHelpRequestQueueItemDto] })
+  async helpRequests() {
+    return this.adminService.listHelpRequestsForAdmin();
+  }
+
+  @Patch('help-requests/:id/status')
+  @ApiOperation({ summary: 'Update help request status as admin' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiBody({ type: UpdateAdminHelpRequestStatusDto })
+  @ApiOkResponse({ type: AdminHelpRequestQueueItemDto })
+  async updateHelpRequestStatus(
+    @Param('id') helpRequestId: string,
+    @AuthSessionParam() session: AuthSession,
+    @Body() body: UpdateAdminHelpRequestStatusDto,
+  ) {
+    assertUpdateAdminHelpRequestStatusDto(body);
+
+    return this.adminService.updateHelpRequestStatusByAdmin({
+      helpRequestId,
+      actorId: session.user.id,
+      nextStatus: body.nextStatus,
+      note: body.note,
     });
   }
 
