@@ -6,18 +6,16 @@ const HUGGING_FACE_THRESHOLD = 0.85;
 
 const PREDICTED_URGENCY_VALUES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
 
-export type PredictedUrgency = (typeof PREDICTED_URGENCY_VALUES)[number];
-
-export type PinTriageResult = {
-  predictedUrgency: PredictedUrgency;
-  urgencyConfidence: number;
-  summary: string;
-};
+type PredictedUrgency = (typeof PREDICTED_URGENCY_VALUES)[number];
 
 type InferencePayload = {
   predicted_urgency?: unknown;
   urgency_confidence?: unknown;
-  summary?: unknown;
+};
+
+export type HelpRequestTriageResult = {
+  predictedUrgency: PredictedUrgency;
+  urgencyConfidence: number;
 };
 
 const LABEL_TO_URGENCY: Record<string, PredictedUrgency> = {
@@ -124,7 +122,7 @@ function findInferencePayload(value: unknown): InferencePayload | null {
   return null;
 }
 
-export function parsePinTriageResult(data: unknown): PinTriageResult | null {
+export function parseHelpRequestTriageResult(data: unknown): HelpRequestTriageResult | null {
   const payload = findInferencePayload(data);
 
   if (!payload) {
@@ -141,56 +139,39 @@ export function parsePinTriageResult(data: unknown): PinTriageResult | null {
   return {
     predictedUrgency,
     urgencyConfidence,
-    summary: typeof payload.summary === 'string' ? payload.summary.trim() : '',
   };
 }
 
 @Injectable()
-export class PinTriageService {
-  private readonly logger = new Logger(PinTriageService.name);
+export class HelpRequestTriageService {
+  private readonly logger = new Logger(HelpRequestTriageService.name);
   private clientPromise: Promise<{
     predict: (endpoint: string, payload: Record<string, unknown>) => Promise<unknown>;
   }> | null = null;
 
-  async triage(input: {
-    hazardType: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
-    title: string;
-    note?: string;
-  }): Promise<PinTriageResult | null> {
+  async triage(text: string): Promise<HelpRequestTriageResult | null> {
     try {
       const client = await this.getClient();
-      const text = this.buildText(input);
       const result = await client.predict(HUGGING_FACE_ENDPOINT, {
         text,
         threshold: HUGGING_FACE_THRESHOLD,
       });
 
       const data = (result as { data?: unknown } | null)?.data ?? result;
-      const parsed = parsePinTriageResult(data);
+      const parsed = parseHelpRequestTriageResult(data);
 
       if (!parsed) {
-        this.logger.warn('Unable to parse Hugging Face response schema for hazard pin triage.');
+        this.logger.warn('Unable to parse Hugging Face response schema for help request triage.');
+        this.logger.warn(`Full response: ${JSON.stringify(result, null, 2)}`);
       }
 
       return parsed;
     } catch (error) {
       this.logger.warn(
-        `Hazard pin triage request failed. Falling back to pending review. ${error instanceof Error ? error.message : String(error)}`,
+        `Help request triage request failed. Proceeding without AI metadata. ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }
-  }
-
-  private buildText(input: {
-    hazardType: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
-    title: string;
-    note?: string;
-  }): string {
-    return [
-      `Hazard Type: ${input.hazardType}`,
-      `Title: ${input.title}`,
-      `Note: ${input.note?.trim() || 'N/A'}`,
-    ].join('\n');
   }
 
   private async getClient(): Promise<{

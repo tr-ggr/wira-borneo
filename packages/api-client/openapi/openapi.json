@@ -456,8 +456,15 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpRequestResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -475,7 +482,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenHelpRequestResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -504,8 +521,15 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpRequestResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -525,7 +549,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HelpRequestWithHistoryResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -545,7 +579,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VolunteerAssignmentResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -573,8 +617,15 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpAssignmentResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -613,7 +664,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpRequestResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1602,6 +1660,82 @@
         ]
       }
     },
+    "/api/admin/help-requests": {
+      "get": {
+        "operationId": "AdminOperationsController_helpRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminHelpRequestQueueItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all user help requests for admin operations",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/admin/help-requests/{id}/status": {
+      "patch": {
+        "operationId": "AdminOperationsController_updateHelpRequestStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminHelpRequestStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminHelpRequestQueueItemDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update help request status as admin",
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
     "/api/admin/warnings/prompt-suggestion": {
       "post": {
         "operationId": "AdminOperationsController_getPromptSuggestion",
@@ -2512,15 +2646,546 @@
       },
       "CreateHelpRequestDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "familyId": {
+            "type": "string"
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "hazardType",
+          "urgency",
+          "description",
+          "latitude",
+          "longitude"
+        ]
+      },
+      "HelpRequestResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requesterId": {
+            "type": "string"
+          },
+          "familyId": {
+            "type": "object",
+            "nullable": true
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLAIMED",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "sosExpiresAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "requesterId",
+          "hazardType",
+          "urgency",
+          "status",
+          "description",
+          "latitude",
+          "longitude",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "CreateSosDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "HelpAssignmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "CLAIMED",
+              "EN_ROUTE",
+              "ON_SITE",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "assignedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "helpRequestId": {
+            "type": "string"
+          },
+          "volunteerId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "assignedAt",
+          "updatedAt",
+          "helpRequestId",
+          "volunteerId"
+        ]
+      },
+      "HelpRequestEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "previousStatus": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLAIMED",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ],
+            "nullable": true
+          },
+          "nextStatus": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLAIMED",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          },
+          "note": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nextStatus",
+          "createdAt"
+        ]
+      },
+      "HelpRequestWithHistoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requesterId": {
+            "type": "string"
+          },
+          "familyId": {
+            "type": "object",
+            "nullable": true
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLAIMED",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "sosExpiresAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HelpAssignmentResponseDto"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HelpRequestEventResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "requesterId",
+          "hazardType",
+          "urgency",
+          "status",
+          "description",
+          "latitude",
+          "longitude",
+          "createdAt",
+          "updatedAt",
+          "assignments",
+          "events"
+        ]
+      },
+      "HelpRequestRequesterSummaryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "OpenHelpRequestResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requesterId": {
+            "type": "string"
+          },
+          "familyId": {
+            "type": "object",
+            "nullable": true
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLAIMED",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "sosExpiresAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "requester": {
+            "$ref": "#/components/schemas/HelpRequestRequesterSummaryDto"
+          }
+        },
+        "required": [
+          "id",
+          "requesterId",
+          "hazardType",
+          "urgency",
+          "status",
+          "description",
+          "latitude",
+          "longitude",
+          "createdAt",
+          "updatedAt",
+          "requester"
+        ]
+      },
+      "HelpRequestForAssignmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requesterId": {
+            "type": "string"
+          },
+          "familyId": {
+            "type": "object",
+            "nullable": true
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLAIMED",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "sosExpiresAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "requester": {
+            "$ref": "#/components/schemas/HelpRequestRequesterSummaryDto"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HelpRequestEventResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "requesterId",
+          "hazardType",
+          "urgency",
+          "status",
+          "description",
+          "latitude",
+          "longitude",
+          "createdAt",
+          "updatedAt",
+          "requester",
+          "events"
+        ]
+      },
+      "VolunteerAssignmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "helpRequestId": {
+            "type": "string"
+          },
+          "volunteerId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "CLAIMED",
+              "EN_ROUTE",
+              "ON_SITE",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "assignedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "helpRequest": {
+            "$ref": "#/components/schemas/HelpRequestForAssignmentResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "helpRequestId",
+          "volunteerId",
+          "status",
+          "assignedAt",
+          "updatedAt",
+          "helpRequest"
+        ]
       },
       "UpdateHelpRequestStatusDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "nextStatus": {
+            "type": "string",
+            "enum": [
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          }
+        },
+        "required": [
+          "nextStatus"
+        ]
       },
       "NearestEvacResponseDto": {
         "type": "object",
@@ -3070,6 +3735,217 @@
         },
         "required": [
           "action"
+        ]
+      },
+      "AdminHelpRequestActorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ]
+      },
+      "AdminHelpAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "assignedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "volunteer": {
+            "$ref": "#/components/schemas/AdminHelpRequestActorDto"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "assignedAt",
+          "volunteer"
+        ]
+      },
+      "AdminHelpRequestEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "previousStatus": {
+            "type": "object"
+          },
+          "nextStatus": {
+            "type": "string"
+          },
+          "note": {
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "actor": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminHelpRequestActorDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nextStatus",
+          "createdAt"
+        ]
+      },
+      "AdminHelpRequestQueueItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requesterId": {
+            "type": "string"
+          },
+          "familyId": {
+            "type": "object"
+          },
+          "hazardType": {
+            "type": "string",
+            "enum": [
+              "FLOOD",
+              "TYPHOON",
+              "EARTHQUAKE",
+              "AFTERSHOCK"
+            ]
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "predictedUrgency": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ],
+            "nullable": true
+          },
+          "urgencyConfidence": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLAIMED",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "sosExpiresAt": {
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "requester": {
+            "$ref": "#/components/schemas/AdminHelpRequestActorDto"
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminHelpAssignmentDto"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminHelpRequestEventDto"
+            }
+          },
+          "latestAssignment": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminHelpAssignmentDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "requesterId",
+          "hazardType",
+          "urgency",
+          "status",
+          "description",
+          "latitude",
+          "longitude",
+          "createdAt",
+          "updatedAt",
+          "requester",
+          "assignments",
+          "events"
+        ]
+      },
+      "UpdateAdminHelpRequestStatusDto": {
+        "type": "object",
+        "properties": {
+          "nextStatus": {
+            "type": "string",
+            "enum": [
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CANCELLED"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nextStatus",
+          "note"
         ]
       },
       "WarningPromptSuggestionDto": {

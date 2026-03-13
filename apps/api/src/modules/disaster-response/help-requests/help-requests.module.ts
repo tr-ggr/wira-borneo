@@ -4,6 +4,7 @@ import { AuthModule } from '../../auth/auth.module';
 import { DisasterPolicyService } from '../shared/disaster-policy.service';
 import { ApprovedVolunteerGuard } from '../shared/approved-volunteer.guard';
 import { HelpRequestsController } from './help-requests.controller';
+import { HelpRequestTriageService } from './help-request-triage.service';
 import { HelpRequestsService } from './help-requests.service';
 
 @Module({
@@ -11,6 +12,7 @@ import { HelpRequestsService } from './help-requests.service';
   controllers: [HelpRequestsController],
   providers: [
     HelpRequestsService,
+    HelpRequestTriageService,
     DisasterPolicyService,
     ApprovedVolunteerGuard,
   ],

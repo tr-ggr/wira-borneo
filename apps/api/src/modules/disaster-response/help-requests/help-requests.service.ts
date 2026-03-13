@@ -4,12 +4,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/database.service';
+import { HelpRequestTriageService } from './help-request-triage.service';
 
 const SOS_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const SOS_TRIAGE_TEXT = [
+  'Hazard Type: FLOOD',
+  'Description: SOS emergency request submitted via one-tap trigger.',
+  'User Context: Immediate assistance needed. Location attached from live device coordinates.',
+].join('\n');
 
 @Injectable()
 export class HelpRequestsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly triageService: HelpRequestTriageService,
+  ) {}
 
   async create(input: {
     requesterId: string;
@@ -21,18 +30,33 @@ export class HelpRequestsService {
     longitude: number;
     sosExpiresAt?: Date;
   }) {
+    const triageText = input.sosExpiresAt ? SOS_TRIAGE_TEXT : this.buildTriageText(input);
+    const triage = await this.triageService.triage(triageText);
+
     return this.prisma.helpRequest.create({
       data: {
         requesterId: input.requesterId,
         familyId: input.familyId,
         hazardType: input.hazardType,
         urgency: input.urgency,
+        predictedUrgency: triage?.predictedUrgency ?? null,
+        urgencyConfidence: triage?.urgencyConfidence ?? null,
         description: input.description,
         latitude: input.latitude,
         longitude: input.longitude,
         ...(input.sosExpiresAt != null && { sosExpiresAt: input.sosExpiresAt }),
       },
     });
+  }
+
+  private buildTriageText(input: {
+    hazardType: 'FLOOD' | 'TYPHOON' | 'EARTHQUAKE' | 'AFTERSHOCK';
+    description: string;
+  }): string {
+    return [
+      `Hazard Type: ${input.hazardType}`,
+      `Description: ${input.description.trim() || 'N/A'}`,
+    ].join('\n');
   }
 
   async listMine(userId: string) {

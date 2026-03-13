@@ -232,6 +232,12 @@ class AdminHelpRequestQueueItemDto {
   @ApiProperty({ enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] })
   urgency!: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
+  @ApiPropertyOptional({ enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], nullable: true })
+  predictedUrgency?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  urgencyConfidence?: number | null;
+
   @ApiProperty({ enum: ['OPEN', 'CLAIMED', 'IN_PROGRESS', 'RESOLVED', 'CANCELLED'] })
   status!: 'OPEN' | 'CLAIMED' | 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED';
 

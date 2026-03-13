@@ -244,6 +244,8 @@ model HelpRequest {
   familyId     String?
   hazardType   HazardType
   urgency      HelpUrgency
+  predictedUrgency  HelpUrgency?
+  urgencyConfidence Float?
   status       HelpRequestStatus  @default(OPEN)
   description  String
   latitude     Float

@@ -2,6 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import {
+  formatUrgencyConfidence,
+  getEffectiveUrgency,
+  getUrgencyPaletteClasses,
+} from './help-requests-urgency.utils';
 
 type HelpRequestStatus = 'OPEN' | 'CLAIMED' | 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED';
 type HelpUrgency = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -37,6 +42,8 @@ type HelpRequestQueueItem = {
   familyId?: string | null;
   hazardType: HazardType;
   urgency: HelpUrgency;
+  predictedUrgency?: HelpUrgency | null;
+  urgencyConfidence?: number | null;
   status: HelpRequestStatus;
   description: string;
   latitude: number;
@@ -389,9 +396,15 @@ export function HelpRequestsPage() {
               const note = noteById[request.id] ?? '';
               const canUpdate = isActiveStatus(request.status);
               const latestAssignment = request.latestAssignment ?? request.assignments[0] ?? null;
+              const effectiveUrgency = getEffectiveUrgency(request);
+              const urgencyPalette = getUrgencyPaletteClasses(effectiveUrgency);
+              const confidenceLabel = formatUrgencyConfidence(request.urgencyConfidence);
 
               return (
-                <article key={request.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <article
+                  key={request.id}
+                  className={`overflow-hidden rounded-2xl border border-slate-200 border-l-4 bg-white shadow-sm ${urgencyPalette.card}`}
+                >
                   <button
                     type="button"
                     onClick={() => setExpandedId(expanded ? null : request.id)}
@@ -405,12 +418,17 @@ export function HelpRequestsPage() {
 
                     <div className="space-y-1 text-sm text-slate-600">
                       <p>Hazard: {request.hazardType}</p>
-                      <p>Urgency: {request.urgency}</p>
+                      <p>Urgency: {effectiveUrgency}</p>
                       <p>Created: {fmtDate(request.createdAt)}</p>
                       <p>Coords: {request.latitude.toFixed(4)}, {request.longitude.toFixed(4)}</p>
                     </div>
 
-                    <div className="flex justify-start md:justify-end">
+                    <div className="flex flex-wrap items-center justify-start gap-2 md:justify-end">
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide ${urgencyPalette.badge}`}
+                      >
+                        {effectiveUrgency}
+                      </span>
                       <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
                         {request.status}
                       </span>
@@ -433,6 +451,19 @@ export function HelpRequestsPage() {
                             ) : (
                               <p className="text-sm text-slate-500">No volunteer assignment yet.</p>
                             )}
+                          </section>
+
+                          <section className="space-y-2">
+                            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-600">Urgency Triage</h3>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                              <p>Submitted urgency: {request.urgency}</p>
+                              {request.predictedUrgency ? (
+                                <>
+                                  <p>Predicted urgency: {request.predictedUrgency}</p>
+                                  {confidenceLabel ? <p>Urgency confidence: {confidenceLabel}</p> : null}
+                                </>
+                              ) : null}
+                            </div>
                           </section>
 
                           <section className="space-y-2">

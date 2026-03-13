@@ -286,4 +286,49 @@ describe('AdminOperationsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
   });
+
+  describe('listHelpRequestsForAdmin', () => {
+    it('returns admin queue items including AI urgency fields and latest assignment', async () => {
+      mockPrisma.helpRequest.findMany.mockResolvedValue([
+        {
+          id: 'req-1',
+          requesterId: 'user-1',
+          familyId: null,
+          hazardType: 'FLOOD',
+          urgency: 'HIGH',
+          predictedUrgency: 'CRITICAL',
+          urgencyConfidence: 0.87,
+          status: 'OPEN',
+          description: 'Need rescue',
+          latitude: 1.1,
+          longitude: 110.1,
+          sosExpiresAt: null,
+          createdAt: new Date('2026-03-13T00:00:00.000Z'),
+          updatedAt: new Date('2026-03-13T00:00:00.000Z'),
+          requester: { id: 'user-1', name: 'Requester', email: 'req@example.com' },
+          assignments: [
+            {
+              id: 'assign-2',
+              status: 'ON_SITE',
+              assignedAt: new Date('2026-03-13T00:10:00.000Z'),
+              volunteer: { id: 'vol-2', name: 'V2', email: 'v2@example.com' },
+            },
+            {
+              id: 'assign-1',
+              status: 'CLAIMED',
+              assignedAt: new Date('2026-03-13T00:05:00.000Z'),
+              volunteer: { id: 'vol-1', name: 'V1', email: 'v1@example.com' },
+            },
+          ],
+          events: [],
+        },
+      ]);
+
+      const result = await service.listHelpRequestsForAdmin();
+
+      expect(result[0].predictedUrgency).toBe('CRITICAL');
+      expect(result[0].urgencyConfidence).toBe(0.87);
+      expect(result[0].latestAssignment?.id).toBe('assign-2');
+    });
+  });
 });
