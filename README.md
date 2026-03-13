@@ -1,7 +1,5 @@
 # WiraBorneo
 
-This project is part of the **wira** root repository. For a map of all projects and ports, see the [root README](../README.md).
-
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
 **WIRA** (Woven Intelligence for Regional Alertness) is an ASEAN disaster response platform: preparedness, during-disaster (pins, help requests, damage reports, volunteer/asset registry), and post-disaster (damage reports, relief tracking). Design is batik-inspired, offline-first, and clarity-first — see [docs/design-guidelines.md](docs/design-guidelines.md).
@@ -12,15 +10,16 @@ This repo is an **Nx monorepo** with shared packages and multiple apps.
 
 ## 1. Project overview
 
-| App | Tech | Purpose |
-|-----|------|--------|
-| **API** | NestJS, Prisma, Better Auth | REST API, auth, disaster-response modules, file uploads via Supabase |
-| **Admin** | Next.js | Dashboards, maps, registries, damage report/volunteer review |
-| **Tracker** | Next.js | Aid shipment tracking, blockchain (Polygon), relief zones |
-| **Mobile** | Next.js / React Native | Resident-facing: map, forecast, pins, help requests, flood simulation, damage reports, LLM assistant |
-| **LLM Server** | Python/Flask | SEA-Lion / Gemini gateway for AI assistant |
+| App                       | Tech                        | Purpose                                                                                                   |
+| ------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **API**                   | NestJS, Prisma, Better Auth | REST API, auth, disaster-response modules, file uploads via Supabase                                      |
+| **Admin**                 | Next.js                     | Dashboards, maps, registries, damage report/volunteer review                                              |
+| **Tracker**               | Next.js                     | Aid shipment tracking, blockchain (Polygon), relief zones                                                 |
+| **Mobile**                | Next.js / React Native      | Resident-facing: map, forecast, pins, help requests, flood simulation, damage reports, LLM assistant      |
+| **LLM Server**            | Python/Flask                | SEA-Lion / Gemini gateway for AI assistant                                                                |
+| **Hazard routing server** | Python/Flask                | Hazard-aware routing for AI flood simulation (risk/hazard route); in-repo at `apps/hazard-routing-server` |
 
-**Optional external service:** **Hazard routing server** (`wira-hazard-routing-server`) — used for AI flood simulation (risk/hazard route). When running, set `HAZARD_ROUTING_SERVER_URL` in the API `.env` (e.g. `http://localhost:5001`).
+Set `HAZARD_ROUTING_SERVER_URL` in the API `.env` (e.g. `http://localhost:5001`) when using the flood simulation risk/hazard route.
 
 ---
 
@@ -68,6 +67,7 @@ npm install
 - **Tracker:** `cp apps/tracker/.env.local.example apps/tracker/.env.local` — fill in API URL, Supabase, Polygon, WalletConnect.
 - **Admin:** `cp apps/admin/.env.local.example apps/admin/.env.local` — set `NEXT_PUBLIC_API_BASE_URL` (e.g. `http://localhost:3333`).
 - **LLM server:** Ensure Python env is set up; set `WIRA_INTERNAL_SECRET` to match the API’s `LLM_INTERNAL_SECRET`.
+- **Hazard routing server:** Optional. Copy `apps/hazard-routing-server/.env.example` to `apps/hazard-routing-server/.env` and set `NEIGHBORHOOD_DATA_PATH` if the graph data is not under `wira-borneo/wira-resources/AI Simulation/neighborhood_data.json` (e.g. in a monorepo use `../../wira-resources/AI Simulation/neighborhood_data.json`).
 
 ---
 
@@ -77,28 +77,28 @@ npm install
 
 Create from `apps/api/.env.example`.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string (Supabase pooler for runtime) |
-| `DIRECT_URL` | For Supabase | Direct connection for migrations/seed (Session, port 5432) |
-| `AUTH_SECRET` | Yes | Long random secret for Better Auth |
-| `AUTH_BASE_URL` | Yes | API origin (e.g. `http://localhost:3333`) |
-| `AUTH_TRUSTED_ORIGINS` | Optional | Comma-separated origins (defaults include 3192, 4444, 8888) |
-| `LLM_SERVER_URL` | Yes* | LLM server URL (e.g. `http://localhost:5000`) |
-| `LLM_INTERNAL_SECRET` | Yes* | Must match LLM server’s `WIRA_INTERNAL_SECRET` |
-| `HAZARD_ROUTING_SERVER_URL` | No | Hazard server URL (e.g. `http://localhost:5001`) for flood simulation route |
-| `SUPABASE_URL` | For uploads | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | For uploads | Service role key |
-| `SUPABASE_BUCKET` | Optional | Bucket name (default `wira-borneo`) |
-| `DAMAGE_REPORT_CONFIDENCE_THRESHOLD` | Optional | 0–1 (default 0.7) |
-| `ADMIN_USER_IDS` | Optional | Comma-separated user IDs for admin-only operations |
+| Variable                             | Required     | Description                                                                 |
+| ------------------------------------ | ------------ | --------------------------------------------------------------------------- |
+| `DATABASE_URL`                       | Yes          | PostgreSQL connection string (Supabase pooler for runtime)                  |
+| `DIRECT_URL`                         | For Supabase | Direct connection for migrations/seed (Session, port 5432)                  |
+| `AUTH_SECRET`                        | Yes          | Long random secret for Better Auth                                          |
+| `AUTH_BASE_URL`                      | Yes          | API origin (e.g. `http://localhost:3333`)                                   |
+| `AUTH_TRUSTED_ORIGINS`               | Optional     | Comma-separated origins (defaults include 3192, 4444, 8888)                 |
+| `LLM_SERVER_URL`                     | Yes\*        | LLM server URL (e.g. `http://localhost:5000`)                               |
+| `LLM_INTERNAL_SECRET`                | Yes\*        | Must match LLM server’s `WIRA_INTERNAL_SECRET`                              |
+| `HAZARD_ROUTING_SERVER_URL`          | No           | Hazard server URL (e.g. `http://localhost:5001`) for flood simulation route |
+| `SUPABASE_URL`                       | For uploads  | Supabase project URL                                                        |
+| `SUPABASE_SERVICE_ROLE_KEY`          | For uploads  | Service role key                                                            |
+| `SUPABASE_BUCKET`                    | Optional     | Bucket name (default `wira-borneo`)                                         |
+| `DAMAGE_REPORT_CONFIDENCE_THRESHOLD` | Optional     | 0–1 (default 0.7)                                                           |
+| `ADMIN_USER_IDS`                     | Optional     | Comma-separated user IDs for admin-only operations                          |
 
 \*Required if the assistant/LLM flow is used.
 
 ### 5.2 Admin (`apps/admin`)
 
-| Variable | Description |
-|----------|-------------|
+| Variable                   | Description                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_API_BASE_URL` | API base URL (e.g. `http://localhost:3333`). No trailing `/api` — the client adds the path. |
 
 Copy `apps/admin/.env.local.example` to `apps/admin/.env.local`.
@@ -114,6 +114,10 @@ Uses shared `@wira-borneo/api-client`. If the app reads an API base URL from env
 ### 5.5 LLM Server (`apps/llm-server`)
 
 See [apps/llm-server/README.md](apps/llm-server/README.md). Key: `SEA_LION_API_KEY`, `SEA_LION_BASE_URL`, `GEMINI_API_KEY`, `WIRA_API_BASE_URL` (default `http://localhost:3333`), `WIRA_INTERNAL_SECRET` (must match API’s `LLM_INTERNAL_SECRET`).
+
+### 5.6 Hazard routing server (`apps/hazard-routing-server`)
+
+See [apps/hazard-routing-server/README.md](apps/hazard-routing-server/README.md). Optional. Copy `apps/hazard-routing-server/.env.example` to `apps/hazard-routing-server/.env`. Set `NEIGHBORHOOD_DATA_PATH` only if the graph data is not at `wira-borneo/wira-resources/AI Simulation/neighborhood_data.json` (e.g. in a monorepo: `../../wira-resources/AI Simulation/neighborhood_data.json`). Default port: 5001.
 
 ---
 
@@ -134,16 +138,16 @@ See [apps/api/prisma/README.md](apps/api/prisma/README.md) for schema layout and
 
 ## 7. Running the apps
 
-| Service | Port | Command |
-|---------|------|---------|
-| **API** | 3333 | `npm run api` |
-| **Admin** | 3192 | `npm run admin` |
-| **Tracker** | 4444 | `npm run tracker` |
-| **Mobile** | 8888 | `npm run mobile` |
-| **LLM Server** | 5000 | `npm run llm-server` |
-| **Hazard server** | 5001 | (external repo) e.g. `python app.py` |
+| Service                   | Port | Command                                                             |
+| ------------------------- | ---- | ------------------------------------------------------------------- |
+| **API**                   | 3333 | `npm run api`                                                       |
+| **Admin**                 | 3192 | `npm run admin`                                                     |
+| **Tracker**               | 4444 | `npm run tracker`                                                   |
+| **Mobile**                | 8888 | `npm run mobile`                                                    |
+| **LLM Server**            | 5000 | `npm run llm-server`                                                |
+| **Hazard routing server** | 5001 | `npm run hazard-routing-server` or `nx serve hazard-routing-server` |
 
-**Suggested order:** (1) Apply migrations and optionally seed. (2) Start API. (3) If using assistant, start LLM server. (4) Start Admin, Tracker, Mobile in any order. (5) Optionally start hazard server for flood simulation.
+**Suggested order:** (1) Apply migrations and optionally seed. (2) Start API. (3) If using assistant, start LLM server. (4) Start Admin, Tracker, Mobile in any order. (5) Optionally start hazard routing server for flood simulation (`npm run hazard-routing-server`).
 
 **Local development URLs:**
 
@@ -167,7 +171,7 @@ See [apps/api/prisma/README.md](apps/api/prisma/README.md) for schema layout and
 
 ## 9. Optional
 
-- **Hazard routing server:** For AI flood simulation (green risk/hazard route), run the hazard server (e.g. from `wira-hazard-routing-server`) and set `HAZARD_ROUTING_SERVER_URL` in the API `.env`. If unset or server is down, the hazard route returns null.
+- **Hazard routing server:** For AI flood simulation (green risk/hazard route), run the in-repo hazard server with `npm run hazard-routing-server` and set `HAZARD_ROUTING_SERVER_URL` in the API `.env` (e.g. `http://localhost:5001`). If unset or server is down, the hazard route returns null.
 - **Building ingest:** `npm run ingest-building` (uses API’s `.env`; see `apps/api/scripts/ingest-building-profiles.ts`).
 
 ---
@@ -178,6 +182,7 @@ See [apps/api/prisma/README.md](apps/api/prisma/README.md) for schema layout and
 - [Tracker setup (detailed)](TRACKER-SETUP.md)
 - [API Prisma schema](apps/api/prisma/README.md)
 - [LLM server](apps/llm-server/README.md)
+- [Hazard routing server](apps/hazard-routing-server/README.md)
 - [Nx workspace](https://nx.dev) — run `npx nx graph` to explore the project graph.
 
 ---
@@ -187,7 +192,3 @@ See [apps/api/prisma/README.md](apps/api/prisma/README.md) for schema layout and
 Run any task with `npx nx <target> <project-name>`. Build: `npx nx build <project>`. Version/release: `npx nx release` (use `--dry-run` to preview). Keep TypeScript project references in sync: `npx nx sync` (manual), `npx nx sync:check` (CI). Connect to Nx Cloud: `npx nx connect`. Configure CI: `npx nx g ci-workflow`. [Install Nx Console](https://nx.dev/getting-started/editor-setup) for your editor.
 
 ---
-
-## SAGIP Demo Screen Recording Plan
-
-Internal plan for mapping the 8-minute SAGIP pitch to screen recordings from admin, mobile, and tracker apps. Key surfaces: Admin (dashboards, maps, registries), Mobile (map/forecast, pin/report flows), Tracker (command center / live-ops). Beats for not-yet-implemented features (SEA-Lion assistant, AI vulnerability scoring, simulation sandbox, blockchain ledger) use static mocks or slides and are marked as future capabilities.

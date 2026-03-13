@@ -115,15 +115,16 @@ export default function FloodSimulation({
 
   /** Fallback when no geolocation: center on hazard graph region (Mandaue City, Cebu) so route requests stay inside graph. */
   const routeFrom = userLocation;
-  const hazardRouteParams = selectedPoint
-    ? {
-        fromLat: routeFrom.latitude,
-        fromLon: routeFrom.longitude,
-        toLat: selectedPoint.latitude,
-        toLon: selectedPoint.longitude,
-        rainfall_mm: debouncedRainfallMm,
-      }
-    : null;
+  const hazardRouteParams =
+    selectedPoint && routeFrom
+      ? {
+          fromLat: routeFrom.latitude,
+          fromLon: routeFrom.longitude,
+          toLat: selectedPoint.latitude,
+          toLon: selectedPoint.longitude,
+          rainfall_mm: debouncedRainfallMm,
+        }
+      : null;
 
   const hazardRouteQueryOptions =
     getEvacuationControllerHazardRouteQueryOptions(
@@ -184,7 +185,7 @@ export default function FloodSimulation({
         }
       : null;
 
-  const centerLoc = userLocation ?? defaultCenter;
+  const centerLoc = userLocation;
 
   const { t } = useI18n();
 
