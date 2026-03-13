@@ -1,7 +1,5 @@
 # WiraBorneo
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
-
 **WIRA** (Woven Intelligence for Regional Alertness) is an ASEAN disaster response platform: preparedness, during-disaster (pins, help requests, damage reports, volunteer/asset registry), and post-disaster (damage reports, relief tracking). Design is batik-inspired, offline-first, and clarity-first — see [docs/design-guidelines.md](docs/design-guidelines.md).
 
 This repo is an **Nx monorepo** with shared packages and multiple apps.
@@ -38,16 +36,20 @@ Set `HAZARD_ROUTING_SERVER_URL` in the API `.env` (e.g. `http://localhost:5001`)
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In **Dashboard → Project Settings → Database**:
-   - **Connection string (URI):**
-     - Use **Transaction pooler** (port 6543) for `DATABASE_URL` (add `?pgbouncer=true` if required).
-     - Use **Direct/Session** (port 5432) for `DIRECT_URL` — required for Prisma migrations and seed.
+
+- **Connection string (URI):**
+  - Use **Transaction pooler** (port 6543) for `DATABASE_URL` (add `?pgbouncer=true` if required).
+  - Use **Direct/Session** (port 5432) for `DIRECT_URL` — required for Prisma migrations and seed.
+
 3. **PostGIS** is used by building/evacuation data; migrations in `apps/api/prisma/migrations/` enable it where needed.
 
 ### 3.2 Storage bucket (API uploads)
 
 1. In **Storage**, create a bucket (e.g. `wira-borneo`). The API uses it for:
-   - Damage report photos: path prefix `damage-reports/`
-   - Asset photos: path prefix `assets/`
+
+- Damage report photos: path prefix `damage-reports/`
+- Asset photos: path prefix `assets/`
+
 2. Configure the bucket for **public read** if the app serves image URLs directly (the API returns public URLs from Supabase).
 3. In **Project Settings → API**, copy **Project URL** and **service_role** key for the API env (see Environment variables).
 
@@ -84,8 +86,8 @@ Create from `apps/api/.env.example`.
 | `AUTH_SECRET`                        | Yes          | Long random secret for Better Auth                                          |
 | `AUTH_BASE_URL`                      | Yes          | API origin (e.g. `http://localhost:3333`)                                   |
 | `AUTH_TRUSTED_ORIGINS`               | Optional     | Comma-separated origins (defaults include 3192, 4444, 8888)                 |
-| `LLM_SERVER_URL`                     | Yes\*        | LLM server URL (e.g. `http://localhost:5000`)                               |
-| `LLM_INTERNAL_SECRET`                | Yes\*        | Must match LLM server’s `WIRA_INTERNAL_SECRET`                              |
+| `LLM_SERVER_URL`                     | Yes          | LLM server URL (e.g. `http://localhost:5000`)                               |
+| `LLM_INTERNAL_SECRET`                | Yes          | Must match LLM server’s `WIRA_INTERNAL_SECRET`                              |
 | `HAZARD_ROUTING_SERVER_URL`          | No           | Hazard server URL (e.g. `http://localhost:5001`) for flood simulation route |
 | `SUPABASE_URL`                       | For uploads  | Supabase project URL                                                        |
 | `SUPABASE_SERVICE_ROLE_KEY`          | For uploads  | Service role key                                                            |
@@ -93,7 +95,7 @@ Create from `apps/api/.env.example`.
 | `DAMAGE_REPORT_CONFIDENCE_THRESHOLD` | Optional     | 0–1 (default 0.7)                                                           |
 | `ADMIN_USER_IDS`                     | Optional     | Comma-separated user IDs for admin-only operations                          |
 
-\*Required if the assistant/LLM flow is used.
+Required if the assistant/LLM flow is used.
 
 ### 5.2 Admin (`apps/admin`)
 
@@ -183,6 +185,7 @@ See [apps/api/prisma/README.md](apps/api/prisma/README.md) for schema layout and
 - [API Prisma schema](apps/api/prisma/README.md)
 - [LLM server](apps/llm-server/README.md)
 - [Hazard routing server](apps/hazard-routing-server/README.md)
+- [Youtube Video](https://www.youtube.com/watch?v=tl6uU0gq5yw)
 - [Nx workspace](https://nx.dev) — run `npx nx graph` to explore the project graph.
 
 ---
