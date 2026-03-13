@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Home, AlertTriangle, MapPin, User, Siren } from 'lucide-react';
+import React, { useState } from 'react';
+import { Home, AlertTriangle, MapPin, User, BarChart3, Activity, CloudRain, Building2 } from 'lucide-react';
 import {
   MobileHeader,
   type MobileHeaderConfig,
@@ -58,6 +58,13 @@ export default function LayoutWrapper({
   const isHome = currentPath === '/';
   const isAssistant = currentPath === '/assistant';
   const isMapScreen = currentPath === '/map' || currentPath.startsWith('/map/');
+  const mapActions = [
+    { path: '/map', labelKey: 'map.vulnerabilityDensity', icon: BarChart3 },
+    { path: '/map/health-outbreaks', labelKey: 'map.healthOutbreaks', icon: Activity },
+    { path: '/map/flood-simulation', labelKey: 'map.floodSim', icon: CloudRain },
+    { path: '/map/pin-location', labelKey: 'map.pinLocation', icon: MapPin },
+    { path: '/map/building-vulnerability', labelKey: 'map.vulnerability', icon: Building2 },
+  ];
   const configMap = buildHeaderConfig(t);
   const headerConfig =
     configMap[currentPath] ?? (isMapScreen ? configMap['/map'] : configMap.__default);
@@ -89,6 +96,37 @@ export default function LayoutWrapper({
         onClose={() => setLanguageOpen(false)}
       />
 
+      {showNav && isMapScreen && (
+        <div
+          className="fixed left-0 right-0 z-40 px-4 py-2 bg-white/95 backdrop-blur-md border-t border-wira-earth/10 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+          style={{ bottom: 'calc(var(--bottom-nav-height) + var(--map-actions-bar-gap, 0.5rem))', height: 'var(--map-actions-bar-height, 56px)' }}
+          role="group"
+          aria-label={t('map.mapLayers')}
+        >
+          <div className="flex gap-2 overflow-x-auto overflow-y-hidden py-1 min-h-0 h-full items-center [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-wira-earth/20">
+            {mapActions.map(({ path, labelKey, icon: Icon }) => {
+              const isActive = currentPath === path;
+              return (
+                <button
+                  key={path}
+                  type="button"
+                  onClick={() => onNavigate(path)}
+                  className={`shrink-0 flex items-center gap-2 rounded-full px-4 py-2.5 font-sagip text-sm font-medium transition-colors min-h-[44px] border ${
+                    isActive
+                      ? 'bg-orange-500 text-white border-orange-500 shadow-md'
+                      : 'bg-white/95 backdrop-blur-md border-wira-earth/20 text-wira-earth hover:bg-wira-earth/5'
+                  }`}
+                  title={t(labelKey)}
+                >
+                  <Icon size={18} className={isActive ? 'text-white' : 'text-wira-teal'} />
+                  <span>{t(labelKey)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {showNav && (
         <nav className="sagip-bottom-nav">
           <button
@@ -115,14 +153,14 @@ export default function LayoutWrapper({
             </span>
           </button>
 
-          <div className="w-14 shrink-0 flex flex-col items-center justify-end relative h-full min-h-[52px] bg-transparent overflow-visible">
+          <div className="w-16 shrink-0 flex flex-col items-center justify-end relative h-full min-h-[52px] bg-transparent overflow-visible">
             <button
               type="button"
               onClick={() => onNavigate('/sos')}
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center justify-center size-14 rounded-full bg-asean-red border-4 border-white shadow-[0_10px_15px_-3px_rgba(253,24,19,0.4),0_4px_6px_-4px_rgba(253,24,19,0.4)] p-1 text-white hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-red focus-visible:ring-offset-2"
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center justify-center size-16 rounded-full bg-asean-red border-4 border-white shadow-[0_10px_15px_-3px_rgba(253,24,19,0.4),0_4px_6px_-4px_rgba(253,24,19,0.4)] text-white hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-asean-red focus-visible:ring-offset-2 font-sagip font-bold text-lg uppercase tracking-widest"
               aria-label={t('aria.emergencySos')}
             >
-              <Siren className="size-6" />
+              SOS
             </button>
           </div>
 
