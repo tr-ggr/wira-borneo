@@ -31,7 +31,6 @@ import {
 import { Zoom } from 'ol/control';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import 'ol/ol.css';
-import { useI18n } from '../../../i18n/context';
 import {
   filterPinStatuses,
   filterRiskLayers,
@@ -254,7 +253,6 @@ function getVulnerabilityColor(score: number): string {
 }
 
 export function OperationsMapPage() {
-  const { t } = useI18n();
   const mapTargetRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const mapViewRef = useRef<View | null>(null);
@@ -312,7 +310,12 @@ export function OperationsMapPage() {
 
   const overviewQuery = useAdminOperationsControllerMapOverview({
     query: {
-      select: (response: unknown) => toMapOverview((response as { data?: unknown })?.data ?? response),
+      select: (response: unknown) =>
+        toMapOverview(
+          response && typeof response === 'object' && 'data' in response
+            ? (response as { data: unknown }).data
+            : response
+        ),
     },
   });
 
@@ -1046,11 +1049,14 @@ export function OperationsMapPage() {
   const hasCriticalRisks = filteredRisks.some((r) => r.severity === 'CRITICAL');
 
   return (
-    <section className="page-shell">
-      <header className="section-header">
-        <p className="eyebrow">{t('map.eyebrow')}</p>
-        <h1 className="title">{t('map.title')}</h1>
-        <p className="subtitle">{t('map.subtitle')}</p>
+    <section className="map-page-shell">
+      <header className="map-page-header">
+        <h1 className="map-page-title">
+          Hazard & Pin <span className="map-page-title-accent">Monitoring</span>
+        </h1>
+        <p className="map-page-subtitle">
+          ASEAN-focused operations · User pins, hazard layers, weather
+        </p>
       </header>
 
       <div className="map-mobile-actions">
@@ -1059,177 +1065,148 @@ export function OperationsMapPage() {
           className="btn btn-neutral"
           onClick={() => setIsFilterDrawerOpen((current) => !current)}
         >
-          {isFilterDrawerOpen ? t('map.closeFilters') : t('map.openFilters')}
+          {isFilterDrawerOpen ? 'Close Filters' : 'Open Filters'}
         </button>
       </div>
 
-      <div className="map-layout map-layout-large">
-        <aside className={`card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
-          <h2 className="card-title">{t('map.riskIntelligence')}</h2>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={viewBuildingProfiles}
-              onChange={(event) => setViewBuildingProfiles(event.target.checked)}
-            />
-            <span>{t('map.viewBuildingProfiles')}</span>
-          </label>
-
-          {viewBuildingProfiles && (
-            <div className="card-content-stack" style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
-              <p className="small muted">{t('map.dataFetchedDynamic')}</p>
-              <label className="field-label">
-                {t('map.country')}
-                <select
-                  className="field"
-                  value={buildingProfilingCountry}
-                  onChange={(e) => setBuildingProfilingCountry(e.target.value)}
-                >
-                  <option value="brn">{t('map.country.brn')}</option>
-                  <option value="idn">{t('map.country.idn')}</option>
-                  <option value="mys">{t('map.country.mys')}</option>
-                  <option value="phl">{t('map.country.phl')}</option>
-                  <option value="sgp">{t('map.country.sgp')}</option>
-                </select>
-              </label>
-              <button
-                className="btn btn-warning"
-                type="button"
-                onClick={applyBuildingProfileFilter}
-                style={{ marginTop: '0.5rem' }}
-              >
-                {t('map.applyFilter')}
-              </button>
-              <p className="small muted">{t('map.showingFullDetail')}</p>
-            </div>
-          )}
-
-          <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderBottom: '1px solid currentColor' }} />
-
-          <h2 className="card-title">{t('map.hazardLayers')}</h2>
-          {Object.keys(hazardFilter).map((key) => (
-            <label className="checkbox-row" key={key}>
-              <input
-                type="checkbox"
-                checked={hazardFilter[key]}
-                onChange={(event) =>
-                  setHazardFilter((current) => ({ ...current, [key]: event.target.checked }))
-                }
-              />
-              <span>{t(`map.hazard.${key}`) || key}</span>
-            </label>
-          ))}
-
-          <h2 className="card-title">{t('map.pinStatusFilters')}</h2>
-          {Object.keys(pinStatusFilter).map((key) => (
-            <label className="checkbox-row" key={key}>
-              <input
-                type="checkbox"
-                checked={pinStatusFilter[key]}
-                onChange={(event) =>
-                  setPinStatusFilter((current) => ({ ...current, [key]: event.target.checked }))
-                }
-              />
-              <span>{t(`map.pinStatus.${key}`) || key}</span>
-            </label>
-          ))}
-
-          <h2 className="card-title">{t('map.userLocationRecency')}</h2>
-          {Object.keys(userFilter).map((key) => (
-            <label className="checkbox-row" key={key}>
-              <input
-                type="checkbox"
-                checked={userFilter[key]}
-                onChange={(event) =>
-                  setUserFilter((current) => ({ ...current, [key]: event.target.checked }))
-                }
-              />
-              <span>{t(`map.recency.${key}`) || key}</span>
-            </label>
-          ))}
-
-          <div className="map-toolbar-row">
-            <button className="btn btn-neutral" type="button" onClick={fitToData}>
-              {t('map.fitToData')}
-            </button>
-            <button className="btn btn-neutral" type="button" onClick={refocusAsean}>
-              {t('map.recenterAsean')}
-            </button>
-          </div>
-
-          <form onSubmit={onSearchLocation} className="map-search-form">
-            <label className="field-label" htmlFor="map-search">
-              {t('map.geocodingSearch')}
-            </label>
+      <div className="map-layout map-layout-large map-layout-command">
+        <div className="map-center-pane card map-card map-card-large">
+          <div className="map-card-top-bar">
+            <form onSubmit={onSearchLocation} className="map-card-search-form">
               <input
                 id="map-search"
                 className="field map-card-search-input"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                placeholder={t('map.searchPlaceholder')}
+                placeholder="City or region"
               />
-            </label>
-            <button className="btn btn-warning" type="submit">
-              {t('map.findLocation')}
-            </button>
-          </form>
+              <button className="btn btn-warning" type="submit">
+                Find Location
+              </button>
+            </form>
+            {geocodeQuery ? (
+              <div className="selection-list map-search-results">
+                {geocodingQuery.isLoading ? <p className="muted small">Searching...</p> : null}
+                {geocodingQuery.isError ? (
+                  <p className="error-text">Geocoding request failed.</p>
+                ) : null}
+                {geocodingResults.length > 0
+                  ? geocodingResults.map((result, index) => (
+                      <button
+                        key={`${result.name ?? 'location'}-${index}`}
+                        type="button"
+                        className="chip"
+                        onClick={() => jumpToLocation(result)}
+                      >
+                        {(result.name ?? 'Unknown')} {result.country_code ? `(${result.country_code})` : ''}
+                      </button>
+                    ))
+                  : null}
+                {!geocodingQuery.isLoading && geocodingResults.length === 0 ? (
+                  <p className="muted small">No matching locations from Open-Meteo geocoding.</p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
 
-          {geocodeQuery ? (
-            <div className="selection-list map-search-results">
-              {geocodingQuery.isLoading ? <p className="muted small">{t('map.searching')}</p> : null}
-              {geocodingQuery.isError ? (
-                <p className="error-text">{t('map.geocodingFailed')}</p>
-              ) : null}
-              {geocodingResults.length > 0
-                ? geocodingResults.map((result, index) => (
-                    <button
-                      key={`${result.name ?? 'location'}-${index}`}
-                      type="button"
-                      className="chip"
-                      onClick={() => jumpToLocation(result)}
-                    >
-                      {(result.name ?? 'Unknown')} {result.country_code ? `(${result.country_code})` : ''}
-                    </button>
-                  ))
-                : null}
-              {!geocodingQuery.isLoading && geocodingResults.length === 0 ? (
-                <p className="muted small">{t('map.noMatchingLocations')}</p>
-              ) : null}
+          <div className="map-card-body">
+            <div className={`map-card-filters card sidebar filter-sidebar ${isFilterDrawerOpen ? 'open' : ''}`}>
+              <div className="filter-sidebar-sections">
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">Risk & Intelligence</h2>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={viewBuildingProfiles}
+                      onChange={(event) => setViewBuildingProfiles(event.target.checked)}
+                    />
+                    <span>View Building Profiles (Overlay)</span>
+                  </label>
+                  {viewBuildingProfiles && (
+                    <div className="card-content-stack" style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                      <p className="small muted">Data fetched dynamically based on map area.</p>
+                      <label className="field-label">
+                        Country
+                        <select
+                          className="field"
+                          value={buildingProfilingCountry}
+                          onChange={(e) => setBuildingProfilingCountry(e.target.value)}
+                        >
+                          <option value="brn">Brunei</option>
+                          <option value="idn">Indonesia</option>
+                          <option value="mys">Malaysia</option>
+                          <option value="phl">Philippines</option>
+                          <option value="sgp">Singapore</option>
+                        </select>
+                      </label>
+                      <button
+                        className="btn btn-warning"
+                        type="button"
+                        onClick={applyBuildingProfileFilter}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        Apply Filter
+                      </button>
+                      <p className="small muted">Showing full detail profiles</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">Hazard Layers</h2>
+                  {Object.keys(hazardFilter).map((key) => (
+                    <label className="checkbox-row" key={key}>
+                      <input
+                        type="checkbox"
+                        checked={hazardFilter[key]}
+                        onChange={(event) =>
+                          setHazardFilter((current) => ({ ...current, [key]: event.target.checked }))
+                        }
+                      />
+                      <span>{labelizeKey(key)}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">Pin Status Filters</h2>
+                  {Object.keys(pinStatusFilter).map((key) => (
+                    <label className="checkbox-row" key={key}>
+                      <input
+                        type="checkbox"
+                        checked={pinStatusFilter[key]}
+                        onChange={(event) =>
+                          setPinStatusFilter((current) => ({ ...current, [key]: event.target.checked }))
+                        }
+                      />
+                      <span>{labelizeKey(key)}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="filter-sidebar-section">
+                  <h2 className="card-title">User Location Recency</h2>
+                  {Object.keys(userFilter).map((key) => (
+                    <label className="checkbox-row" key={key}>
+                      <input
+                        type="checkbox"
+                        checked={userFilter[key]}
+                        onChange={(event) =>
+                          setUserFilter((current) => ({ ...current, [key]: event.target.checked }))
+                        }
+                      />
+                      <span>{labelizeKey(key)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
-          ) : null}
-        </aside>
 
-        <div className="card map-card map-card-large">
-          <div className="map-legend">
-            <span className="legend-item">
-              <span className="legend-dot legend-hazard" /> {t('map.legend.hazards')}
-            </span>
-            <span className="legend-item">
-              <span className="legend-dot legend-pin" /> {t('map.legend.opsPins')}
-            </span>
-            <span className="legend-item">
-              <span className="legend-dot legend-user" /> {t('map.legend.userLocations')}
-            </span>
-            <span className="legend-item">
-              <span className="legend-dot legend-help" /> {t('map.legend.helpRequests')}
-            </span>
-          </div>
-          <div className="map-status-row">
-            <span className="chip">{t('map.statusHazards')}: {filteredRisks.length}</span>
-            <span className="chip">{t('map.statusPins')}: {filteredPins.length}</span>
-            <span className="chip">{t('map.statusUsers')}: {filteredUsers.length}</span>
-            <span className="chip">{t('map.statusHelp')}: {filteredHelpRequests.length}</span>
-          </div>
-          {overviewQuery.isLoading ? <p className="muted small">{t('map.loadingDatasets')}</p> : null}
-          {overviewQuery.isError ? (
-            <p className="error-text">
-              {t('map.loadError')}
-              {overviewQuery.error && typeof overviewQuery.error === 'object' && 'response' in overviewQuery.error
-                ? ` ${t('map.checkAdminLogin')}`
-                : ''}
-            </p>
-          ) : null}
-          <div ref={mapTargetRef} className="map-canvas" />
+            <div className="map-card-map-area">
+              {overviewQuery.isLoading ? <p className="muted small">Loading map datasets...</p> : null}
+              {overviewQuery.isError ? <p className="error-text">Failed to load map datasets.</p> : null}
+              <div ref={mapTargetRef} className="map-canvas" />
+          
           <div ref={popupRef} className="map-hover-popup card" style={{ 
             display: hoveredBuilding ? 'block' : 'none',
             position: 'absolute',
@@ -1243,15 +1220,15 @@ export function OperationsMapPage() {
           }}>
             {hoveredBuilding && (
               <div className="popup-content">
-                <h3 className="small mono">{t('map.buildingData')}</h3>
+                <h3 className="small mono">Building Data</h3>
                 <div className="divider" style={{ margin: '0.5rem 0' }} />
                 <dl className="summary-grid" style={{ gridTemplateColumns: '1fr 1fr', fontSize: '0.75rem' }}>
-                  <dt>{t('map.stories')}</dt> <dd>{hoveredBuilding.stories ?? 'N/A'}</dd>
-                  <dt>{t('map.population')}</dt> <dd>{hoveredBuilding.total_pop?.toFixed(2) ?? 'N/A'}</dd>
-                  <dt>{t('map.children')}</dt> <dd>{hoveredBuilding.child_count?.toFixed(2) ?? 'N/A'}</dd>
-                  <dt>{t('map.elderly')}</dt> <dd>{hoveredBuilding.elderly_count?.toFixed(2) ?? 'N/A'}</dd>
-                  <dt>{t('map.vulnerability')}</dt> <dd><strong>{hoveredBuilding.vulnerability_score?.toFixed(2) ?? 'N/A'}</strong></dd>
-                  <dt>{t('map.riskStatus')}</dt> <dd>{hoveredBuilding.risk_status ?? 'N/A'}</dd>
+                  <dt>Stories</dt> <dd>{hoveredBuilding.stories ?? 'N/A'}</dd>
+                  <dt>Population</dt> <dd>{hoveredBuilding.total_pop?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>Children</dt> <dd>{hoveredBuilding.child_count?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>Elderly</dt> <dd>{hoveredBuilding.elderly_count?.toFixed(2) ?? 'N/A'}</dd>
+                  <dt>Vulnerability</dt> <dd><strong>{hoveredBuilding.vulnerability_score?.toFixed(2) ?? 'N/A'}</strong></dd>
+                  <dt>Risk Status</dt> <dd>{hoveredBuilding.risk_status ?? 'N/A'}</dd>
                 </dl>
               </div>
             )}
@@ -1259,12 +1236,12 @@ export function OperationsMapPage() {
 
           {!isMapReady ? (
             <div className="map-overlay">
-              <p className="small muted">{t('map.initializingViewport')}</p>
+              <p className="small muted">Initializing map viewport...</p>
             </div>
           ) : null}
           {!overviewQuery.isLoading && !overviewQuery.isError && !hasAnyMapData ? (
             <div className="map-overlay map-overlay-warning">
-              <p className="small">{t('map.noOverlays')}</p>
+              <p className="small">Map loaded with no overlays. Base map should still be visible.</p>
             </div>
           ) : null}
 
@@ -1328,12 +1305,50 @@ export function OperationsMapPage() {
               </button>
             </div>
           </div>
+            </div>
+          </div>
         </div>
 
-        <aside className="card sidebar details-sidebar">
+        <aside className="map-right-panel">
+          <section className="map-right-section">
+            <div className="map-right-section-header">
+              <h2 className="map-right-section-title">Local Environment</h2>
+              <span className="map-right-section-synced">Synced just now</span>
+            </div>
+            <div className="map-right-section-content">
+              <div className="map-env-cards">
+                <div className="map-env-card">
+                  <div className="map-env-card-value">
+                    {weatherSummary ? `${fmt(weatherSummary.temperature)}°C` : '—'}
+                  </div>
+                  <div className="map-env-card-label">Current Temperature</div>
+                </div>
+                <div className="map-env-card accent">
+                  <div className="map-env-card-value accent">
+                    {weatherSummary ? fmt(weatherSummary.precipitation) : '—'}
+                  </div>
+                  <div className="map-env-card-label">Precipitation (today)</div>
+                </div>
+              </div>
+              <div className="map-parametric-card">
+                <div className="map-parametric-card-header">
+                  <span className="map-parametric-label">Parametric Trigger</span>
+                  <span className="map-parametric-badge">
+                    {hasCriticalRisks ? 'Activated' : 'Monitoring'}
+                  </span>
+                </div>
+                <p className="map-parametric-body">
+                  {hasCriticalRisks
+                    ? 'Critical hazard regions detected in current viewport. Prioritize verification and responder assignment.'
+                    : 'No critical hazard regions in current viewport. Continuing passive monitoring of rainfall and river levels.'}
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section className="map-needs-section">
             <div className="map-needs-section-header">
-              <h2 className="map-needs-section-title">{t('map.liveVerifiedNeeds')}</h2>
+              <h2 className="map-needs-section-title">Live Verified Needs</h2>
               <span className="map-needs-live-dot" />
             </div>
             <div className="map-needs-list">
@@ -1376,7 +1391,7 @@ export function OperationsMapPage() {
                           setSelectedCoords([req.longitude, req.latitude]);
                         }}
                       >
-                        {t('map.viewOnMap')}
+                        View on map
                       </button>
                     </div>
                   </article>
@@ -1384,194 +1399,290 @@ export function OperationsMapPage() {
               })}
 
               {filteredHelpRequests.length === 0 ? (
-                <p className="muted small">{t('map.noActiveVerifiedNeeds')}</p>
+                <p className="muted small">No active verified needs in the current viewport.</p>
               ) : null}
             </div>
           </section>
 
-          <h2 className="card-title">{t('map.selectionDetails')}</h2>
+          <section className="card sidebar details-sidebar">
+            <h2 className="card-title">Selection Details</h2>
 
-          {selectedPin ? (
-            <>
-              <p className="small muted">{t('map.operationalPin')}</p>
-              <dl className="summary-grid">
-                <dt>{t('map.detailTitle')}</dt>
-                <dd>{selectedPin.title}</dd>
-                <dt>{t('map.detailStatus')}</dt>
-                <dd>{selectedPin.status}</dd>
-                <dt>{t('map.detailRegion')}</dt>
-                <dd>{selectedPin.region ?? t('map.unknown')}</dd>
-                <dt>{t('map.hazard')}</dt>
-                <dd>{selectedPin.hazardType}</dd>
-                {selectedPin.reporter ? (
-                  <>
-                    <dt>{t('map.reporter')}</dt>
-                    <dd>{selectedPin.reporter.name}</dd>
-                  </>
+            {selectedPin ? (
+              <>
+                <p className="small muted">Operational Pin</p>
+                <dl className="summary-grid">
+                  <dt>Title</dt>
+                  <dd>{selectedPin.title}</dd>
+                  <dt>Status</dt>
+                  <dd>{selectedPin.status}</dd>
+                  <dt>Region</dt>
+                  <dd>{selectedPin.region ?? 'Unknown'}</dd>
+                  <dt>Hazard</dt>
+                  <dd>{selectedPin.hazardType}</dd>
+                  {selectedPin.reporter ? (
+                    <>
+                      <dt>Reporter</dt>
+                      <dd>{selectedPin.reporter.name}</dd>
+                    </>
+                  ) : null}
+                  {selectedPin.note ? (
+                    <>
+                      <dt>Note</dt>
+                      <dd className="small">{selectedPin.note}</dd>
+                    </>
+                  ) : null}
+                  <dt>Updated</dt>
+                  <dd>{selectedPin.updatedAt ?? 'N/A'}</dd>
+                  {selectedPin.reviewStatus ? (
+                    <>
+                      <dt>Review</dt>
+                      <dd>{selectedPin.reviewStatus}</dd>
+                      {selectedPin.reviewNote ? (
+                        <>
+                          <dt>Review note</dt>
+                          <dd className="small">{selectedPin.reviewNote}</dd>
+                        </>
+                      ) : null}
+                    </>
+                  ) : null}
+                </dl>
+                {selectedPin.photoUrl ? (
+                  <div className="summary-grid" style={{ marginTop: '0.5rem' }}>
+                    <dt>Photo</dt>
+                    <dd>
+                      <img
+                        src={selectedPin.photoUrl}
+                        alt="Pin attachment"
+                        style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
+                      />
+                    </dd>
+                  </div>
                 ) : null}
-                {selectedPin.note ? (
-                  <>
-                    <dt>{t('map.note')}</dt>
-                    <dd className="small">{selectedPin.note}</dd>
-                  </>
-                ) : null}
-                <dt>{t('map.updated')}</dt>
-                <dd>{selectedPin.updatedAt ?? 'N/A'}</dd>
-                {selectedPin.reviewStatus ? (
-                  <>
-                    <dt>{t('map.review')}</dt>
-                    <dd>{selectedPin.reviewStatus}</dd>
-                    {selectedPin.reviewNote ? (
-                      <>
-                        <dt>{t('map.reviewNote')}</dt>
-                        <dd className="small">{selectedPin.reviewNote}</dd>
-                      </>
+                {selectedPin.reviewStatus !== 'APPROVED' && selectedPin.reviewStatus !== 'REJECTED' ? (
+                  <div style={{ marginTop: '1rem' }}>
+                    <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>Review pin</h3>
+                    <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        className="field"
+                        placeholder="Reason (required for reject)"
+                        value={pinReviewReason}
+                        onChange={(e) => setPinReviewReason(e.target.value)}
+                        aria-label="Review reason"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-neutral"
+                        disabled={reviewPinMutation.isPending}
+                        onClick={() => {
+                          reviewPinMutation.mutate({
+                            id: selectedPin.id,
+                            data: { action: 'APPROVE' },
+                          });
+                        }}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        disabled={reviewPinMutation.isPending || !pinReviewReason.trim()}
+                        onClick={() => {
+                          reviewPinMutation.mutate({
+                            id: selectedPin.id,
+                            data: { action: 'REJECT', reason: pinReviewReason.trim() },
+                          });
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                    {reviewPinMutation.isError ? (
+                      <p className="error-text small" style={{ marginTop: '0.5rem' }}>
+                        Review failed. Please try again.
+                      </p>
                     ) : null}
-                  </>
+                  </div>
                 ) : null}
-              </dl>
-              {selectedPin.photoUrl ? (
+              </>
+            ) : null}
+
+            {selectedDamageReport ? (
+              <>
+                <p className="small muted">Damage Report</p>
+                <dl className="summary-grid">
+                  <dt>Title</dt>
+                  <dd>{selectedDamageReport.title}</dd>
+                  <dt>Reporter</dt>
+                  <dd>{selectedDamageReport.reporter.name}</dd>
+                  <dt>Email</dt>
+                  <dd>{selectedDamageReport.reporter.email}</dd>
+                  <dt>Categories</dt>
+                  <dd>{selectedDamageReport.damageCategories.join(', ')}</dd>
+                  <dt>Confidence</dt>
+                  <dd>{Math.round(selectedDamageReport.confidenceScore * 100)}%</dd>
+                  <dt>Threshold</dt>
+                  <dd>{Math.round(selectedDamageReport.confidenceThreshold * 100)}%</dd>
+                  <dt>Status</dt>
+                  <dd>{selectedDamageReport.reviewStatus}</dd>
+                  <dt>Submitted</dt>
+                  <dd>{new Date(selectedDamageReport.createdAt).toLocaleString()}</dd>
+                  {selectedDamageReport.description ? (
+                    <>
+                      <dt>Description</dt>
+                      <dd className="small">{selectedDamageReport.description}</dd>
+                    </>
+                  ) : null}
+                  {selectedDamageReport.reviewNote ? (
+                    <>
+                      <dt>Review note</dt>
+                      <dd className="small">{selectedDamageReport.reviewNote}</dd>
+                    </>
+                  ) : null}
+                </dl>
                 <div className="summary-grid" style={{ marginTop: '0.5rem' }}>
-                  <dt>{t('map.photo')}</dt>
+                  <dt>Photo</dt>
                   <dd>
                     <img
-                      src={selectedPin.photoUrl}
-                      alt={t('map.pinAttachment')}
-                      style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
+                      src={selectedDamageReport.photoUrl}
+                      alt="Damage report attachment"
+                      style={{ maxWidth: '100%', maxHeight: 220, objectFit: 'contain', borderRadius: 8 }}
                     />
                   </dd>
                 </div>
-              ) : null}
-              {selectedPin.reviewStatus !== 'APPROVED' && selectedPin.reviewStatus !== 'REJECTED' ? (
-                <div style={{ marginTop: '1rem' }}>
-                  <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>{t('map.reviewPin')}</h3>
-                  <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <input
-                      type="text"
-                      className="field"
-                      placeholder={t('map.reasonRequiredReject')}
-                      value={pinReviewReason}
-                      onChange={(e) => setPinReviewReason(e.target.value)}
-                      aria-label={t('map.reviewPin')}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-neutral"
-                      disabled={reviewPinMutation.isPending}
-                      onClick={() => {
-                        reviewPinMutation.mutate({
-                          id: selectedPin.id,
-                          data: { action: 'APPROVE' },
-                        });
-                      }}
-                    >
-                      {t('volunteers.approve')}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-warning"
-                      disabled={reviewPinMutation.isPending || !pinReviewReason.trim()}
-                      onClick={() => {
-                        reviewPinMutation.mutate({
-                          id: selectedPin.id,
-                          data: { action: 'REJECT', reason: pinReviewReason.trim() },
-                        });
-                      }}
-                    >
-                      {t('volunteers.reject')}
-                    </button>
+                {selectedDamageReport.reviewStatus === 'PENDING' ? (
+                  <div style={{ marginTop: '1rem' }}>
+                    <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>Review damage report</h3>
+                    <div className="map-toolbar-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        className="field"
+                        placeholder="Reason (required for reject)"
+                        value={pinReviewReason}
+                        onChange={(e) => setPinReviewReason(e.target.value)}
+                        aria-label="Damage report review reason"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-neutral"
+                        disabled={reviewDamageReportMutation.isPending}
+                        onClick={() => {
+                          reviewDamageReportMutation.mutate({
+                            id: selectedDamageReport.id,
+                            data: { action: 'APPROVE' },
+                          });
+                        }}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        disabled={reviewDamageReportMutation.isPending || !pinReviewReason.trim()}
+                        onClick={() => {
+                          reviewDamageReportMutation.mutate({
+                            id: selectedDamageReport.id,
+                            data: { action: 'REJECT', reason: pinReviewReason.trim() },
+                          });
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                    {reviewDamageReportMutation.isError ? (
+                      <p className="error-text small" style={{ marginTop: '0.5rem' }}>
+                        Review failed. Please try again.
+                      </p>
+                    ) : null}
                   </div>
-                  {reviewPinMutation.isError ? (
-                    <p className="error-text small" style={{ marginTop: '0.5rem' }}>
-                      {t('map.reviewFailed')}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </>
-          ) : null}
+                ) : null}
+              </>
+            ) : null}
 
-          {selectedUser ? (
-            <>
-              <p className="small muted">{t('map.userLocation')}</p>
+            {selectedUser ? (
+              <>
+                <p className="small muted">User Location</p>
+                <dl className="summary-grid">
+                  <dt>User ID</dt>
+                  <dd className="mono small">{selectedUser.userId}</dd>
+                  <dt>Region</dt>
+                  <dd>{selectedUser.region ?? 'Unknown'}</dd>
+                  <dt>Coordinates</dt>
+                  <dd>
+                    {selectedUser.latitude.toFixed(4)}, {selectedUser.longitude.toFixed(4)}
+                  </dd>
+                  <dt>Recency</dt>
+                </dl>
+              </>
+            ) : null}
+
+            {selectedHelpRequest ? (
+              <>
+                <p className="small muted">Emergency Help Request</p>
+                <dl className="summary-grid">
+                  <dt>Requester</dt>
+                  <dd>{selectedHelpRequest.requester.name}</dd>
+                  <dt>Hazard</dt>
+                  <dd>{selectedHelpRequest.hazardType}</dd>
+                  <dt>Urgency</dt>
+                  <dd>
+                    <span className={`chip chip-${selectedHelpRequest.urgency.toLowerCase()}`}>
+                      {selectedHelpRequest.urgency}
+                    </span>
+                  </dd>
+                  <dt>Status</dt>
+                  <dd>{selectedHelpRequest.status}</dd>
+                  <dt>Description</dt>
+                  <dd className="small">{selectedHelpRequest.description}</dd>
+                  <dt>Created</dt>
+                  <dd>{new Date(selectedHelpRequest.createdAt).toLocaleString()}</dd>
+                </dl>
+              </>
+            ) : null}
+
+            {!selectedPin && !selectedDamageReport && !selectedUser && !selectedHelpRequest ? (
+              <p className="muted">
+                Select an operations pin, damage report, user, or help request to inspect details.
+              </p>
+            ) : null}
+
+            <h2 className="card-title">Open-Meteo Weather</h2>
+            {selectedCoords ? (
+              <p className="small muted">
+                Lat {selectedCoords[1].toFixed(4)}, Lon {selectedCoords[0].toFixed(4)}
+              </p>
+            ) : (
+              <p className="muted small">Select a pin or user location to load weather.</p>
+            )}
+
+            {weatherQuery.isLoading ? <p className="muted">Loading forecast...</p> : null}
+            {weatherQuery.isError ? (
+              <p className="error-text">Unable to load weather forecast for this selection.</p>
+            ) : null}
+
+            {weatherSummary ? (
               <dl className="summary-grid">
-                <dt>{t('map.userId')}</dt>
-                <dd className="mono small">{selectedUser.userId}</dd>
-                <dt>{t('map.detailRegion')}</dt>
-                <dd>{selectedUser.region ?? t('map.unknown')}</dd>
-                <dt>{t('map.coordinates')}</dt>
+                <dt>Current Temp</dt>
+                <dd>{fmt(weatherSummary.temperature)} C</dd>
+                <dt>Wind Speed</dt>
+                <dd>{fmt(weatherSummary.windSpeed)} km/h</dd>
+                <dt>Weather Code</dt>
+                <dd>{fmt(weatherSummary.weatherCode, 0)}</dd>
+                <dt>Max (Today)</dt>
                 <dd>
-                  {selectedUser.latitude.toFixed(4)}, {selectedUser.longitude.toFixed(4)}
+                  {fmt(weatherSummary.maxTemp)} {weatherSummary.tempUnit}
                 </dd>
-                <dt>{t('map.recency')}</dt>
-              </dl>
-            </>
-          ) : null}
-
-          {selectedHelpRequest ? (
-            <>
-              <p className="small muted">{t('map.emergencyHelpRequest')}</p>
-              <dl className="summary-grid">
-                <dt>{t('map.requester')}</dt>
-                <dd>{selectedHelpRequest.requester.name}</dd>
-                <dt>{t('map.hazard')}</dt>
-                <dd>{selectedHelpRequest.hazardType}</dd>
-                <dt>{t('map.urgency')}</dt>
+                <dt>Min (Today)</dt>
                 <dd>
-                  <span className={`chip chip-${selectedHelpRequest.urgency.toLowerCase()}`}>
-                    {selectedHelpRequest.urgency}
-                  </span>
+                  {fmt(weatherSummary.minTemp)} {weatherSummary.tempUnit}
                 </dd>
-                <dt>{t('map.detailStatus')}</dt>
-                <dd>{selectedHelpRequest.status}</dd>
-                <dt>{t('map.description')}</dt>
-                <dd className="small">{selectedHelpRequest.description}</dd>
-                <dt>{t('map.created')}</dt>
-                <dd>{new Date(selectedHelpRequest.createdAt).toLocaleString()}</dd>
+                <dt>Precipitation</dt>
+                <dd>
+                  {fmt(weatherSummary.precipitation)} {weatherSummary.precipitationUnit}
+                </dd>
               </dl>
-            </>
-          ) : null}
-
-          {!selectedPin && !selectedUser && !selectedHelpRequest ? (
-            <p className="muted">{t('map.selectPinOrUser')}</p>
-          ) : null}
-
-          <h2 className="card-title">{t('map.weatherTitle')}</h2>
-          {selectedCoords ? (
-            <p className="small muted">
-              Lat {selectedCoords[1].toFixed(4)}, Lon {selectedCoords[0].toFixed(4)}
-            </p>
-          ) : (
-            <p className="muted small">{t('map.selectPinForWeather')}</p>
-          )}
-
-          {weatherQuery.isLoading ? <p className="muted">{t('map.loadingForecast')}</p> : null}
-          {weatherQuery.isError ? (
-            <p className="error-text">{t('map.weatherError')}</p>
-          ) : null}
-
-          {weatherSummary ? (
-            <dl className="summary-grid">
-              <dt>{t('map.currentTemp')}</dt>
-              <dd>{fmt(weatherSummary.temperature)} C</dd>
-              <dt>{t('map.windSpeed')}</dt>
-              <dd>{fmt(weatherSummary.windSpeed)} km/h</dd>
-              <dt>{t('map.weatherCode')}</dt>
-              <dd>{fmt(weatherSummary.weatherCode, 0)}</dd>
-              <dt>{t('map.maxToday')}</dt>
-              <dd>
-                {fmt(weatherSummary.maxTemp)} {weatherSummary.tempUnit}
-              </dd>
-              <dt>{t('map.minToday')}</dt>
-              <dd>
-                {fmt(weatherSummary.minTemp)} {weatherSummary.tempUnit}
-              </dd>
-              <dt>{t('map.precipitation')}</dt>
-              <dd>
-                {fmt(weatherSummary.precipitation)} {weatherSummary.precipitationUnit}
-              </dd>
-            </dl>
-          ) : null}
+            ) : null}
+          </section>
         </aside>
       </div>
 
@@ -1579,7 +1690,7 @@ export function OperationsMapPage() {
         <button
           type="button"
           className="map-drawer-backdrop"
-          aria-label={t('map.ariaCloseFilters')}
+          aria-label="Close map filters"
           onClick={() => setIsFilterDrawerOpen(false)}
         />
       ) : null}

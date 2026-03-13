@@ -12,8 +12,6 @@ interface ActionModalProps {
   type: 'SAFE' | 'CRITICAL' | 'WARNING';
   placeholder?: string;
   required?: boolean;
-  cancelText?: string;
-  requiredMessage?: string;
 }
 
 export function ActionModal({
@@ -26,8 +24,6 @@ export function ActionModal({
   type,
   placeholder = 'Provide a reason...',
   required = true,
-  cancelText = 'Cancel',
-  requiredMessage = 'A reason is required.',
 }: ActionModalProps) {
   const [reason, setReason] = useState('');
 
@@ -35,7 +31,7 @@ export function ActionModal({
 
   const handleConfirm = () => {
     if (required && !reason.trim()) {
-      alert(requiredMessage);
+      alert('A reason is required.');
       return;
     }
     onConfirm(reason);
@@ -60,7 +56,7 @@ export function ActionModal({
           />
         </div>
         <footer className="modal-footer" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-          <button className="btn btn-neutral" onClick={onClose}>{cancelText}</button>
+          <button className="btn btn-neutral" onClick={onClose}>Cancel</button>
           <button 
             className={`btn ${type === 'CRITICAL' ? 'btn-critical' : type === 'WARNING' ? 'btn-warning' : 'btn-safe'}`}
             onClick={handleConfirm}

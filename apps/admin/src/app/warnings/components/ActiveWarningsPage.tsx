@@ -57,7 +57,7 @@ export function ActiveWarningsPage() {
   const [status, setStatus] = useState<WarningStatusFilter>('SENT');
 
   const warningsQuery = useAdminOperationsControllerListWarnings(
-    { status: status === 'ALL' ? '' : status },
+    { status: status === 'ALL' ? undefined : status },
     {
       query: {
         select: (response: unknown) => toWarnings(response),

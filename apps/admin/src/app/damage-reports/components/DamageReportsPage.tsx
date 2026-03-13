@@ -8,7 +8,6 @@ import {
   useAdminOperationsControllerReviewDamageReport,
 } from '@wira-borneo/api-client';
 import {
-  AlertCircle,
   Camera,
   CheckCircle2,
   Clock,

@@ -10,7 +10,6 @@ import { createBox } from 'ol/interaction/Draw';
 import { fromLonLat, toLonLat } from 'ol/proj';
 import { useEffect, useRef, useState } from 'react';
 import { GeoJSON } from 'ol/format';
-import { useI18n } from '../../../../i18n/context';
 import { Circle as CircleGeom, Point } from 'ol/geom';
 import { Feature } from 'ol';
 import { Style, Stroke, Fill } from 'ol/style';
@@ -56,7 +55,6 @@ export default function WarningMapSupport({
   onDrawModeChange,
   radiusKm = 5,
 }: WarningMapSupportProps) {
-  const { t } = useI18n();
   const mapRef = useRef<HTMLDivElement>(null);
   const olMap = useRef<Map | null>(null);
   const vectorSource = useRef(new VectorSource());
@@ -267,6 +265,7 @@ export default function WarningMapSupport({
         map.removeInteraction(snap);
       };
     }
+    return undefined;
   }, [drawMode, radiusKm, onTargetChange]);
 
   const handleModeChange = (mode: DrawMode) => {
@@ -280,7 +279,7 @@ export default function WarningMapSupport({
         className="map-toolbar-row"
         style={{
           padding: '0.5rem',
-          background: 'var(--wira-ivory-dark)',
+          background: '#ffffff',
           borderBottom: '1px solid var(--wira-earth-muted)',
         }}
       >
@@ -289,25 +288,25 @@ export default function WarningMapSupport({
           className={`btn ${drawMode === 'pin' ? 'btn-warning' : 'btn-neutral'}`}
           onClick={() => handleModeChange('pin')}
         >
-          {t('warnings.map.drawPin')}
+          Draw Pin
         </button>
         <button
           type="button"
           className={`btn ${drawMode === 'box' ? 'btn-warning' : 'btn-neutral'}`}
           onClick={() => handleModeChange('box')}
         >
-          {t('warnings.map.drawBox')}
+          Draw Box
         </button>
         <button
           type="button"
           className={`btn ${drawMode === 'polygon' ? 'btn-warning' : 'btn-neutral'}`}
           onClick={() => handleModeChange('polygon')}
         >
-          {t('warnings.map.drawPolygon')}
+          Draw Polygon
         </button>
         <button
-          type="button"
           className="btn btn-neutral"
+          type="button"
           onClick={() => {
             vectorSource.current.clear();
             radiusLayerSource.current.clear();
@@ -315,12 +314,16 @@ export default function WarningMapSupport({
             onTargetChange({});
           }}
         >
-          {t('warnings.map.clear')}
+          Clear
         </button>
       </div>
       <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
       <p className="small muted" style={{ padding: '0.5rem' }}>
-        {t('warnings.map.hint')}
+        {drawMode === 'pin' &&
+          'Click on the map to place a pin. The dashed circle shows the warning radius.'}
+        {drawMode === 'box' && 'Click and drag to draw a box.'}
+        {drawMode === 'polygon' &&
+          'Click points to draw a polygon (double-click to finish).'}
       </p>
     </div>
   );

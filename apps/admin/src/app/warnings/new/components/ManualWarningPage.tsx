@@ -5,7 +5,6 @@ import {
   useAdminOperationsControllerGetPromptSuggestion,
 } from '@wira-borneo/api-client';
 import { useEffect, useMemo, useState } from 'react';
-import { useI18n } from '../../../../i18n/context';
 import {
   canProceedToConfirmation,
   warningFlowReducer,
@@ -44,7 +43,6 @@ const defaultTarget = {
 };
 
 export function ManualWarningPage() {
-  const { t } = useI18n();
   const [step, setStep] = useState<'compose' | 'confirm'>('compose');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -126,205 +124,386 @@ export function ManualWarningPage() {
       : `${targetCoordinates.length} ${targetCoordinates.length === 1 ? 'pin' : 'pins'}`;
 
   return (
-    <section className="page-shell">
-      <header className="section-header">
-        <p className="eyebrow">{t('warnings.eyebrow')}</p>
-        <h1 className="title">{t('warnings.title')}</h1>
-        <p className="subtitle">{t('warnings.subtitle')}</p>
-      </header>
-
+    <section className="page-shell warning-page">
       {step === 'compose' ? (
-        <div className="grid-list">
-          <article className="card">
-            <h2 className="card-title">{t('warnings.composeTitle')}</h2>
-            <label className="field-label">
-              {t('warnings.fieldTitle')}
-              <input className="field" value={title} onChange={(event) => setTitle(event.target.value)} />
-            </label>
-            <label className="field-label">
-              {t('warnings.fieldMessage')}
-              <textarea
-                className="field"
-                rows={5}
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-              />
-            </label>
-            <div className="row-2">
-              <label className="field-label">
-                {t('warnings.hazard')}
-                <select
-                  className="field"
-                  value={hazardType}
-                  onChange={(event) => setHazardType(event.target.value as HazardType)}
-                >
-                  <option value="FLOOD">{t('warnings.hazard.FLOOD')}</option>
-                  <option value="TYPHOON">{t('warnings.hazard.TYPHOON')}</option>
-                  <option value="EARTHQUAKE">{t('warnings.hazard.EARTHQUAKE')}</option>
-                  <option value="AFTERSHOCK">{t('warnings.hazard.AFTERSHOCK')}</option>
-                </select>
-              </label>
-              <label className="field-label">
-                {t('warnings.severity')}
-                <select
-                  className="field"
-                  value={severity}
-                  onChange={(event) => setSeverity(event.target.value as SeverityLevel)}
-                >
-                  <option value="LOW">{t('warnings.severity.LOW')}</option>
-                  <option value="MODERATE">{t('warnings.severity.MODERATE')}</option>
-                  <option value="HIGH">{t('warnings.severity.HIGH')}</option>
-                  <option value="CRITICAL">{t('warnings.severity.CRITICAL')}</option>
-                </select>
-              </label>
-            </div>
-            <div className="row-2">
-              <label className="field-label">
-                {t('warnings.startMyt')}
-                <input
-                  type="datetime-local"
-                  className="field"
-                  value={startsAt}
-                  onChange={(event) => setStartsAt(event.target.value)}
-                />
-              </label>
-              <label className="field-label">
-                {t('warnings.endOptional')}
-                <input
-                  type="datetime-local"
-                  className="field"
-                  value={endsAt}
-                  onChange={(event) => setEndsAt(event.target.value)}
-                />
-              </label>
-            </div>
-            <button
-              type="button"
-              className="btn btn-neutral"
-              onClick={() => {
-                promptMutation.mutate(
-                  {
-                    data: {
-                      hazardType,
-                      areaOrRegion: target.areaName || 'selected area',
-                      radiusKm: Number(target.radiusKm),
-                    },
-                  },
-                  {
-                    onSuccess: (response: unknown) => {
-                      const d = response as { data?: { prompt?: string } } | undefined;
-                      const prompt = String(d?.data?.prompt ?? '');
-                      if (prompt) {
-                        setMessage(prompt);
-                      }
-                    },
-                  },
-                );
-              }}
-            >
-              {t('warnings.suggestPrompt')}
-            </button>
-          </article>
-
-          <article className="card">
-            <h2 className="card-title">{t('warnings.targetTitle')}</h2>
-            <label className="field-label">
-              {t('warnings.areaName')}
-              <input
-                className="field"
-                value={target.areaName}
-                onChange={(event) =>
-                  setTarget((prev) => ({ ...prev, areaName: event.target.value }))
-                }
-              />
-            </label>
-            <div className="row-3">
-              <label className="field-label">
-                {t('warnings.latitude')}
-                <input
-                  className="field"
-                  value={target.latitude}
-                  onChange={(event) =>
-                    setTarget((prev) => ({ ...prev, latitude: event.target.value }))
-                  }
-                />
-              </label>
-              <label className="field-label">
-                {t('warnings.longitude')}
-                <input
-                  className="field"
-                  value={target.longitude}
-                  onChange={(event) =>
-                    setTarget((prev) => ({ ...prev, longitude: event.target.value }))
-                  }
-                />
-              </label>
-              <label className="field-label">
-                {t('warnings.radiusKm')}
-                <input
-                  type="number"
-                  min={1}
-                  className="field"
-                  value={target.radiusKm}
-                  onChange={(event) =>
-                    setTarget((prev) => ({ ...prev, radiusKm: event.target.value }))
-                  }
-                />
-              </label>
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label className="field-label">{t('warnings.drawTargetArea')}</label>
-              <WarningMapSupport
-                onTargetChange={(data) => {
-                  setTarget(prev => ({
-                    ...prev,
-                    latitude: data.latitude?.toString() ?? prev.latitude,
-                    longitude: data.longitude?.toString() ?? prev.longitude,
-                    radiusKm: data.radiusKm?.toString() ?? prev.radiusKm,
-                    polygonGeoJson: data.polygonGeoJson ?? '',
-                  }));
-                }}
-              />
-              {target.polygonGeoJson && (
-                <p className="small success-text" style={{ marginTop: '0.5rem' }}>
-                  ✓ {t('warnings.customShapeCaptured')}
+        <div className="warning-modal-shell">
+          <div className="warning-modal-header">
+            <div className="warning-modal-header-left">
+              <div className="warning-modal-ribbon" aria-hidden="true">
+                <span className="ribbon-block ribbon-blue" />
+                <span className="ribbon-block ribbon-gold" />
+                <span className="ribbon-block ribbon-red" />
+              </div>
+              <div>
+                <h2 className="warning-modal-title">
+                  ALERT DISPATCH WORKFLOW / ALIRAN KERJA PENGHANTARAN AMARAN
+                </h2>
+                <p className="warning-modal-step small mono">
+                  Step 1 &amp; 2 of 4: Configuration &amp; Geofencing
                 </p>
-              )}
+              </div>
             </div>
-          </article>
+          </div>
 
-          <article className="card">
-            <h2 className="card-title">{t('warnings.checkpointTitle')}</h2>
-            <p className="warning-note">{t('warnings.checkpointNote')}</p>
-            <button
-              type="button"
-              className="btn btn-warning"
-              disabled={
-                !canProceedToConfirmation({
-                  title,
-                  message,
-                  areaName: target.areaName,
-                })
-              }
-              onClick={() => setStep((current) => warningFlowReducer(current, { type: 'CONTINUE' }))}
-            >
-              {t('warnings.continueToConfirm')}
-            </button>
-          </article>
+          <div className="warning-modal-body">
+            <article className="warning-column card">
+              <header className="warning-section-header">
+                <div className="step-pill step-pill-primary">1</div>
+                <div>
+                  <h3 className="card-title">Compose Message / Karang Mesej</h3>
+                  <p className="small muted">
+                    Provide clear, bilingual messaging so residents understand the risk and
+                    recommended actions.
+                  </p>
+                </div>
+              </header>
+
+              <div className="warning-field-group">
+                <label className="field-label">
+                  Hazard Type / Jenis Bahaya
+                  <div className="hazard-toggle-row">
+                    {(['FLOOD', 'TYPHOON', 'EARTHQUAKE', 'AFTERSHOCK'] as HazardType[]).map(
+                      (type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          className={`hazard-chip ${
+                            hazardType === type ? 'hazard-chip-active' : ''
+                          }`}
+                          onClick={() => setHazardType(type)}
+                        >
+                          {type === 'FLOOD'
+                            ? 'Flood'
+                            : type === 'TYPHOON'
+                              ? 'Typhoon'
+                              : type === 'EARTHQUAKE'
+                                ? 'Earthquake'
+                                : 'Aftershock'}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </label>
+
+                <label className="field-label">
+                  Alert Title / Tajuk Amaran
+                  <input
+                    className="field"
+                    placeholder="e.g. SEVERE FLOOD WARNING - KOTA TINGGI"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                  />
+                </label>
+
+                <div className="warning-message-header">
+                  <div>
+                    <p className="field-label-heading">
+                      Message Content / Kandungan Mesej
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="suggest-prompt-chip"
+                    onClick={() => {
+                      promptMutation.mutate(
+                        {
+                          data: {
+                            hazardType,
+                            areaOrRegion: target.areaName || 'selected area',
+                            radiusKm: Number(target.radiusKm),
+                          },
+                        },
+                        {
+                          onSuccess: (response: unknown) => {
+                            const d = response as { prompt?: string } | undefined;
+                            const prompt = String(d?.prompt ?? '');
+                            if (prompt) {
+                              setMessage(prompt);
+                            }
+                          },
+                        },
+                      );
+                    }}
+                    disabled={promptMutation.isPending}
+                  >
+                    {promptMutation.isPending ? 'Generating Prompt…' : 'Suggest Prompt (AI)'}
+                  </button>
+                </div>
+                <textarea
+                  className="field warning-message-input"
+                  rows={6}
+                  placeholder="Write the alert details here..."
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                />
+                <p className="small muted character-helper">
+                  Characters: {message.length}/160 (1 SMS Segment)
+                </p>
+
+                <div className="warning-severity-group">
+                  <p className="field-label-heading">Severity Level / Tahap Amaran</p>
+                  <div className="severity-row">
+                    {([
+                      { value: 'LOW', label: 'Advisory' },
+                      { value: 'MODERATE', label: 'Warning' },
+                      { value: 'HIGH', label: 'Emergency (Danger)' },
+                      { value: 'CRITICAL', label: 'Critical' },
+                    ] as const).map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`severity-chip ${
+                          severity === option.value ? 'severity-chip-active' : ''
+                        }`}
+                        onClick={() => setSeverity(option.value as SeverityLevel)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="row-2">
+                  <label className="field-label">
+                    Start (MYT)
+                    <input
+                      type="datetime-local"
+                      className="field"
+                      value={startsAt}
+                      onChange={(event) => setStartsAt(event.target.value)}
+                    />
+                  </label>
+                  <label className="field-label">
+                    End (optional)
+                    <input
+                      type="datetime-local"
+                      className="field"
+                      value={endsAt}
+                      onChange={(event) => setEndsAt(event.target.value)}
+                    />
+                  </label>
+                </div>
+              </div>
+            </article>
+
+            <aside className="warning-column card warning-target-column">
+              <header className="warning-section-header">
+                <div className="step-pill step-pill-secondary">2</div>
+                <div>
+                  <h3 className="card-title">Target Area / Kawasan Sasaran</h3>
+                  <p className="small muted">
+                    Confirm the search area, coordinates, radius, and drawn polygon for this alert.
+                  </p>
+                </div>
+              </header>
+
+              <div className="warning-field-group">
+                <label className="field-label small">
+                  Search Area / Cari Kawasan
+                  <input
+                    className="field"
+                    placeholder="e.g. Sungai Johor Basin, Kota Tinggi"
+                    value={target.areaName}
+                    onChange={(event) =>
+                      setTarget((prev) => ({ ...prev, areaName: event.target.value }))
+                    }
+                  />
+                </label>
+
+                <div className="row-3 warning-latlng-row">
+                  {drawMode === 'pin' ? (
+                    <>
+                      <label className="field-label small">
+                        Lat / Long
+                        <input
+                          className="field"
+                          placeholder="Latitude"
+                          value={target.latitude}
+                          onChange={(event) =>
+                            setTarget((prev) => ({ ...prev, latitude: event.target.value }))
+                          }
+                        />
+                      </label>
+                      <label className="field-label small">
+                        &nbsp;
+                        <input
+                          className="field"
+                          placeholder="Longitude"
+                          value={target.longitude}
+                          onChange={(event) =>
+                            setTarget((prev) => ({ ...prev, longitude: event.target.value }))
+                          }
+                        />
+                      </label>
+                      <label className="field-label small">
+                        Radius (km)
+                        <div className="radius-row">
+                          <input
+                            type="number"
+                            min={1}
+                            className="field"
+                            value={target.radiusKm}
+                            onChange={(event) =>
+                              setTarget((prev) => ({ ...prev, radiusKm: event.target.value }))
+                            }
+                          />
+                          <span className="radius-unit small muted">km</span>
+                        </div>
+                      </label>
+                    </>
+                  ) : (
+                    <div className="warning-shape-info">
+                      <p className="small">
+                        <strong>
+                          {drawMode === 'box' ? 'Bounding Box Coordinates' : 'Polygon Vertices'}
+                        </strong>
+                      </p>
+                      <p className="small muted">
+                        {targetCoordinates.length > 0
+                          ? coordinateCountLabel
+                          : drawMode === 'box'
+                            ? 'Draw a box to capture 4 corners.'
+                            : 'Draw a polygon to capture each pin you add.'}
+                      </p>
+                      {targetCoordinates.length > 0 ? (
+                        <div className="coordinate-grid">
+                          {targetCoordinates.map((point, index) => (
+                            <div key={`${point.latitude}-${point.longitude}-${index}`} className="coordinate-card">
+                              <p className="small muted mono coordinate-card-label">
+                                {coordinateLabel(drawMode, index, targetCoordinates.length)}
+                              </p>
+                              <p className="small">Lat: {formatCoordinate(point.latitude)}</p>
+                              <p className="small">Long: {formatCoordinate(point.longitude)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+
+                <div className="warning-map-shell">
+                  <div className="warning-map-header">
+                    <p className="small muted mono">HPix Vector Tiles Active</p>
+                  </div>
+                  <div className="warning-map-body">
+                    <WarningMapSupport
+                      drawMode={drawMode}
+                      radiusKm={Number(target.radiusKm) || 5}
+                      onDrawModeChange={(mode) => {
+                        setDrawMode(mode);
+                        if (mode !== drawMode) {
+                          setTargetCoordinates([]);
+                          setTarget((prev) => ({
+                            ...prev,
+                            latitude: '',
+                            longitude: '',
+                            polygonGeoJson: '',
+                          }));
+                        }
+                      }}
+                      onTargetChange={(data: {
+                        latitude?: number | string;
+                        longitude?: number | string;
+                        radiusKm?: number | string;
+                        polygonGeoJson?: string;
+                        coordinates?: WarningCoordinatePoint[];
+                      }) => {
+                        if (
+                          data.latitude == null &&
+                          data.longitude == null &&
+                          data.polygonGeoJson == null
+                        ) {
+                          setTargetCoordinates([]);
+                          setTarget((prev) => ({
+                            ...prev,
+                            latitude: '',
+                            longitude: '',
+                            polygonGeoJson: '',
+                          }));
+                          return;
+                        }
+
+                        setTargetCoordinates(data.coordinates ?? []);
+                        setTarget((prev) => ({
+                          ...prev,
+                          latitude:
+                            data.latitude != null ? data.latitude.toString() : prev.latitude,
+                          longitude:
+                            data.longitude != null ? data.longitude.toString() : prev.longitude,
+                          radiusKm: data.radiusKm?.toString() ?? prev.radiusKm,
+                          polygonGeoJson: data.polygonGeoJson ?? '',
+                        }));
+                      }}
+                    />
+                    {target.polygonGeoJson && (
+                      <p className="small success-text warning-map-success">
+                        ✓ Custom shape captured.
+                      </p>
+                    )}
+                  </div>
+                  <div className="warning-map-footer">
+                    <p className="small mono">
+                      Estimated Population Reach:{' '}
+                      <span className="warning-map-population">~12,450 Active Subscribers</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <footer className="warning-modal-footer">
+            <div className="footer-stage-indicator small mono">
+              <span className="footer-stage-dot" aria-hidden="true" />
+              Stage 1: Prep
+            </div>
+            <div className="footer-actions">
+              <button
+                type="button"
+                className="btn btn-neutral"
+                onClick={() => {
+                  setTitle('');
+                  setMessage('');
+                  setEndsAt('');
+                  setTarget(defaultTarget);
+                }}
+              >
+                Cancel / Batal
+              </button>
+              <button
+                type="button"
+                className="btn btn-critical footer-primary"
+                disabled={
+                  !canProceedToConfirmation({
+                    title,
+                    message,
+                    areaName: target.areaName,
+                  })
+                }
+                onClick={() =>
+                  setStep((current) => warningFlowReducer(current, { type: 'CONTINUE' }))
+                }
+              >
+                Continue to Verification / Seterusnya →
+              </button>
+            </div>
+          </footer>
         </div>
       ) : (
-        <article className="card">
-          <h2 className="card-title">{t('warnings.confirmTitle')}</h2>
-          <p className="muted">{t('warnings.reviewSummary')}</p>
-          <dl className="summary-grid">
-            <dt>{t('warnings.summaryTitle')}</dt>
+        <article className="card warning-confirm-card">
+          <h2 className="card-title">Confirm Warning Dispatch / Sahkan Amaran</h2>
+          <p className="muted small">
+            Review the composed message, target area, and evacuation coverage before sending.
+          </p>
+          <dl className="summary-grid warning-summary">
+            <dt>Title</dt>
             <dd>{summary.heading}</dd>
-            <dt>{t('warnings.summaryMessage')}</dt>
+            <dt>Message</dt>
             <dd>{summary.body}</dd>
-            <dt>{t('warnings.summaryTarget')}</dt>
+            <dt>Target</dt>
             <dd>{summary.target}</dd>
-            <dt>{t('warnings.summaryEvacuationAreas')}</dt>
+            <dt>Evacuation Areas</dt>
             <dd>{summary.evacuationCount}</dd>
           </dl>
           <div className="action-row warning-confirm-actions">
@@ -333,7 +512,7 @@ export function ManualWarningPage() {
               className="btn btn-neutral"
               onClick={() => setStep((current) => warningFlowReducer(current, { type: 'CANCEL' }))}
             >
-              {t('warnings.cancel')}
+              Back to Editing
             </button>
             <button
               type="button"
@@ -358,12 +537,9 @@ export function ManualWarningPage() {
               }}
               disabled={createWarningMutation.isPending}
             >
-              {t('warnings.confirmAndSend')}
+              Confirm and Send / Sahkan &amp; Hantar
             </button>
           </div>
-          {createWarningMutation.error ? (
-            <p className="error-text">{t('warnings.dispatchError')}</p>
-          ) : null}
         </article>
       )}
 
@@ -371,6 +547,36 @@ export function ManualWarningPage() {
         .warning-page {
           display: flex;
           flex-direction: column;
+                    <WarningMapSupport
+                      drawMode={drawMode as 'pin' | 'box' | 'polygon'}
+                      radiusKm={Number(target.radiusKm) || 5}
+                      onDrawModeChange={(mode) => {
+                        setDrawMode(mode as DrawMode);
+                        // Clear previous collected data when switching modes
+                        if (mode !== drawMode) {
+                          setTarget((prev) => ({
+                            ...prev,
+                            latitude: '',
+                            longitude: '',
+                            polygonGeoJson: '',
+                          }));
+                        }
+                      }}
+                      onTargetChange={(data: {
+                        latitude?: number | string;
+                        longitude?: number | string;
+                        radiusKm?: number | string;
+                        polygonGeoJson?: string;
+                      }) => {
+                        setTarget((prev) => ({
+                          ...prev,
+                          latitude: data.latitude?.toString() ?? prev.latitude,
+                          longitude: data.longitude?.toString() ?? prev.longitude,
+                          radiusKm: data.radiusKm?.toString() ?? prev.radiusKm,
+                          polygonGeoJson: data.polygonGeoJson ?? '',
+                        }));
+                      }}
+                    />
           color: #e5e7eb;
         }
 

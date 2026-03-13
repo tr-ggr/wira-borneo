@@ -9,7 +9,6 @@ import {
   useAdminOperationsControllerGetApplicationHistory,
 } from '@wira-borneo/api-client';
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useI18n } from '../../../i18n/context';
 import { ActionModal } from './ActionModal';
 
 interface VolunteerApplication {
@@ -72,9 +71,7 @@ function exportApplicationsToCsv(applications: VolunteerApplication[]) {
 }
 
 export function VolunteerApprovalsPage() {
-  const { t } = useI18n();
   const [status, setStatus] = useState<VolunteerStatusFilter>('PENDING');
-  const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -90,7 +87,11 @@ export function VolunteerApprovalsPage() {
   });
 
   const applicationsQuery = useAdminOperationsControllerListVolunteerApplications(
-    { status: status === 'ALL' ? undefined : status, sortBy, sortOrder },
+    {
+      status: status === 'ALL' ? '' : status,
+      sortBy: 'createdAt',
+      sortOrder,
+    },
     {
       query: {
         select: (response: unknown) => toApplications((response as { data?: unknown })?.data ?? response),
@@ -151,7 +152,7 @@ export function VolunteerApprovalsPage() {
 
   const handleBulkReview = (nextStatus: 'APPROVED' | 'REJECTED') => {
     if (nextStatus === 'REJECTED' && !rejectionReason) {
-      alert(t('volunteers.rejectionReasonRequired'));
+      alert('Please provide a rejection reason.');
       return;
     }
 
@@ -210,211 +211,329 @@ export function VolunteerApprovalsPage() {
 
   return (
     <section className="page-shell">
-      <header className="section-header">
-        <p className="eyebrow">{t('volunteers.eyebrow')}</p>
-        <h1 className="title">{t('volunteers.title')}</h1>
-        <p className="subtitle">{t('volunteers.subtitle')}</p>
-      </header>
-
-      <div className="card filter-row" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {statusFilters.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`chip ${status === item ? 'chip-active' : ''}`}
-              onClick={() => setStatus(item)}
-            >
-              {t(`volunteers.status.${item}`)}
-            </button>
-          ))}
-        </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
-          <select
-            className="input small"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'createdAt' | 'updatedAt')}
+      <div className="volunteer-registry-section">
+        <header className="volunteer-registry-header">
+          <div>
+            <h1 className="volunteer-registry-title">Volunteer Registry</h1>
+            <p className="volunteer-registry-subtitle">
+              Review and approve incoming disaster response personnel.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="volunteer-registry-export-btn"
+            onClick={handleExportCsv}
+            disabled={applications.length === 0}
           >
-            <option value="createdAt">{t('volunteers.sortBySubmitted')}</option>
-            <option value="updatedAt">{t('volunteers.sortByReview')}</option>
-          </select>
-          <select
-            className="input small"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-          >
-            <option value="desc">{t('volunteers.newestFirst')}</option>
-            <option value="asc">{t('volunteers.oldestFirst')}</option>
-          </select>
-        </div>
-      </div>
+            Export CSV
+          </button>
+        </header>
 
-      {selectedIds.length > 0 && (
-        <div className="card toolbar" style={{ background: 'rgba(var(--brand-primary-rgb), 0.1)', border: '1px solid var(--brand-primary)' }}>
-          <p className="mono small">{t('volunteers.applicationsSelected').replace('{count}', String(selectedIds.length))}</p>
-          <div className="action-row" style={{ marginTop: '0.5rem' }}>
+        <div style={{ padding: '16px 16px 0' }}>
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}
+          >
             <input
-              type="text"
-              placeholder={t('volunteers.reasonPlaceholder')}
+              type="search"
               className="input"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Search name, email, or ID…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', flex: 1 }}
             />
-            <button
-              className="btn btn-safe"
-              onClick={() => handleBulkReview('APPROVED')}
-              disabled={bulkReviewMutation.isPending}
-            >
-              {t('volunteers.bulkApprove')}
+            <button type="submit" className="btn btn-neutral">
+              Search
             </button>
-            <button
-              className="btn btn-critical"
-              onClick={() => handleBulkReview('REJECTED')}
-              disabled={bulkReviewMutation.isPending}
+          </form>
+        </div>
+
+        <div
+          className="card filter-row"
+          style={{
+            display: 'flex',
+            gap: '0.5rem',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            margin: '16px 16px 0',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {statusFilters.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={`chip ${status === item ? 'chip-active' : ''}`}
+                onClick={() => setStatus(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <div
+            style={{
+              marginLeft: 'auto',
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <select
+              className="input small"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
             >
-              {t('volunteers.bulkReject')}
-            </button>
+              <option value="desc">Newest</option>
+              <option value="asc">Oldest</option>
+            </select>
           </div>
         </div>
-      )}
 
-      {applicationsQuery.isLoading ? <p className="muted">{t('volunteers.loadingRequests')}</p> : null}
-      {applicationsQuery.error ? (
-        <p className="error-text">{t('volunteers.loadError')}</p>
-      ) : null}
+        {selectedIds.length > 0 && (
+          <div
+            className="card toolbar"
+            style={{
+              background: 'rgba(13, 79, 92, 0.08)',
+              border: '1px solid var(--wira-teal)',
+              margin: '12px 16px 0',
+            }}
+          >
+            <p className="mono small">{selectedIds.length} applications selected</p>
+            <div className="action-row" style={{ marginTop: '0.5rem' }}>
+              <input
+                type="text"
+                placeholder="Reason (required for rejection)…"
+                className="input"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+              />
+              <button
+                className="btn btn-safe"
+                onClick={() => handleBulkReview('APPROVED')}
+                disabled={bulkReviewMutation.isPending}
+              >
+                Bulk Approve
+              </button>
+              <button
+                className="btn btn-critical"
+                onClick={() => handleBulkReview('REJECTED')}
+                disabled={bulkReviewMutation.isPending}
+              >
+                Bulk Reject
+              </button>
+            </div>
+          </div>
+        )}
 
-      {!applicationsQuery.isLoading && !applicationsQuery.error && filteredApplications.map((application) => {
-        const isPending = application.status === 'PENDING';
-        const isApproved = application.status === 'APPROVED';
-        const isSuspended = application.status === 'SUSPENDED';
-        const isSelected = selectedIds.includes(application.id);
-        return (
-            <article key={application.id} className={`card volunteer-card ${isSelected ? 'selected' : ''}`}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                {isPending && (
-                  <input 
-                    type="checkbox" 
-                    checked={isSelected}
-                    onChange={() => handleSelect(application.id)}
-                  />
-                )}
-                <div style={{ flex: 1 }}>
-                  <p className="mono small">ID: {application.id}</p>
-                  <h2 className="card-title">{application.user?.name ?? t('volunteers.unknownApplicant')}</h2>
-                  <p className="muted">{application.user?.email ?? t('volunteers.noEmail')}</p>
-                  <p className="muted">{t('volunteers.notes')}: {application.notes ?? t('volunteers.notesNone')}</p>
-                  <p className="muted small">{t('volunteers.submitted')}: {new Date(application.createdAt).toLocaleString()}</p>
-                  <p className="badge-row">
-                    <span className={`status-badge status-${application.status.toLowerCase()}`}>
-                      {t(`volunteers.status.${application.status}`)}
-                    </span>
-                  </p>
-                </div>
-              </div>
+        {applicationsQuery.isLoading && (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <p className="muted">Loading applications…</p>
+          </div>
+        )}
+        {applicationsQuery.isError && (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <p className="error-text">Unable to load volunteer applications.</p>
+          </div>
+        )}
 
-              <div className="action-row" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
-                {isPending && (
-                  <>
-                    <button
-                      type="button"
-                      className="btn btn-safe"
-                      disabled={reviewMutation.isPending}
-                      onClick={() => {
-                        reviewMutation.mutate(
-                          { id: application.id, data: { nextStatus: 'APPROVED' } },
-                          { onSuccess: () => applicationsQuery.refetch() },
-                        );
-                      }}
-                    >
-                      {t('volunteers.approve')}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-critical"
-                      disabled={reviewMutation.isPending}
-                      onClick={() => {
-                        setModalConfig({
-                          isOpen: true,
-                          application,
-                          actionType: 'REJECT',
-                        });
-                      }}
-                    >
-                      {t('volunteers.reject')}
-                    </button>
-                  </>
-                )}
+        {!applicationsQuery.isLoading && !applicationsQuery.isError && (
+          <>
+            <div className="volunteer-table-wrap">
+            <table className="volunteer-table">
+              <thead>
+                <tr>
+                  {status === 'PENDING' && (
+                    <th style={{ width: '40px' }}>
+                      <input
+                        type="checkbox"
+                        checked={filteredApplications.length > 0 && filteredApplications.every((a) => selectedIds.includes(a.id))}
+                        onChange={handleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </th>
+                  )}
+                  <th>Name</th>
+                  <th>Notes</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredApplications.map((application) => {
+                  const isPending = application.status === 'PENDING';
+                  const isApproved = application.status === 'APPROVED';
+                  const isSuspended = application.status === 'SUSPENDED';
+                  const name = application.user?.name ?? 'Unknown Applicant';
 
-                {isApproved && application.user && (
-                  <button
-                    type="button"
-                    className="btn btn-critical"
-                    disabled={suspendMutation.isPending}
-                    onClick={() => {
-                      setModalConfig({
-                        isOpen: true,
-                        application,
-                        actionType: 'SUSPEND',
-                      });
-                    }}
-                  >
-                    {t('volunteers.suspend')}
-                  </button>
-                )}
+                  return (
+                    <tr key={application.id}>
+                      {status === 'PENDING' && (
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(application.id)}
+                            onChange={() => handleSelect(application.id)}
+                            aria-label={`Select ${name}`}
+                          />
+                        </td>
+                      )}
+                      <td>
+                        <div className="volunteer-table-name-cell">
+                          <div className="volunteer-table-avatar" aria-hidden>
+                            {getInitials(name)}
+                          </div>
+                          <div>
+                            <div className="volunteer-table-name">{name}</div>
+                            <div className="volunteer-table-id">ID: #{application.id.slice(-6).toUpperCase()}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="volunteer-table-notes" title={application.notes ?? undefined}>
+                          {application.notes || '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          className={`volunteer-table-status-pill ${application.status.toLowerCase()}`}
+                        >
+                          {application.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="volunteer-table-actions">
+                          {isPending && (
+                            <>
+                              <button
+                                type="button"
+                                className="volunteer-table-btn-approve"
+                                disabled={reviewMutation.isPending}
+                                onClick={() => {
+                                  reviewMutation.mutate(
+                                    { id: application.id, data: { nextStatus: 'APPROVED' } },
+                                    { onSuccess: () => applicationsQuery.refetch() },
+                                  );
+                                }}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                className="volunteer-table-btn-deny"
+                                disabled={reviewMutation.isPending}
+                                onClick={() => {
+                                  setModalConfig({
+                                    isOpen: true,
+                                    application,
+                                    actionType: 'REJECT',
+                                  });
+                                }}
+                              >
+                                Deny
+                              </button>
+                            </>
+                          )}
+                          {isApproved && application.user && (
+                            <button
+                              type="button"
+                              className="btn btn-critical"
+                              style={{ minHeight: '32px', padding: '4px 12px', fontSize: '12px' }}
+                              disabled={suspendMutation.isPending}
+                              onClick={() => {
+                                setModalConfig({
+                                  isOpen: true,
+                                  application,
+                                  actionType: 'SUSPEND',
+                                });
+                              }}
+                            >
+                              Suspend
+                            </button>
+                          )}
+                          {isSuspended && application.user && (
+                            <button
+                              type="button"
+                              className="volunteer-table-btn-approve"
+                              disabled={reactivateMutation.isPending}
+                              onClick={() => {
+                                setModalConfig({
+                                  isOpen: true,
+                                  application,
+                                  actionType: 'REACTIVATE',
+                                });
+                              }}
+                            >
+                              Reactivate
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="volunteer-table-btn-deny"
+                            onClick={() =>
+                              setShowHistoryId(showHistoryId === application.id ? null : application.id)
+                            }
+                          >
+                            {showHistoryId === application.id ? 'Hide History' : 'History'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            </div>
 
-                {isSuspended && application.user && (
-                  <button
-                    type="button"
-                    className="btn btn-safe"
-                    disabled={reactivateMutation.isPending}
-                    onClick={() => {
-                      setModalConfig({
-                        isOpen: true,
-                        application,
-                        actionType: 'REACTIVATE',
-                      });
-                    }}
-                  >
-                    {t('volunteers.reactivate')}
-                  </button>
-                )}
-
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowHistoryId(showHistoryId === application.id ? null : application.id)}
-                >
-                  {showHistoryId === application.id ? t('volunteers.hideHistory') : t('volunteers.history')}
-                </button>
-              </div>
-
-              {showHistoryId === application.id && (
-                <div className="history-view small" style={{ marginTop: '1rem', background: 'var(--bg-subtle)', padding: '0.5rem', borderRadius: '4px' }}>
-                  <h3 className="mono small bold">{t('volunteers.decisionLog')}</h3>
-                  {historyQuery.isLoading ? <p className="muted">{t('volunteers.loadingHistory')}</p> : null}
-                  <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {(() => {
-                      const raw = historyQuery.data as unknown;
-                      const arr = (raw && typeof raw === 'object' && 'data' in raw ? (raw as { data?: unknown[] }).data : raw) ?? [];
-                      const list = Array.isArray(arr) ? arr : [];
-                      return list.map((log: unknown) => {
-                        const l = log as { id: string; previousStatus: string; nextStatus: string; actor?: { name?: string }; createdAt: string; reason?: string };
-                        return (
-                      <li key={l.id} style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--border-subtle)' }}>
+            {showHistoryId && (() => {
+              const app = filteredApplications.find((a) => a.id === showHistoryId);
+              return (
+              <div
+                className="history-view small"
+                style={{
+                  margin: '0 24px 16px',
+                  background: 'var(--bg-subtle, #f8fafc)',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  borderTop: '1px solid #f1f5f9',
+                }}
+              >
+                <h3 className="mono small bold">Decision log for {app?.user?.name ?? 'Application'}</h3>
+                {historyQuery.isLoading && <p className="muted">Loading history…</p>}
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0.5rem 0 0' }}>
+                  {(() => {
+                    const raw = historyQuery.data as unknown;
+                    const list = (raw && typeof raw === 'object' && 'data' in raw ? (raw as { data: unknown }).data : raw) ?? [];
+                    return Array.isArray(list) ? list : [];
+                  })().map(
+                    (log: { id: string; previousStatus?: string; nextStatus: string; actor?: { name?: string }; createdAt: string; reason?: string }) => (
+                      <li
+                        key={log.id}
+                        style={{
+                          marginBottom: '0.5rem',
+                          paddingBottom: '0.5rem',
+                          borderBottom: '1px solid var(--border-subtle, #e2e8f0)',
+                        }}
+                      >
                         <p className="mono">
-                          {l.previousStatus} → <strong>{l.nextStatus}</strong>
+                          {log.previousStatus ?? '—'} → <strong>{log.nextStatus}</strong>
                         </p>
-                        <p className="muted">{t('volunteers.by')} {l.actor?.name ?? 'System'} on {new Date(l.createdAt).toLocaleString()}</p>
-                        {l.reason && <p className="italic">"{l.reason}"</p>}
+                        <p className="muted small">
+                          By: {log.actor?.name ?? 'System'} on {new Date(log.createdAt).toLocaleString()}
+                        </p>
+                        {log.reason && <p className="italic">"{log.reason}"</p>}
                       </li>
-                        );
-                      });
-                    })()}
-                  </ul>
-                </div>
-              )}
-            </article>
-        );
-      })}
+                    ),
+                  )}
+                </ul>
+              </div>
+              );
+            })()}
+
+            <footer className="volunteer-registry-footer">{footerText}</footer>
+          </>
+        )}
+      </div>
 
       <ActionModal
         isOpen={modalConfig.isOpen}
@@ -422,29 +541,26 @@ export function VolunteerApprovalsPage() {
         onConfirm={handleActionConfirm}
         title={
           modalConfig.actionType === 'REJECT'
-            ? t('volunteers.modal.rejectTitle')
+            ? 'Reject Application'
             : modalConfig.actionType === 'SUSPEND'
-            ? t('volunteers.modal.suspendTitle')
-            : t('volunteers.modal.reactivateTitle')
+              ? 'Suspend Volunteer'
+              : 'Reactivate Volunteer'
         }
         description={
           modalConfig.actionType === 'REJECT'
-            ? t('volunteers.modal.rejectDescription').replace('{name}', modalConfig.application?.user?.name ?? '')
+            ? `You are rejecting the application for ${modalConfig.application?.user?.name}. This action will notify the user.`
             : modalConfig.actionType === 'SUSPEND'
-            ? t('volunteers.modal.suspendDescription').replace('{name}', modalConfig.application?.user?.name ?? '')
-            : t('volunteers.modal.reactivateDescription').replace('{name}', modalConfig.application?.user?.name ?? '')
+              ? `You are suspending ${modalConfig.application?.user?.name}. They will no longer be able to claim requests.`
+              : `You are reactivating ${modalConfig.application?.user?.name}. They will be able to claim requests again.`
         }
         confirmText={
           modalConfig.actionType === 'REJECT'
-            ? t('volunteers.modal.rejectConfirm')
+            ? 'Reject Application'
             : modalConfig.actionType === 'SUSPEND'
-            ? t('volunteers.modal.suspendConfirm')
-            : t('volunteers.modal.reactivateConfirm')
+              ? 'Suspend Account'
+              : 'Reactivate Account'
         }
         type={modalConfig.actionType === 'REACTIVATE' ? 'SAFE' : 'CRITICAL'}
-        placeholder={t('volunteers.reasonPlaceholderModal')}
-        cancelText={t('common.cancel')}
-        requiredMessage={t('common.reasonRequired')}
       />
     </section>
   );
