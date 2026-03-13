@@ -1,0 +1,18 @@
+[project]
+name = "hazard-routing-server"
+version = "1.0.0"
+description = "Hazard-aware routing microservice for WIRA flood simulation."
+requires-python = ">=3.9,<4"
+readme = "README.md"
+dependencies = [
+    "flask>=3.0",
+    "python-dotenv>=1.0",
+    "gunicorn>=21.0",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["app", "config", "graph_loader"]
